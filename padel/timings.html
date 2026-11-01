@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule & Timings — United Sports Club</title>
+  <meta name="description" content="View the full daily schedule for Court 1 and Court 2 at United Sports Club." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- Floating buttons -->
+<div class="fab-group">
+  <a href="tel:+254700000000" class="fab" title="Call Us">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.17h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 5.95 5.95l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+  </a>
+  <a href="https://wa.me/254700000000" class="fab" title="WhatsApp" target="_blank" rel="noopener">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  </a>
+  <a href="https://instagram.com/unitedsportsclub" class="fab" title="Instagram" target="_blank" rel="noopener">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+  </a>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+  <button class="nav-hamburger" onclick="openDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+        <line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/>
+      </svg>
+    </div>
+    <div class="nav-logo-text">
+      <div class="brand">United Sports Club</div>
+      <div class="sub">Padel Courts — Nairobi</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <a href="index.html#courts" class="nav-book-btn">Book Now</a>
+  </div>
+</nav>
+
+<!-- Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="nav-drawer" id="navDrawer">
+  <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+  <nav class="drawer-links">
+    <a href="index.html"           onclick="closeDrawer()">Home</a>
+    <a href="index.html#courts"    onclick="closeDrawer()">Our Courts</a>
+    <a href="index.html#pricing"   onclick="closeDrawer()">Pricing</a>
+    <a href="index.html#community" onclick="closeDrawer()">Community</a>
+    <a href="timings.html"         onclick="closeDrawer()">Schedule</a>
+    <a href="index.html#contact"   onclick="closeDrawer()">Contact</a>
+  </nav>
+  <a href="index.html#courts" class="drawer-cta">Book a Court</a>
+</div>
+
+<!-- Page Hero -->
+<div class="page-hero">
+  <div class="container reveal">
+    <span class="label">Daily Schedule</span>
+    <h1>Court Schedule &amp; Timings</h1>
+    <p>All slots available for Court 1 and Court 2 · 6:00 AM – 10:00 PM · Every day</p>
+  </div>
+</div>
+
+<!-- Info bar -->
+<div style="background:var(--navy-mid);padding:1rem 0;">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;">
+      <div style="color:rgba(255,255,255,.55);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">
+        <span style="color:white;font-size:1rem;font-weight:800;display:block;" id="todayLabel">—</span>
+        Today's Schedule
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,.1);"></div>
+      <div style="color:rgba(255,255,255,.55);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">
+        <span style="color:white;font-size:1rem;font-weight:800;display:block;">KES 500</span>
+        Per 30 Minutes
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,.1);"></div>
+      <div style="color:rgba(255,255,255,.55);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;">
+        <span style="color:white;font-size:1rem;font-weight:800;display:block;">6 AM – 10 PM</span>
+        Opening Hours
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="index.html#courts" style="display:inline-flex;align-items:center;gap:.4rem;background:white;color:var(--navy);font-size:.82rem;font-weight:800;padding:.5rem 1.2rem;border-radius:50px;text-decoration:none;transition:var(--transition);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Book a Court
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule -->
+<section class="schedule-section">
+  <div class="container">
+    <div class="schedule-grid reveal">
+      <!-- Court 1 -->
+      <div class="sched-card">
+        <div class="sched-header">
+          <h3>Court 1</h3>
+          <div class="all-avail">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            All Slots Available
+          </div>
+        </div>
+        <table class="sched-table">
+          <thead>
+            <tr>
+              <th>Time Slot</th>
+              <th>Duration</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="court1-body">
+            <!-- TODO: GET /api/courts/1/schedule?date=YYYY-MM-DD -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Court 2 -->
+      <div class="sched-card">
+        <div class="sched-header">
+          <h3>Court 2</h3>
+          <div class="all-avail">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            All Slots Available
+          </div>
+        </div>
+        <table class="sched-table">
+          <thead>
+            <tr>
+              <th>Time Slot</th>
+              <th>Duration</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="court2-body">
+            <!-- TODO: GET /api/courts/2/schedule?date=YYYY-MM-DD -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1.75rem;font-size:.82rem;color:var(--gray-600);flex-wrap:wrap;" class="reveal">
+      <div style="display:flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;"></span>Available</div>
+      <div style="display:flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;background:#EF4444;border-radius:50%;display:inline-block;"></span>Booked</div>
+      <div style="display:flex;align-items:center;gap:.4rem;"><span style="width:8px;height:8px;background:#F59E0B;border-radius:50%;display:inline-block;"></span>Pending</div>
+      <span style="margin-left:auto;font-size:.75rem;color:var(--gray-400);">* Real-time availability once backend is connected</span>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing section on timings page -->
+<section class="section" style="background:var(--white);">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">Pricing</span>
+      <h2>Simple Pricing</h2>
+      <p>KES 500 per 30 minutes. Minimum 1 hour. No hidden fees.</p>
+    </div>
+    <div id="pricing-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-top:2rem;" class="reveal"></div>
+  </div>
+</section>
+
+<footer>
+  <strong>United Sports Club</strong> &nbsp;·&nbsp; Padel Courts &nbsp;·&nbsp; Nairobi, Kenya &nbsp;·&nbsp; &copy; 2026
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+  /* Today label */
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'});
+
+  /* Build slots */
+  const slots = [];
+  for (let h = 6; h <= 22; h++) {
+    for (const m of ['00','30']) {
+      if (h === 22 && m === '30') break;
+      const h12 = h > 12 ? h-12 : h===0?12:h, ampm = h>=12?'PM':'AM';
+      const nh = m==='00'?h:h+1, nm = m==='00'?'30':'00';
+      const nh12 = nh>12?nh-12:nh===0?12:nh, nampm = nh>=12?'PM':'AM';
+      slots.push({ from:`${h12}:${m} ${ampm}`, to:`${nh12}:${nm.padStart(2,'0')} ${nampm}` });
+    }
+  }
+
+  const statusHTML = `<span class="status-avail"><span class="s-dot"></span>Available</span>`;
+
+  ['court1-body','court2-body'].forEach(id => {
+    const tb = document.getElementById(id);
+    slots.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><strong>${s.from}</strong> – ${s.to}</td><td>30 min</td><td>KES 500</td><td>${statusHTML}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+
+  /* Pricing cards */
+  const prices = [
+    {d:'1 Hour',    h:2, p:1000},
+    {d:'1.5 Hours', h:3, p:1500},
+    {d:'2 Hours',   h:4, p:2000},
+    {d:'2.5 Hours', h:5, p:2500},
+    {d:'3 Hours',   h:6, p:3000},
+    {d:'3.5 Hours', h:7, p:3500},
+  ];
+  const pc = document.getElementById('pricing-cards');
+  prices.forEach((p, i) => {
+    const popular = i === 1;
+    const card = document.createElement('div');
+    card.style.cssText = `background:${popular?'var(--navy)':'var(--bg2)'};border-radius:var(--radius-lg);padding:1.5rem 1.25rem;text-align:center;position:relative;transition:var(--transition);cursor:default;`;
+    card.innerHTML = `
+      ${popular?`<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--gold-bright);color:white;font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .8rem;border-radius:50px;">Popular</div>`:''}
+      <div style="font-size:1.5rem;font-weight:900;color:${popular?'white':'var(--navy)'};">KES ${p.p.toLocaleString()}</div>
+      <div style="font-size:.9rem;font-weight:700;color:${popular?'rgba(255,255,255,.75)':'var(--gray-600)'};margin:.35rem 0 .5rem;">${p.d}</div>
+      <div style="font-size:.72rem;color:${popular?'rgba(255,255,255,.45)':'var(--gray-400)'};">${p.h} × 30 min slots</div>
+    `;
+    if (!popular) {
+      card.addEventListener('mouseenter', ()=>{ card.style.background='var(--gray-100)'; card.style.transform='translateY(-4px)'; });
+      card.addEventListener('mouseleave', ()=>{ card.style.background='var(--bg2)'; card.style.transform=''; });
+    }
+    pc.appendChild(card);
+  });
+</script>
+</body>
+</html>

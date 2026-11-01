@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>United Sports Club</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --navy:#0a2342;--navy-2:#0d2d52;--gold:#c9a84c;--gold-2:#e8c96b;
+      --white:#fff;--gray-400:#9ca3af;--gray-500:#6b7280;
+      --error:#ef4444;--success:#22c55e;
+      --r-sm:8px;--r-md:14px;--r-lg:22px;--ease:all .2s ease;
+    }
+    body{
+      font-family:'Inter',sans-serif;background:var(--navy);min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;
+      background-image:radial-gradient(ellipse at 15% 55%,rgba(201,168,76,.09) 0%,transparent 55%),
+        radial-gradient(ellipse at 85% 15%,rgba(255,255,255,.04) 0%,transparent 50%);
+    }
+
+    /* ── SCREENS ── */
+    .screen{display:none;width:100%;max-width:440px;animation:fadeUp .3s ease}
+    .screen.active{display:flex;flex-direction:column;align-items:center}
+    #screen-dashboard{max-width:1100px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── AUTH CARD ── */
+    .auth-card{
+      background:rgba(255,255,255,.04);backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);
+      padding:2.5rem 2.25rem;width:100%;
+    }
+    .logo-wrap{text-align:center;margin-bottom:1.75rem}
+    .logo-wrap img{height:60px;object-fit:contain}
+    .logo-wrap .club-name{
+      font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--gold);margin-top:.55rem;
+    }
+    .auth-title{font-size:1.3rem;font-weight:800;color:var(--white);margin-bottom:.2rem}
+    .auth-sub{font-size:.82rem;color:rgba(255,255,255,.45);margin-bottom:1.75rem}
+
+    /* ── FORM ── */
+    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+    .fg{display:flex;flex-direction:column;gap:.38rem;margin-bottom:.9rem}
+    .fg label{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+    .fg input{
+      background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.11);
+      border-radius:var(--r-sm);padding:.72rem 1rem;color:var(--white);
+      font-size:.88rem;font-family:inherit;outline:none;transition:var(--ease);width:100%;
+    }
+    .fg input::placeholder{color:rgba(255,255,255,.25)}
+    .fg input:focus{border-color:var(--gold);background:rgba(201,168,76,.05)}
+
+    .err-msg{font-size:.75rem;color:var(--error);margin-bottom:.7rem;display:none}
+    .err-msg.show{display:block}
+
+    .btn-gold{
+      width:100%;padding:.82rem;background:var(--gold);color:var(--navy);border:none;
+      border-radius:var(--r-sm);font-size:.9rem;font-weight:800;cursor:pointer;
+      font-family:inherit;letter-spacing:.02em;margin-top:.4rem;transition:var(--ease);
+    }
+    .btn-gold:hover{background:var(--gold-2);transform:translateY(-1px)}
+    .btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+    .form-footer{text-align:center;margin-top:1.1rem;font-size:.8rem;color:rgba(255,255,255,.45)}
+    .form-footer a{color:var(--gold);font-weight:600;cursor:pointer;text-decoration:none}
+    .form-footer a:hover{text-decoration:underline}
+
+    /* ── OTP SCREEN ── */
+    .otp-icon{
+      width:58px;height:58px;background:rgba(201,168,76,.13);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;margin:0 auto 1.4rem;
+    }
+    .otp-email{font-size:.8rem;color:var(--gold);font-weight:600;word-break:break-all;text-align:center}
+    .otp-inputs{display:flex;gap:.55rem;justify-content:center;margin:1.5rem 0}
+    .otp-inputs input{
+      width:44px;height:54px;text-align:center;font-size:1.35rem;font-weight:700;
+      background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);
+      border-radius:var(--r-sm);color:var(--white);font-family:inherit;outline:none;transition:var(--ease);
+      -moz-appearance:textfield;
+    }
+    .otp-inputs input::-webkit-outer-spin-button,.otp-inputs input::-webkit-inner-spin-button{-webkit-appearance:none}
+    .otp-inputs input:focus{border-color:var(--gold);background:rgba(201,168,76,.06)}
+
+    /* ── DASHBOARD ── */
+    .dash-bar{
+      width:100%;display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:2.25rem;flex-wrap:wrap;gap:1rem;
+    }
+    .dash-left{display:flex;align-items:center;gap:.9rem}
+    .dash-left img{height:42px;object-fit:contain}
+    .dash-greeting{display:flex;flex-direction:column;gap:3px}
+    .dash-welcome{font-size:1.05rem;font-weight:800;color:var(--white)}
+    .dash-badge{
+      display:inline-flex;align-items:center;gap:.28rem;padding:.18rem .62rem;
+      border-radius:20px;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    }
+    .dash-badge.member{background:rgba(201,168,76,.18);color:var(--gold);border:1px solid rgba(201,168,76,.38)}
+    .dash-badge.non-member{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.14)}
+
+    .btn-signout{
+      padding:.46rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);
+      border-radius:var(--r-sm);color:rgba(255,255,255,.65);font-size:.76rem;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:var(--ease);
+    }
+    .btn-signout:hover{background:rgba(255,255,255,.12);color:var(--white)}
+
+    /* ── VENUE CARDS ── */
+    .venues-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;width:100%}
+    @media(max-width:620px){.venues-grid{grid-template-columns:1fr}}
+
+    .venue-card{
+      position:relative;height:360px;border-radius:var(--r-lg);overflow:hidden;
+      cursor:pointer;text-decoration:none;display:block;
+      transition:transform .3s ease,box-shadow .3s ease;
+      box-shadow:0 8px 32px rgba(0,0,0,.45);
+    }
+    .venue-card:hover{transform:translateY(-6px);box-shadow:0 22px 52px rgba(0,0,0,.65)}
+    .venue-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+    .venue-card:hover img{transform:scale(1.05)}
+    .venue-card-bg{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+    .venue-overlay{
+      position:absolute;inset:0;
+      background:linear-gradient(to top,rgba(10,35,66,.96) 0%,rgba(10,35,66,.55) 55%,rgba(10,35,66,.18) 100%);
+    }
+    .venue-content{position:absolute;bottom:0;left:0;right:0;padding:2rem}
+    .venue-tag{
+      font-size:.58rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--gold);background:rgba(201,168,76,.14);border:1px solid rgba(201,168,76,.3);
+      padding:.2rem .65rem;border-radius:20px;display:inline-block;margin-bottom:.7rem;
+    }
+    .venue-name{font-size:2.4rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.02em;margin-bottom:.45rem}
+    .venue-desc{font-size:.78rem;color:rgba(255,255,255,.55);margin-bottom:1.2rem}
+    .venue-cta{
+      display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:var(--navy);
+      padding:.58rem 1.25rem;border-radius:var(--r-sm);font-size:.78rem;font-weight:800;transition:var(--ease);
+    }
+    .venue-card:hover .venue-cta{background:var(--gold-2)}
+
+    /* Restaurant card: no image → styled bg */
+    .venue-card-rest{background:var(--navy-2)}
+    .rest-pattern{
+      position:absolute;inset:0;
+      background:radial-gradient(circle at 30% 40%,rgba(201,168,76,.12) 0%,transparent 50%),
+        radial-gradient(circle at 75% 70%,rgba(255,255,255,.04) 0%,transparent 45%);
+    }
+    .rest-icon{
+      position:absolute;top:2rem;right:2rem;width:72px;height:72px;
+      background:rgba(201,168,76,.1);border-radius:50%;border:1px solid rgba(201,168,76,.2);
+      display:flex;align-items:center;justify-content:center;
+    }
+
+    @media(max-width:480px){
+      .auth-card{padding:2rem 1.25rem}
+      .venue-name{font-size:2rem}
+      .venue-card{height:300px}
+      .form-2col{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div class="screen active" id="screen-login">
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+      <div class="club-name">United Sports Club</div>
+    </div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your USC account</div>
+    <div class="err-msg" id="loginErr"></div>
+    <div class="fg"><label>Email</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email"/></div>
+    <div class="fg"><label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/></div>
+    <button class="btn-gold" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="form-footer">No account? <a onclick="showScreen('screen-signup')">Create one</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════ SIGNUP ══════════════════ -->
+<div class="screen" id="screen-signup">
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+      <div class="club-name">United Sports Club</div>
+    </div>
+    <div class="auth-title">Create account</div>
+    <div class="auth-sub">Join United Sports Club — it's free</div>
+    <div class="err-msg" id="signupErr"></div>
+    <div class="form-2col">
+      <div class="fg"><label>First Name</label>
+        <input type="text" id="su-first" placeholder="John" autocomplete="given-name"/></div>
+      <div class="fg"><label>Last Name</label>
+        <input type="text" id="su-last" placeholder="Doe" autocomplete="family-name"/></div>
+    </div>
+    <div class="fg">
+      <label>Username <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(others see this)</span></label>
+      <input type="text" id="su-username" placeholder="johndoe" autocomplete="username"/>
+    </div>
+    <div class="fg"><label>Email</label>
+      <input type="email" id="su-email" placeholder="your@email.com" autocomplete="email"/></div>
+    <div class="fg"><label>Phone</label>
+      <input type="tel" id="su-phone" placeholder="+254 7XX XXX XXX" autocomplete="tel"/></div>
+    <div class="fg"><label>Password <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(min 8 chars)</span></label>
+      <input type="password" id="su-password" placeholder="••••••••" autocomplete="new-password"/></div>
+    <button class="btn-gold" id="signupBtn" onclick="doSignup()">Create Account</button>
+    <div class="form-footer">Already have an account? <a onclick="showScreen('screen-login')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ══════════════════ VERIFY ══════════════════ -->
+<div class="screen" id="screen-verify">
+  <div class="auth-card">
+    <div class="otp-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#c9a84c" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+      </svg>
+    </div>
+    <div class="auth-title" style="text-align:center">Confirm your email</div>
+    <div class="auth-sub" style="text-align:center;margin-bottom:.4rem">We sent a confirmation link to</div>
+    <div class="otp-email" id="verifyEmailLabel"></div>
+    <div style="text-align:center;color:var(--gray-400);font-size:.82rem;margin:.9rem 0 1.2rem;line-height:1.55">
+      Open the email and click the link.<br>
+      Even if your browser shows an error page,<br>
+      your email will be confirmed — then come back and sign in.
+    </div>
+    <div class="err-msg" id="verifyErr" style="margin-top:.5rem;text-align:center"></div>
+    <div id="otpWrap" style="display:none"></div>
+    <button class="btn-gold" id="verifyBtn" onclick="showScreen('screen-login')">I&rsquo;ve clicked the link &mdash; Sign In</button>
+    <div class="form-footer" style="margin-top:1rem">
+      Didn't get it? <a onclick="resendCode()">Resend email</a> · <a onclick="showScreen('screen-login')">Back</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div class="screen" id="screen-dashboard">
+  <div class="dash-bar">
+    <div class="dash-left">
+      <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+      <div class="dash-greeting">
+        <div class="dash-welcome" id="dashWelcome">Welcome</div>
+        <div class="dash-badge non-member" id="dashBadge">Non-Member</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
+  </div>
+
+  <div class="venues-grid">
+    <!-- PADEL -->
+    <a class="venue-card" href="./padel/index.html">
+      <img src="./padel/court1.jpg" alt="Padel" onerror="this.style.background='var(--navy-2)';this.style.display='none'"/>
+      <div class="venue-overlay"></div>
+      <div class="venue-content">
+        <div class="venue-tag">Book a Court</div>
+        <div class="venue-name">Padel</div>
+        <div class="venue-desc">Court 1 · Court 2 · Pickleball</div>
+        <div class="venue-cta">
+          Book Now
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- RESTAURANT -->
+    <a class="venue-card venue-card-rest" href="./restaurant/index.html">
+      <div class="rest-pattern"></div>
+      <div class="rest-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="rgba(201,168,76,0.8)" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+      </div>
+      <div class="venue-overlay" style="background:linear-gradient(to top,rgba(10,35,66,.97) 0%,rgba(10,35,66,.6) 55%,rgba(10,35,66,.22) 100%)"></div>
+      <div class="venue-content">
+        <div class="venue-tag">Order Food</div>
+        <div class="venue-name">Restaurant</div>
+        <div class="venue-desc">Full menu · In-club dining</div>
+        <div class="venue-cta">
+          View Menu
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SUPABASE CONFIG
+   ══════════════════════════════════════════════════
+   1. Go to supabase.com → your project → Settings → API
+   2. Replace the two values below
+   3. In Supabase: Authentication → Settings → enable
+      "Use OTP for email confirmations"
+   ══════════════════════════════════════════════════ */
+const SUPABASE_URL      = 'https://itzfanrkpvpfucgkbkff.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
+
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ── state ── */
+let pendingEmail = '';
+let currentUser  = null;
+
+/* ── screen helpers ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.add('show');
+}
+function clearErr(id) {
+  const el = document.getElementById(id);
+  el.textContent = ''; el.classList.remove('show');
+}
+function setBusy(id, busy, label) {
+  const btn = document.getElementById(id);
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Please wait…' : label;
+}
+
+/* ── OTP inputs ── */
+function initOtp() {
+  const inputs = [...document.querySelectorAll('#otpWrap input')];
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g,'');
+      e.target.value = v.slice(-1);
+      if (v && i < inputs.length - 1) inputs[i+1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) {
+        inputs[i-1].value = ''; inputs[i-1].focus();
+      }
+      if (e.key === 'Enter') doVerify();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      [...txt].forEach((ch,j) => { if (inputs[j]) inputs[j].value = ch; });
+      const last = Math.min(txt.length, inputs.length-1);
+      inputs[last].focus();
+    });
+  });
+}
+
+function getOtp() {
+  return [...document.querySelectorAll('#otpWrap input')].map(i=>i.value).join('');
+}
+function clearOtp() {
+  document.querySelectorAll('#otpWrap input').forEach(i=>i.value='');
+  document.querySelector('#otpWrap input')?.focus();
+}
+
+/* ── init ── */
+document.addEventListener('DOMContentLoaded', async () => {
+  initOtp();
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key==='Enter') doLogin();
+  });
+
+  // Auto-login when Supabase redirects back after email confirmation
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
+      await loadDashboard(session.user);
+    }
+  });
+
+  // Check existing session
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) await loadDashboard(session.user);
+});
+
+/* ── LOGIN ── */
+async function doLogin() {
+  clearErr('loginErr');
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { showErr('loginErr','Enter your email and password.'); return; }
+  setBusy('loginBtn', true, 'Sign In');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  setBusy('loginBtn', false, 'Sign In');
+  if (error) {
+    showErr('loginErr', error.message.includes('Email not confirmed')
+      ? 'Please click the link in your confirmation email first, then try again.' : 'Incorrect email or password.');
+    return;
+  }
+  await loadDashboard(data.user);
+}
+
+/* ── SIGNUP ── */
+async function doSignup() {
+  clearErr('signupErr');
+  const first    = document.getElementById('su-first').value.trim();
+  const last     = document.getElementById('su-last').value.trim();
+  const username = document.getElementById('su-username').value.trim().replace(/^@/,'');
+  const email    = document.getElementById('su-email').value.trim();
+  const phone    = document.getElementById('su-phone').value.trim();
+  const password = document.getElementById('su-password').value;
+
+  if (!first||!last||!username||!email||!phone||!password)
+    { showErr('signupErr','Please fill in all fields.'); return; }
+  if (password.length < 8)
+    { showErr('signupErr','Password must be at least 8 characters.'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username))
+    { showErr('signupErr','Username: letters, numbers and underscores only.'); return; }
+
+  setBusy('signupBtn', true, 'Create Account');
+  const { data: signupData, error } = await sb.auth.signUp({
+    email, password,
+    options: { data: { first_name:first, last_name:last, username, phone } },
+  });
+  setBusy('signupBtn', false, 'Create Account');
+
+  if (error) { showErr('signupErr', error.message); return; }
+
+  // If email confirmation is disabled in Supabase, user gets a session immediately
+  if (signupData?.session) {
+    await loadDashboard(signupData.session.user);
+    return;
+  }
+
+  // Email confirmation is on — show the link-click screen
+  pendingEmail = email;
+  document.getElementById('verifyEmailLabel').textContent = email;
+  showScreen('screen-verify');
+}
+
+/* ── VERIFY OTP ── */
+async function doVerify() {
+  clearErr('verifyErr');
+  const token = getOtp();
+  if (token.length < 6) { showErr('verifyErr','Enter the full 6-digit code.'); return; }
+  setBusy('verifyBtn', true, 'Verify Email');
+  const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type:'signup' });
+  setBusy('verifyBtn', false, 'Verify Email');
+  if (error) { showErr('verifyErr','Invalid or expired code. Try resending.'); return; }
+  await loadDashboard(data.user);
+}
+
+async function resendCode() {
+  if (!pendingEmail) return;
+  const { error } = await sb.auth.resend({ type:'signup', email: pendingEmail });
+  alert(error ? 'Error: ' + error.message : 'Code resent to ' + pendingEmail);
+}
+
+/* ── DASHBOARD ── */
+async function loadDashboard(user) {
+  currentUser = user;
+  const { data: profile } = await sb.from('profiles')
+    .select('first_name, is_member')
+    .eq('id', user.id).single();
+
+  const name     = profile?.first_name || user.user_metadata?.first_name || user.email.split('@')[0];
+  const isMember = profile?.is_member || false;
+
+  document.getElementById('dashWelcome').textContent = `Welcome, ${name}`;
+  const badge = document.getElementById('dashBadge');
+  badge.textContent = isMember ? '✦ Member' : 'Non-Member';
+  badge.className   = 'dash-badge ' + (isMember ? 'member' : 'non-member');
+
+  // Store for other sites
+  try {
+    localStorage.setItem('usc_user_name',   name);
+    localStorage.setItem('usc_user_id',     user.id);
+    localStorage.setItem('usc_is_member',   isMember ? 'true' : 'false');
+  } catch(e){}
+
+  showScreen('screen-dashboard');
+}
+
+/* ── SIGN OUT ── */
+async function doSignOut() {
+  await sb.auth.signOut();
+  try {
+    localStorage.removeItem('usc_user_name');
+    localStorage.removeItem('usc_user_id');
+    localStorage.removeItem('usc_is_member');
+  } catch(e){}
+  currentUser = null;
+  showScreen('screen-login');
+}
+</script>
+</body>
+</html>

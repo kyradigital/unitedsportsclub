@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
+    <title>USC Premium Menu</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="header">
+    <img src="images/usclogo.png" alt="USC Logo" class="logo">
+</div>
+
+<div class="search-container">
+    <input type="text" id="menuSearch" placeholder="Search for dishes..." oninput="filterMenu()">
+</div>
+
+<div id="nav-buttons"></div>
+
+<div id="menu-app"></div>
+
+<div id="cart-bar" onclick="toggleCart()">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <i data-lucide="shopping-cart" style="width:20px"></i>
+        <span id="cart-count" style="font-weight:800">0</span> Items
+    </div>
+    <span id="cart-total" style="font-weight:800">KES 0</span>
+</div>
+
+<div id="cart-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Order Summary</h3>
+            <button class="close-btn" onclick="toggleCart()">&times;</button>
+        </div>
+        
+        <div class="modal-body-scroll">
+            
+            <div class="customer-info-grid">
+                <div class="input-group full-width">
+                    <label>Name</label>
+                    <input type="text" id="cust-name" placeholder="Enter your name" class="modern-input">
+                </div>
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="order-date" class="modern-input">
+                </div>
+                <div class="input-group">
+                    <label>Order Time</label>
+                    <input type="time" id="order-time-now" class="modern-input">
+                </div>
+                <div class="input-group">
+                    <label>Serving Time</label>
+                    <input type="time" id="order-time" class="modern-input">
+                </div>
+                <div class="input-group">
+                    <label>No. of People (Pax)</label>
+                    <input type="number" id="cust-people" value="1" class="modern-input">
+                </div>
+                <div class="input-group full-width">
+                    <label>Order Type</label>
+                    <div class="order-type-toggle">
+                        <button type="button" class="order-type-btn active" onclick="setOrderType(this)">Dine In</button>
+                        <button type="button" class="order-type-btn" onclick="setOrderType(this)">Takeaway</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-items-container">
+                <h4 class="section-title">Your Selection</h4>
+                <div id="cart-items-list">
+                    </div>
+            </div>
+        </div>
+
+        <div class="modal-footer-fixed">
+            <div class="modal-footer-total">
+                <span>Total Amount:</span>
+                <span id="modal-total">KES 0</span>
+            </div>
+
+            <div class="modal-actions">
+                <button class="clear-cart-btn" onclick="clearCart()">Clear All</button>
+                <button class="whatsapp-btn" onclick="placeOrder()">
+                    <i data-lucide="send" style="width:16px; margin-right:5px;"></i> Order via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
