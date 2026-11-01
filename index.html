@@ -5,313 +5,570 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>United Sports Club</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
     :root{
-      --navy:#0a2342;--navy-2:#0d2d52;--gold:#c9a84c;--gold-2:#e8c96b;
-      --white:#fff;--gray-400:#9ca3af;--gray-500:#6b7280;
-      --error:#ef4444;--success:#22c55e;
-      --r-sm:8px;--r-md:14px;--r-lg:22px;--ease:all .2s ease;
+      --bg:#08111f;
+      --bg2:#0c1a2e;
+      --panel:#0f2038;
+      --white:#ffffff;
+      --white-60:rgba(255,255,255,.6);
+      --white-30:rgba(255,255,255,.3);
+      --white-12:rgba(255,255,255,.12);
+      --white-06:rgba(255,255,255,.06);
+      --error:#ff4757;
+      --r:12px;
     }
+
+    html,body{height:100%;overflow:hidden}
+
     body{
-      font-family:'Inter',sans-serif;background:var(--navy);min-height:100vh;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;
-      background-image:radial-gradient(ellipse at 15% 55%,rgba(201,168,76,.09) 0%,transparent 55%),
-        radial-gradient(ellipse at 85% 15%,rgba(255,255,255,.04) 0%,transparent 50%);
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:var(--white);
     }
 
-    /* ── SCREENS ── */
-    .screen{display:none;width:100%;max-width:440px;animation:fadeUp .3s ease}
-    .screen.active{display:flex;flex-direction:column;align-items:center}
-    #screen-dashboard{max-width:1100px}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-
-    /* ── AUTH CARD ── */
-    .auth-card{
-      background:rgba(255,255,255,.04);backdrop-filter:blur(24px);
-      border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);
-      padding:2.5rem 2.25rem;width:100%;
+    /* ═══ AMBIENT BACKGROUND ═══ */
+    .bg-canvas{
+      position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
     }
-    .logo-wrap{text-align:center;margin-bottom:1.75rem}
-    .logo-wrap img{height:60px;object-fit:contain}
-    .logo-wrap .club-name{
-      font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
-      color:var(--gold);margin-top:.55rem;
+    .orb{
+      position:absolute;border-radius:50%;filter:blur(90px);opacity:.18;
+      animation:drift 18s ease-in-out infinite;
     }
-    .auth-title{font-size:1.3rem;font-weight:800;color:var(--white);margin-bottom:.2rem}
-    .auth-sub{font-size:.82rem;color:rgba(255,255,255,.45);margin-bottom:1.75rem}
-
-    /* ── FORM ── */
-    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
-    .fg{display:flex;flex-direction:column;gap:.38rem;margin-bottom:.9rem}
-    .fg label{font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.45)}
-    .fg input{
-      background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.11);
-      border-radius:var(--r-sm);padding:.72rem 1rem;color:var(--white);
-      font-size:.88rem;font-family:inherit;outline:none;transition:var(--ease);width:100%;
+    .orb1{width:600px;height:600px;background:#1a3a6b;top:-15%;left:-10%;animation-delay:0s;animation-duration:22s}
+    .orb2{width:400px;height:400px;background:#0e2d55;top:55%;right:-8%;animation-delay:-7s;animation-duration:18s}
+    .orb3{width:300px;height:300px;background:#163251;top:30%;left:40%;animation-delay:-12s;animation-duration:25s}
+    @keyframes drift{
+      0%,100%{transform:translate(0,0) scale(1)}
+      33%{transform:translate(30px,-40px) scale(1.05)}
+      66%{transform:translate(-20px,25px) scale(.97)}
     }
-    .fg input::placeholder{color:rgba(255,255,255,.25)}
-    .fg input:focus{border-color:var(--gold);background:rgba(201,168,76,.05)}
 
-    .err-msg{font-size:.75rem;color:var(--error);margin-bottom:.7rem;display:none}
-    .err-msg.show{display:block}
-
-    .btn-gold{
-      width:100%;padding:.82rem;background:var(--gold);color:var(--navy);border:none;
-      border-radius:var(--r-sm);font-size:.9rem;font-weight:800;cursor:pointer;
-      font-family:inherit;letter-spacing:.02em;margin-top:.4rem;transition:var(--ease);
+    /* ═══ SCREEN SYSTEM ═══ */
+    .screen{
+      display:none;position:relative;z-index:1;
+      width:100%;height:100vh;
+      animation:screenIn .45s cubic-bezier(.22,.68,0,1.2) both;
     }
-    .btn-gold:hover{background:var(--gold-2);transform:translateY(-1px)}
-    .btn-gold:disabled{opacity:.5;cursor:not-allowed;transform:none}
-
-    .form-footer{text-align:center;margin-top:1.1rem;font-size:.8rem;color:rgba(255,255,255,.45)}
-    .form-footer a{color:var(--gold);font-weight:600;cursor:pointer;text-decoration:none}
-    .form-footer a:hover{text-decoration:underline}
-
-    /* ── OTP SCREEN ── */
-    .otp-icon{
-      width:58px;height:58px;background:rgba(201,168,76,.13);border-radius:50%;
-      display:flex;align-items:center;justify-content:center;margin:0 auto 1.4rem;
+    .screen.active{display:flex}
+    @keyframes screenIn{
+      from{opacity:0;transform:translateY(16px) scale(.98)}
+      to{opacity:1;transform:translateY(0) scale(1)}
     }
-    .otp-email{font-size:.8rem;color:var(--gold);font-weight:600;word-break:break-all;text-align:center}
-    .otp-inputs{display:flex;gap:.55rem;justify-content:center;margin:1.5rem 0}
-    .otp-inputs input{
-      width:44px;height:54px;text-align:center;font-size:1.35rem;font-weight:700;
-      background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);
-      border-radius:var(--r-sm);color:var(--white);font-family:inherit;outline:none;transition:var(--ease);
-      -moz-appearance:textfield;
-    }
-    .otp-inputs input::-webkit-outer-spin-button,.otp-inputs input::-webkit-inner-spin-button{-webkit-appearance:none}
-    .otp-inputs input:focus{border-color:var(--gold);background:rgba(201,168,76,.06)}
 
-    /* ── DASHBOARD ── */
-    .dash-bar{
-      width:100%;display:flex;align-items:center;justify-content:space-between;
-      margin-bottom:2.25rem;flex-wrap:wrap;gap:1rem;
+    /* ═══ AUTH LAYOUT (split) ═══ */
+    #screen-login,#screen-signup,#screen-verify{
+      align-items:stretch;
     }
-    .dash-left{display:flex;align-items:center;gap:.9rem}
-    .dash-left img{height:42px;object-fit:contain}
-    .dash-greeting{display:flex;flex-direction:column;gap:3px}
-    .dash-welcome{font-size:1.05rem;font-weight:800;color:var(--white)}
-    .dash-badge{
-      display:inline-flex;align-items:center;gap:.28rem;padding:.18rem .62rem;
-      border-radius:20px;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-    }
-    .dash-badge.member{background:rgba(201,168,76,.18);color:var(--gold);border:1px solid rgba(201,168,76,.38)}
-    .dash-badge.non-member{background:rgba(255,255,255,.07);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.14)}
 
+    .auth-brand{
+      flex:1;display:flex;flex-direction:column;justify-content:space-between;
+      padding:3rem;position:relative;overflow:hidden;
+      background:linear-gradient(145deg,#071526 0%,#0d2545 60%,#112d58 100%);
+    }
+    .auth-brand::before{
+      content:'';position:absolute;inset:0;
+      background:url('./padel/court1.jpg') center/cover no-repeat;
+      opacity:.18;
+    }
+    .auth-brand::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(to right,rgba(8,17,31,.6) 0%,rgba(8,17,31,.1) 100%);
+    }
+    .brand-inner{position:relative;z-index:1}
+    .brand-logo{display:flex;align-items:center;gap:.8rem;margin-bottom:auto}
+    .brand-logo img{height:48px;object-fit:contain}
+    .brand-logo-name{
+      font-size:.6rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+      color:rgba(255,255,255,.9);
+    }
+    .brand-tagline{
+      margin-top:auto;
+    }
+    .brand-big{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;
+      line-height:1.05;letter-spacing:-.02em;
+      color:var(--white);
+    }
+    .brand-big em{font-style:normal;color:rgba(255,255,255,.45)}
+    .brand-sub{
+      margin-top:.9rem;font-size:.85rem;color:rgba(255,255,255,.5);
+      font-weight:400;line-height:1.6;max-width:320px;
+    }
+    .brand-dots{
+      display:flex;gap:.5rem;margin-top:2rem;
+    }
+    .brand-dots span{
+      width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.2);
+    }
+    .brand-dots span:first-child{width:40px;background:var(--white)}
+
+    .auth-form-panel{
+      width:460px;min-width:380px;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:3rem 3.5rem;
+      background:rgba(8,17,31,.85);
+      backdrop-filter:blur(32px);
+      border-left:1px solid var(--white-06);
+    }
+
+    /* ═══ FORM ELEMENTS ═══ */
+    .form-title{font-size:1.65rem;font-weight:800;letter-spacing:-.03em;color:var(--white);margin-bottom:.3rem}
+    .form-sub{font-size:.83rem;color:var(--white-60);margin-bottom:2rem;font-weight:400}
+
+    .fl{position:relative;margin-bottom:1.1rem}
+    .fl input{
+      width:100%;background:var(--white-06);
+      border:1.5px solid var(--white-12);
+      border-radius:var(--r);padding:1.05rem 1rem .55rem;
+      color:var(--white);font-size:.9rem;font-family:inherit;
+      outline:none;transition:border-color .2s,background .2s;
+    }
+    .fl input::placeholder{color:transparent}
+    .fl label{
+      position:absolute;left:1rem;top:50%;transform:translateY(-50%);
+      font-size:.85rem;color:var(--white-30);
+      transition:all .18s ease;pointer-events:none;
+      font-weight:500;
+    }
+    .fl input:focus,
+    .fl input:not(:placeholder-shown){
+      border-color:rgba(255,255,255,.45);background:var(--white-06);
+    }
+    .fl input:focus + label,
+    .fl input:not(:placeholder-shown) + label{
+      top:.55rem;transform:translateY(0);font-size:.62rem;
+      letter-spacing:.06em;text-transform:uppercase;color:var(--white-60);font-weight:700;
+    }
+    .fl input:focus{border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.08)}
+
+    .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+    .err-msg{
+      font-size:.75rem;color:var(--error);margin-bottom:.8rem;
+      display:none;padding:.6rem .8rem;
+      background:rgba(255,71,87,.08);border-radius:8px;
+      border-left:3px solid var(--error);
+    }
+    .err-msg.show{display:block;animation:shake .3s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+    .btn-primary{
+      width:100%;padding:.9rem;
+      background:var(--white);color:var(--bg);
+      border:none;border-radius:var(--r);
+      font-size:.9rem;font-weight:800;cursor:pointer;
+      font-family:inherit;letter-spacing:.02em;
+      margin-top:.5rem;
+      transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+      box-shadow:0 4px 20px rgba(255,255,255,.12);
+      position:relative;overflow:hidden;
+    }
+    .btn-primary::after{
+      content:'';position:absolute;inset:0;
+      background:rgba(0,0,0,0);transition:background .18s;
+    }
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(255,255,255,.22)}
+    .btn-primary:active{transform:translateY(0);box-shadow:none}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+    .form-switch{
+      text-align:center;margin-top:1.4rem;
+      font-size:.8rem;color:var(--white-30);
+    }
+    .form-switch a{
+      color:var(--white);font-weight:700;cursor:pointer;
+      text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.3);
+      transition:text-decoration-color .2s;
+    }
+    .form-switch a:hover{text-decoration-color:var(--white)}
+
+    /* ═══ VERIFY SCREEN ═══ */
+    .verify-wrap{
+      display:flex;flex-direction:column;align-items:center;
+      text-align:center;
+    }
+    .verify-icon{
+      width:68px;height:68px;
+      background:var(--white-06);border:1.5px solid var(--white-12);
+      border-radius:50%;display:flex;align-items:center;justify-content:center;
+      margin-bottom:1.5rem;
+      animation:pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.1)}50%{box-shadow:0 0 0 14px rgba(255,255,255,0)}}
+    .verify-email-badge{
+      display:inline-block;background:var(--white-06);border:1px solid var(--white-12);
+      border-radius:20px;padding:.35rem 1rem;
+      font-size:.8rem;color:var(--white);font-weight:600;margin:.9rem 0 1.1rem;
+    }
+    .verify-note{
+      font-size:.8rem;color:var(--white-30);line-height:1.65;max-width:300px;
+    }
+
+    /* ═══ DASHBOARD ═══ */
+    #screen-dashboard{
+      flex-direction:column;overflow-y:auto;
+      padding:2rem 2.5rem;
+    }
+
+    .dash-nav{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-bottom:3rem;
+      animation:fadeUp .4s ease both;
+    }
+    .dash-nav-left{display:flex;align-items:center;gap:1rem}
+    .dash-nav-left img{height:40px}
+    .dash-greeting-text{font-size:.75rem;color:var(--white-30);font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+    .dash-name{font-size:1.1rem;font-weight:800;color:var(--white);letter-spacing:-.02em}
+
+    .dash-right{display:flex;align-items:center;gap:.9rem}
+    .member-pill{
+      display:flex;align-items:center;gap:.4rem;
+      padding:.35rem .9rem;border-radius:20px;
+      font-size:.65rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    }
+    .member-pill.member{
+      background:rgba(255,255,255,.12);color:var(--white);
+      border:1px solid rgba(255,255,255,.25);
+    }
+    .member-pill.non-member{
+      background:var(--white-06);color:var(--white-60);
+      border:1px solid var(--white-12);
+    }
     .btn-signout{
-      padding:.46rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);
-      border-radius:var(--r-sm);color:rgba(255,255,255,.65);font-size:.76rem;font-weight:600;
-      cursor:pointer;font-family:inherit;transition:var(--ease);
+      padding:.42rem 1rem;background:transparent;
+      border:1px solid var(--white-12);border-radius:8px;
+      color:var(--white-60);font-size:.75rem;font-weight:600;
+      cursor:pointer;font-family:inherit;
+      transition:all .18s ease;
     }
-    .btn-signout:hover{background:rgba(255,255,255,.12);color:var(--white)}
+    .btn-signout:hover{background:var(--white-06);color:var(--white);border-color:var(--white-30)}
 
-    /* ── VENUE CARDS ── */
-    .venues-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;width:100%}
-    @media(max-width:620px){.venues-grid{grid-template-columns:1fr}}
+    /* ═══ VENUE CARDS ═══ */
+    .venues-wrap{flex:1;display:flex;flex-direction:column;justify-content:center}
+    .venues-heading{
+      font-size:.65rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--white-30);margin-bottom:1.25rem;
+      animation:fadeUp .4s .1s ease both;
+    }
+    .venues-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;
+    }
+    @media(max-width:700px){.venues-grid{grid-template-columns:1fr}}
 
     .venue-card{
-      position:relative;height:360px;border-radius:var(--r-lg);overflow:hidden;
-      cursor:pointer;text-decoration:none;display:block;
-      transition:transform .3s ease,box-shadow .3s ease;
-      box-shadow:0 8px 32px rgba(0,0,0,.45);
+      position:relative;height:clamp(260px,38vh,400px);
+      border-radius:18px;overflow:hidden;
+      text-decoration:none;display:block;
+      cursor:pointer;
+      border:1px solid var(--white-06);
+      transition:transform .35s cubic-bezier(.22,.68,0,1.2),
+                 box-shadow .35s ease,border-color .3s;
     }
-    .venue-card:hover{transform:translateY(-6px);box-shadow:0 22px 52px rgba(0,0,0,.65)}
-    .venue-card img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-    .venue-card:hover img{transform:scale(1.05)}
-    .venue-card-bg{width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+    .venue-card:nth-child(1){animation:cardIn .5s .15s ease both}
+    .venue-card:nth-child(2){animation:cardIn .5s .28s ease both}
+    @keyframes cardIn{
+      from{opacity:0;transform:translateY(28px) scale(.97)}
+      to{opacity:1;transform:translateY(0) scale(1)}
+    }
+    .venue-card:hover{
+      transform:translateY(-8px) scale(1.01);
+      box-shadow:0 30px 70px rgba(0,0,0,.7);
+      border-color:rgba(255,255,255,.18);
+    }
+    .venue-bg{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      transition:transform .5s ease;
+    }
+    .venue-card:hover .venue-bg{transform:scale(1.06)}
     .venue-overlay{
       position:absolute;inset:0;
-      background:linear-gradient(to top,rgba(10,35,66,.96) 0%,rgba(10,35,66,.55) 55%,rgba(10,35,66,.18) 100%);
+      background:linear-gradient(to top,rgba(5,12,25,.97) 0%,rgba(5,12,25,.5) 50%,rgba(5,12,25,.1) 100%);
     }
-    .venue-content{position:absolute;bottom:0;left:0;right:0;padding:2rem}
-    .venue-tag{
-      font-size:.58rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
-      color:var(--gold);background:rgba(201,168,76,.14);border:1px solid rgba(201,168,76,.3);
-      padding:.2rem .65rem;border-radius:20px;display:inline-block;margin-bottom:.7rem;
+    .venue-content{
+      position:absolute;inset:0;padding:1.75rem 2rem;
+      display:flex;flex-direction:column;justify-content:flex-end;
     }
-    .venue-name{font-size:2.4rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.02em;margin-bottom:.45rem}
-    .venue-desc{font-size:.78rem;color:rgba(255,255,255,.55);margin-bottom:1.2rem}
-    .venue-cta{
-      display:inline-flex;align-items:center;gap:.45rem;background:var(--gold);color:var(--navy);
-      padding:.58rem 1.25rem;border-radius:var(--r-sm);font-size:.78rem;font-weight:800;transition:var(--ease);
+    .venue-label{
+      font-size:.6rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+      color:var(--white-60);margin-bottom:.5rem;
     }
-    .venue-card:hover .venue-cta{background:var(--gold-2)}
+    .venue-title{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(1.8rem,3vw,2.6rem);font-weight:900;
+      color:var(--white);line-height:1;letter-spacing:-.02em;margin-bottom:.55rem;
+    }
+    .venue-meta{font-size:.75rem;color:var(--white-30);margin-bottom:1.3rem;font-weight:400}
+    .venue-btn{
+      display:inline-flex;align-items:center;gap:.5rem;
+      background:var(--white);color:var(--bg);
+      padding:.55rem 1.25rem;border-radius:8px;
+      font-size:.78rem;font-weight:800;
+      width:fit-content;
+      transition:all .2s ease;
+    }
+    .venue-btn svg{transition:transform .2s ease}
+    .venue-card:hover .venue-btn{background:var(--white);box-shadow:0 4px 20px rgba(255,255,255,.2)}
+    .venue-card:hover .venue-btn svg{transform:translateX(3px)}
 
-    /* Restaurant card: no image → styled bg */
-    .venue-card-rest{background:var(--navy-2)}
-    .rest-pattern{
+    /* Restaurant gradient bg */
+    .venue-rest-bg{
       position:absolute;inset:0;
-      background:radial-gradient(circle at 30% 40%,rgba(201,168,76,.12) 0%,transparent 50%),
-        radial-gradient(circle at 75% 70%,rgba(255,255,255,.04) 0%,transparent 45%);
+      background:linear-gradient(135deg,#0a1f3d 0%,#091828 50%,#071220 100%);
     }
-    .rest-icon{
-      position:absolute;top:2rem;right:2rem;width:72px;height:72px;
-      background:rgba(201,168,76,.1);border-radius:50%;border:1px solid rgba(201,168,76,.2);
+    .venue-rest-deco{
+      position:absolute;top:1.5rem;right:1.5rem;
+      width:88px;height:88px;border-radius:50%;
+      border:1px solid var(--white-12);
       display:flex;align-items:center;justify-content:center;
+      background:var(--white-06);
+    }
+    .venue-rest-rings{
+      position:absolute;inset:0;
+      background:
+        radial-gradient(circle at 70% 25%,rgba(255,255,255,.04) 0%,transparent 45%),
+        radial-gradient(circle at 20% 75%,rgba(255,255,255,.03) 0%,transparent 40%);
     }
 
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ═══ RESPONSIVE ═══ */
+    @media(max-width:800px){
+      #screen-login .auth-brand,
+      #screen-signup .auth-brand,
+      #screen-verify .auth-brand{display:none}
+      .auth-form-panel{width:100%;min-width:0;padding:2.5rem 1.5rem;border-left:none}
+      #screen-dashboard{padding:1.5rem 1.25rem}
+    }
     @media(max-width:480px){
-      .auth-card{padding:2rem 1.25rem}
-      .venue-name{font-size:2rem}
-      .venue-card{height:300px}
       .form-2col{grid-template-columns:1fr}
+      .dash-nav{margin-bottom:1.75rem}
+      .venue-card{height:220px}
     }
   </style>
 </head>
 <body>
 
+<!-- AMBIENT BG -->
+<div class="bg-canvas">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
 <!-- ══════════════════ LOGIN ══════════════════ -->
 <div class="screen active" id="screen-login">
-  <div class="auth-card">
-    <div class="logo-wrap">
-      <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
-      <div class="club-name">United Sports Club</div>
+  <div class="auth-brand">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+        <div class="brand-logo-name">United Sports Club</div>
+      </div>
     </div>
-    <div class="auth-title">Welcome back</div>
-    <div class="auth-sub">Sign in to your USC account</div>
+    <div class="brand-tagline">
+      <div class="brand-big">Where sport<br><em>&amp;</em> community<br>meet.</div>
+      <div class="brand-sub">Book courts, order food, and connect with your club — all in one place.</div>
+      <div class="brand-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="form-title">Welcome back</div>
+    <div class="form-sub">Sign in to your USC account</div>
     <div class="err-msg" id="loginErr"></div>
-    <div class="fg"><label>Email</label>
-      <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email"/></div>
-    <div class="fg"><label>Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"/></div>
-    <button class="btn-gold" id="loginBtn" onclick="doLogin()">Sign In</button>
-    <div class="form-footer">No account? <a onclick="showScreen('screen-signup')">Create one</a></div>
+    <div class="fl">
+      <input type="email" id="loginEmail" placeholder="email" autocomplete="email"/>
+      <label>Email address</label>
+    </div>
+    <div class="fl">
+      <input type="password" id="loginPassword" placeholder="password" autocomplete="current-password"/>
+      <label>Password</label>
+    </div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="form-switch">Don't have an account? <a onclick="showScreen('screen-signup')">Create one</a></div>
   </div>
 </div>
 
 <!-- ══════════════════ SIGNUP ══════════════════ -->
 <div class="screen" id="screen-signup">
-  <div class="auth-card">
-    <div class="logo-wrap">
-      <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
-      <div class="club-name">United Sports Club</div>
+  <div class="auth-brand">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+        <div class="brand-logo-name">United Sports Club</div>
+      </div>
     </div>
-    <div class="auth-title">Create account</div>
-    <div class="auth-sub">Join United Sports Club — it's free</div>
+    <div class="brand-tagline">
+      <div class="brand-big">Join the<br>club.<br><em>It's free.</em></div>
+      <div class="brand-sub">Create your account and get access to padel bookings, the restaurant, and more.</div>
+      <div class="brand-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel" style="overflow-y:auto">
+    <div class="form-title">Create account</div>
+    <div class="form-sub">Join United Sports Club</div>
     <div class="err-msg" id="signupErr"></div>
     <div class="form-2col">
-      <div class="fg"><label>First Name</label>
-        <input type="text" id="su-first" placeholder="John" autocomplete="given-name"/></div>
-      <div class="fg"><label>Last Name</label>
-        <input type="text" id="su-last" placeholder="Doe" autocomplete="family-name"/></div>
+      <div class="fl">
+        <input type="text" id="su-first" placeholder="first" autocomplete="given-name"/>
+        <label>First name</label>
+      </div>
+      <div class="fl">
+        <input type="text" id="su-last" placeholder="last" autocomplete="family-name"/>
+        <label>Last name</label>
+      </div>
     </div>
-    <div class="fg">
-      <label>Username <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(others see this)</span></label>
-      <input type="text" id="su-username" placeholder="johndoe" autocomplete="username"/>
+    <div class="fl">
+      <input type="text" id="su-username" placeholder="username" autocomplete="username"/>
+      <label>Username (others see this)</label>
     </div>
-    <div class="fg"><label>Email</label>
-      <input type="email" id="su-email" placeholder="your@email.com" autocomplete="email"/></div>
-    <div class="fg"><label>Phone</label>
-      <input type="tel" id="su-phone" placeholder="+254 7XX XXX XXX" autocomplete="tel"/></div>
-    <div class="fg"><label>Password <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(min 8 chars)</span></label>
-      <input type="password" id="su-password" placeholder="••••••••" autocomplete="new-password"/></div>
-    <button class="btn-gold" id="signupBtn" onclick="doSignup()">Create Account</button>
-    <div class="form-footer">Already have an account? <a onclick="showScreen('screen-login')">Sign in</a></div>
+    <div class="fl">
+      <input type="email" id="su-email" placeholder="email" autocomplete="email"/>
+      <label>Email address</label>
+    </div>
+    <div class="fl">
+      <input type="tel" id="su-phone" placeholder="phone" autocomplete="tel"/>
+      <label>Phone number</label>
+    </div>
+    <div class="fl">
+      <input type="password" id="su-password" placeholder="password" autocomplete="new-password"/>
+      <label>Password (min 8 characters)</label>
+    </div>
+    <button class="btn-primary" id="signupBtn" onclick="doSignup()">Create Account</button>
+    <div class="form-switch">Already have an account? <a onclick="showScreen('screen-login')">Sign in</a></div>
   </div>
 </div>
 
 <!-- ══════════════════ VERIFY ══════════════════ -->
 <div class="screen" id="screen-verify">
-  <div class="auth-card">
-    <div class="otp-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#c9a84c" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-      </svg>
+  <div class="auth-brand">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+        <div class="brand-logo-name">United Sports Club</div>
+      </div>
     </div>
-    <div class="auth-title" style="text-align:center">Confirm your email</div>
-    <div class="auth-sub" style="text-align:center;margin-bottom:.4rem">We sent a confirmation link to</div>
-    <div class="otp-email" id="verifyEmailLabel"></div>
-    <div style="text-align:center;color:var(--gray-400);font-size:.82rem;margin:.9rem 0 1.2rem;line-height:1.55">
-      Open the email and click the link.<br>
-      Even if your browser shows an error page,<br>
-      your email will be confirmed — then come back and sign in.
+    <div class="brand-tagline">
+      <div class="brand-big">Almost<br>there.</div>
+      <div class="brand-sub">Check your inbox to confirm your email address.</div>
+      <div class="brand-dots"><span></span><span></span><span></span></div>
     </div>
-    <div class="err-msg" id="verifyErr" style="margin-top:.5rem;text-align:center"></div>
-    <div id="otpWrap" style="display:none"></div>
-    <button class="btn-gold" id="verifyBtn" onclick="showScreen('screen-login')">I&rsquo;ve clicked the link &mdash; Sign In</button>
-    <div class="form-footer" style="margin-top:1rem">
-      Didn't get it? <a onclick="resendCode()">Resend email</a> · <a onclick="showScreen('screen-login')">Back</a>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="verify-wrap">
+      <div class="verify-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,.8)" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div class="form-title">Check your email</div>
+      <div class="form-sub" style="text-align:center">We sent a confirmation link to</div>
+      <div class="verify-email-badge" id="verifyEmailLabel"></div>
+      <div class="verify-note">
+        Click the link in the email. Even if your browser shows an error page, your email will be confirmed — then come back and sign in.
+      </div>
+      <div class="err-msg" id="verifyErr" style="margin-top:1rem;width:100%"></div>
+      <div id="otpWrap" style="display:none"></div>
+      <button class="btn-primary" id="verifyBtn" onclick="showScreen('screen-login')" style="margin-top:2rem">
+        I've confirmed — Sign In
+      </button>
+      <div class="form-switch" style="margin-top:1rem">
+        Didn't receive it? <a onclick="resendCode()">Resend</a> · <a onclick="showScreen('screen-login')">Back</a>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════ DASHBOARD ══════════════════ -->
 <div class="screen" id="screen-dashboard">
-  <div class="dash-bar">
-    <div class="dash-left">
+
+  <nav class="dash-nav">
+    <div class="dash-nav-left">
       <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
-      <div class="dash-greeting">
-        <div class="dash-welcome" id="dashWelcome">Welcome</div>
-        <div class="dash-badge non-member" id="dashBadge">Non-Member</div>
+      <div>
+        <div class="dash-greeting-text">Good to see you</div>
+        <div class="dash-name" id="dashWelcome">Welcome</div>
       </div>
     </div>
-    <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
-  </div>
+    <div class="dash-right">
+      <div class="member-pill non-member" id="dashBadge">Non-Member</div>
+      <button class="btn-signout" onclick="doSignOut()">Sign out</button>
+    </div>
+  </nav>
 
-  <div class="venues-grid">
-    <!-- PADEL -->
-    <a class="venue-card" href="./padel/index.html">
-      <img src="./padel/court1.jpg" alt="Padel" onerror="this.style.background='var(--navy-2)';this.style.display='none'"/>
-      <div class="venue-overlay"></div>
-      <div class="venue-content">
-        <div class="venue-tag">Book a Court</div>
-        <div class="venue-name">Padel</div>
-        <div class="venue-desc">Court 1 · Court 2 · Pickleball</div>
-        <div class="venue-cta">
-          Book Now
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </div>
-      </div>
-    </a>
+  <div class="venues-wrap">
+    <div class="venues-heading">Choose a venue</div>
+    <div class="venues-grid">
 
-    <!-- RESTAURANT -->
-    <a class="venue-card venue-card-rest" href="./restaurant/index.html">
-      <div class="rest-pattern"></div>
-      <div class="rest-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="rgba(201,168,76,0.8)" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-        </svg>
-      </div>
-      <div class="venue-overlay" style="background:linear-gradient(to top,rgba(10,35,66,.97) 0%,rgba(10,35,66,.6) 55%,rgba(10,35,66,.22) 100%)"></div>
-      <div class="venue-content">
-        <div class="venue-tag">Order Food</div>
-        <div class="venue-name">Restaurant</div>
-        <div class="venue-desc">Full menu · In-club dining</div>
-        <div class="venue-cta">
-          View Menu
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      <!-- PADEL -->
+      <a class="venue-card" href="./padel/index.html">
+        <div class="venue-bg" style="background-image:url('./padel/court1.jpg')"></div>
+        <div class="venue-overlay"></div>
+        <div class="venue-content">
+          <div class="venue-label">Book a Court</div>
+          <div class="venue-title">Padel</div>
+          <div class="venue-meta">Court 1 · Court 2 · Pickleball</div>
+          <div class="venue-btn">
+            Book now
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </div>
         </div>
-      </div>
-    </a>
+      </a>
+
+      <!-- RESTAURANT -->
+      <a class="venue-card" href="./restaurant/index.html">
+        <div class="venue-rest-bg"></div>
+        <div class="venue-rest-rings"></div>
+        <div class="venue-rest-deco">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.6)" stroke-width="1.4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div class="venue-overlay"></div>
+        <div class="venue-content">
+          <div class="venue-label">Order Food</div>
+          <div class="venue-title">Restaurant</div>
+          <div class="venue-meta">Full menu · In-club dining</div>
+          <div class="venue-btn">
+            View menu
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+    </div>
   </div>
 </div>
 
 <script>
-/* ══════════════════════════════════════════════════
-   SUPABASE CONFIG
-   ══════════════════════════════════════════════════
-   1. Go to supabase.com → your project → Settings → API
-   2. Replace the two values below
-   3. In Supabase: Authentication → Settings → enable
-      "Use OTP for email confirmations"
-   ══════════════════════════════════════════════════ */
 const SUPABASE_URL      = 'https://itzfanrkpvpfucgkbkff.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
 
 const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ── state ── */
 let pendingEmail = '';
 let currentUser  = null;
 
-/* ── screen helpers ── */
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('active'));
 }
 function showErr(id, msg) {
   const el = document.getElementById(id);
@@ -327,7 +584,6 @@ function setBusy(id, busy, label) {
   btn.textContent = busy ? 'Please wait…' : label;
 }
 
-/* ── OTP inputs ── */
 function initOtp() {
   const inputs = [...document.querySelectorAll('#otpWrap input')];
   inputs.forEach((inp, i) => {
@@ -337,49 +593,37 @@ function initOtp() {
       if (v && i < inputs.length - 1) inputs[i+1].focus();
     });
     inp.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !e.target.value && i > 0) {
-        inputs[i-1].value = ''; inputs[i-1].focus();
-      }
+      if (e.key === 'Backspace' && !e.target.value && i > 0) { inputs[i-1].value = ''; inputs[i-1].focus(); }
       if (e.key === 'Enter') doVerify();
     });
     inp.addEventListener('paste', e => {
       e.preventDefault();
       const txt = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
       [...txt].forEach((ch,j) => { if (inputs[j]) inputs[j].value = ch; });
-      const last = Math.min(txt.length, inputs.length-1);
-      inputs[last].focus();
+      inputs[Math.min(txt.length, inputs.length-1)].focus();
     });
   });
 }
-
-function getOtp() {
-  return [...document.querySelectorAll('#otpWrap input')].map(i=>i.value).join('');
-}
+function getOtp() { return [...document.querySelectorAll('#otpWrap input')].map(i=>i.value).join(''); }
 function clearOtp() {
   document.querySelectorAll('#otpWrap input').forEach(i=>i.value='');
   document.querySelector('#otpWrap input')?.focus();
 }
 
-/* ── init ── */
 document.addEventListener('DOMContentLoaded', async () => {
   initOtp();
   document.getElementById('loginPassword').addEventListener('keydown', e => {
     if (e.key==='Enter') doLogin();
   });
-
-  // Auto-login when Supabase redirects back after email confirmation
   sb.auth.onAuthStateChange(async (event, session) => {
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
       await loadDashboard(session.user);
     }
   });
-
-  // Check existing session
   const { data:{ session } } = await sb.auth.getSession();
   if (session) await loadDashboard(session.user);
 });
 
-/* ── LOGIN ── */
 async function doLogin() {
   clearErr('loginErr');
   const email    = document.getElementById('loginEmail').value.trim();
@@ -390,13 +634,13 @@ async function doLogin() {
   setBusy('loginBtn', false, 'Sign In');
   if (error) {
     showErr('loginErr', error.message.includes('Email not confirmed')
-      ? 'Please click the link in your confirmation email first, then try again.' : 'Incorrect email or password.');
+      ? 'Please click the confirmation link in your email first, then try again.'
+      : 'Incorrect email or password.');
     return;
   }
   await loadDashboard(data.user);
 }
 
-/* ── SIGNUP ── */
 async function doSignup() {
   clearErr('signupErr');
   const first    = document.getElementById('su-first').value.trim();
@@ -405,36 +649,22 @@ async function doSignup() {
   const email    = document.getElementById('su-email').value.trim();
   const phone    = document.getElementById('su-phone').value.trim();
   const password = document.getElementById('su-password').value;
-
-  if (!first||!last||!username||!email||!phone||!password)
-    { showErr('signupErr','Please fill in all fields.'); return; }
-  if (password.length < 8)
-    { showErr('signupErr','Password must be at least 8 characters.'); return; }
-  if (!/^[a-zA-Z0-9_]+$/.test(username))
-    { showErr('signupErr','Username: letters, numbers and underscores only.'); return; }
-
+  if (!first||!last||!username||!email||!phone||!password) { showErr('signupErr','Please fill in all fields.'); return; }
+  if (password.length < 8) { showErr('signupErr','Password must be at least 8 characters.'); return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { showErr('signupErr','Username: letters, numbers and underscores only.'); return; }
   setBusy('signupBtn', true, 'Create Account');
   const { data: signupData, error } = await sb.auth.signUp({
     email, password,
     options: { data: { first_name:first, last_name:last, username, phone } },
   });
   setBusy('signupBtn', false, 'Create Account');
-
   if (error) { showErr('signupErr', error.message); return; }
-
-  // If email confirmation is disabled in Supabase, user gets a session immediately
-  if (signupData?.session) {
-    await loadDashboard(signupData.session.user);
-    return;
-  }
-
-  // Email confirmation is on — show the link-click screen
+  if (signupData?.session) { await loadDashboard(signupData.session.user); return; }
   pendingEmail = email;
   document.getElementById('verifyEmailLabel').textContent = email;
   showScreen('screen-verify');
 }
 
-/* ── VERIFY OTP ── */
 async function doVerify() {
   clearErr('verifyErr');
   const token = getOtp();
@@ -449,42 +679,29 @@ async function doVerify() {
 async function resendCode() {
   if (!pendingEmail) return;
   const { error } = await sb.auth.resend({ type:'signup', email: pendingEmail });
-  alert(error ? 'Error: ' + error.message : 'Code resent to ' + pendingEmail);
+  alert(error ? 'Error: ' + error.message : 'Email resent to ' + pendingEmail);
 }
 
-/* ── DASHBOARD ── */
 async function loadDashboard(user) {
   currentUser = user;
-  const { data: profile } = await sb.from('profiles')
-    .select('first_name, is_member')
-    .eq('id', user.id).single();
-
+  const { data: profile } = await sb.from('profiles').select('first_name, is_member').eq('id', user.id).single();
   const name     = profile?.first_name || user.user_metadata?.first_name || user.email.split('@')[0];
   const isMember = profile?.is_member || false;
-
   document.getElementById('dashWelcome').textContent = `Welcome, ${name}`;
   const badge = document.getElementById('dashBadge');
   badge.textContent = isMember ? '✦ Member' : 'Non-Member';
-  badge.className   = 'dash-badge ' + (isMember ? 'member' : 'non-member');
-
-  // Store for other sites
+  badge.className   = 'member-pill ' + (isMember ? 'member' : 'non-member');
   try {
-    localStorage.setItem('usc_user_name',   name);
-    localStorage.setItem('usc_user_id',     user.id);
-    localStorage.setItem('usc_is_member',   isMember ? 'true' : 'false');
+    localStorage.setItem('usc_user_name', name);
+    localStorage.setItem('usc_user_id',   user.id);
+    localStorage.setItem('usc_is_member', isMember ? 'true' : 'false');
   } catch(e){}
-
   showScreen('screen-dashboard');
 }
 
-/* ── SIGN OUT ── */
 async function doSignOut() {
   await sb.auth.signOut();
-  try {
-    localStorage.removeItem('usc_user_name');
-    localStorage.removeItem('usc_user_id');
-    localStorage.removeItem('usc_is_member');
-  } catch(e){}
+  try { localStorage.removeItem('usc_user_name'); localStorage.removeItem('usc_user_id'); localStorage.removeItem('usc_is_member'); } catch(e){}
   currentUser = null;
   showScreen('screen-login');
 }
