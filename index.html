@@ -342,13 +342,30 @@
       #screen-login .auth-brand,
       #screen-signup .auth-brand,
       #screen-verify .auth-brand{display:none}
-      .auth-form-panel{width:100%;min-width:0;padding:2.5rem 1.5rem;border-left:none}
-      #screen-dashboard{padding:1.5rem 1.25rem}
+      .auth-form-panel{width:100%;min-width:0;padding:2rem 1.25rem 1.75rem;border-left:none}
+      #screen-dashboard{padding:1.25rem 1rem}
+      .fl input,.fl select{font-size:16px}/* prevent iOS zoom */
+      .btn-primary{min-height:52px;font-size:.9rem}
+    }
+    @media(max-width:600px){
+      .venues-grid{grid-template-columns:1fr}
+      .venue-card{height:clamp(170px,42vw,230px)}
+      .venue-title{font-size:1.6rem}
+      .venue-content{padding:1.1rem 1.25rem}
+      .dash-nav{flex-wrap:wrap;gap:.6rem;margin-bottom:1.5rem}
+      .dash-nav-left{flex:1;min-width:0}
+      .dash-nav-left img{height:32px}
+      .dash-name{font-size:.95rem}
+      .dash-right{flex:0 0 auto;gap:.6rem}
+      .member-pill{font-size:.6rem;padding:.28rem .65rem}
+      .btn-signout{font-size:.7rem;padding:.32rem .75rem}
+      .venues-heading{margin-bottom:.9rem}
     }
     @media(max-width:480px){
       .form-2col{grid-template-columns:1fr}
-      .dash-nav{margin-bottom:1.75rem}
-      .venue-card{height:220px}
+      .fl{margin-bottom:.5rem}
+      .form-title{font-size:1.4rem}
+      .form-sub{font-size:.8rem}
     }
   </style>
 </head>

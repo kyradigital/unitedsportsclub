@@ -7,7 +7,7 @@
   <meta name="description" content="Book world-class padel courts in Mombasa at United Sports Club. Two premium courts, open 6AM–10PM daily."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="css/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 </head>
@@ -37,6 +37,7 @@
 <nav class="nav-drawer" id="navDrawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
   <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu">&#10005;</button>
   <div class="drawer-links">
+    <a href="../index.html">← Back to Portal</a>
     <a href="#courts" onclick="closeDrawer()">Book a Court</a>
     <a href="#community" onclick="closeDrawer()">Community</a>
     <a href="#contact" onclick="closeDrawer()">Contact</a>
@@ -61,6 +62,7 @@
   </div>
   <div class="nav-right">
     <div id="userBar" style="display:none;align-items:center;gap:.6rem;font-size:.75rem"></div>
+    <a href="../index.html" class="nav-portal-link">← Portal</a>
     <a href="#courts" class="nav-book-btn">Book Now</a>
   </div>
 </header>

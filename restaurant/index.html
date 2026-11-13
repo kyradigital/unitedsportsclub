@@ -3,15 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
-    <title>USC Premium Menu</title>
+    <title>USC Restaurant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="header">
-    <img src="images/usclogo.png" alt="USC Logo" class="logo">
-</div>
+<header class="usc-nav">
+  <div class="usc-nav-left">
+    <a href="../index.html" class="usc-back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Portal
+    </a>
+  </div>
+  <div class="usc-nav-logo">
+    <img src="images/usclogo.png" alt="USC"/>
+    <div>
+      <div class="usc-nav-brand">United Sports Club</div>
+      <div class="usc-nav-sub">Restaurant</div>
+    </div>
+  </div>
+  <div class="usc-nav-right"></div>
+</header>
 
 <div class="search-container">
     <input type="text" id="menuSearch" placeholder="Search for dishes..." oninput="filterMenu()">
