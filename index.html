@@ -700,20 +700,32 @@ async function resendCode() {
 }
 
 async function loadDashboard(user) {
+  if (currentUser) return; // prevent double-call from onAuthStateChange
   currentUser = user;
-  const { data: profile } = await sb.from('profiles').select('first_name, is_member').eq('id', user.id).single();
-  const name     = profile?.first_name || user.user_metadata?.first_name || user.email.split('@')[0];
-  const isMember = profile?.is_member || false;
+
+  // Show dashboard immediately using data already in the JWT
+  const name = user.user_metadata?.first_name || user.email.split('@')[0];
   document.getElementById('dashWelcome').textContent = `Welcome, ${name}`;
   const badge = document.getElementById('dashBadge');
-  badge.textContent = isMember ? '✦ Member' : 'Non-Member';
-  badge.className   = 'member-pill ' + (isMember ? 'member' : 'non-member');
-  try {
-    localStorage.setItem('usc_user_name', name);
-    localStorage.setItem('usc_user_id',   user.id);
-    localStorage.setItem('usc_is_member', isMember ? 'true' : 'false');
-  } catch(e){}
+  badge.textContent = 'Non-Member';
+  badge.className   = 'member-pill non-member';
   showScreen('screen-dashboard');
+
+  // Fetch profile in background — update badge when ready, no waiting
+  sb.from('profiles').select('first_name, is_member').eq('id', user.id).single()
+    .then(({ data: profile }) => {
+      if (!profile) return;
+      const finalName = profile.first_name || name;
+      document.getElementById('dashWelcome').textContent = `Welcome, ${finalName}`;
+      const isMember = profile.is_member || false;
+      badge.textContent = isMember ? '✦ Member' : 'Non-Member';
+      badge.className   = 'member-pill ' + (isMember ? 'member' : 'non-member');
+      try {
+        localStorage.setItem('usc_user_name', finalName);
+        localStorage.setItem('usc_user_id',   user.id);
+        localStorage.setItem('usc_is_member', isMember ? 'true' : 'false');
+      } catch(e){}
+    });
 }
 
 async function doSignOut() {
