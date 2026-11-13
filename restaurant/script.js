@@ -1,3 +1,39 @@
+// ── Supabase auth ──
+const SUPABASE_URL = 'https://itzfanrkpvpfucgkbkff.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function buildNavUserBar(name, isMember) {
+    const badge = isMember
+        ? `<span class="usc-member-badge"><span class="diamond">◆</span> Member</span>`
+        : `<span class="usc-nonmember-badge">Non-Member</span>`;
+    return `<div class="usc-user-bar"><div class="usc-user-info"><span class="usc-user-name">${name}</span>${badge}</div><button class="usc-signout-btn" onclick="doSignOut()">Sign out</button></div>`;
+}
+
+async function doSignOut() {
+    await sb.auth.signOut();
+    window.location.href = '../index.html';
+}
+window.doSignOut = doSignOut;
+
+async function initAuth() {
+    const { data: { session } } = await sb.auth.getSession();
+    const navRight = document.querySelector('.usc-nav-right');
+    if (!navRight) return;
+    if (!session) {
+        navRight.innerHTML = '<a href="../index.html" class="usc-back-link">Sign In</a>';
+        return;
+    }
+    const user = session.user;
+    const name = user.user_metadata?.first_name || user.email.split('@')[0];
+    navRight.innerHTML = buildNavUserBar(name, false);
+    sb.from('profiles').select('first_name, is_member').eq('id', user.id).single()
+        .then(({ data: profile }) => {
+            if (!profile) return;
+            navRight.innerHTML = buildNavUserBar(profile.first_name || name, profile.is_member || false);
+        });
+}
+
 const menuData = [
     {
         name: "STARTERS", icon: "zap",
@@ -712,3 +748,4 @@ function toggleMulti(el, p) {
 }
 
 init();
+initAuth();

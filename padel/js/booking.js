@@ -453,17 +453,30 @@ async function initAuth() {
     .eq('id', currentUser.id).single();
   currentProfile = profile;
 
-  // Show user bar in header if element exists
+  // Show user bar in header
   const bar = document.getElementById('userBar');
   if (bar && profile) {
     const isMem = profile.is_member;
+    const badge = isMem
+      ? `<span class="usc-member-badge"><span class="diamond">◆</span> Member</span>`
+      : `<span class="usc-nonmember-badge">Non-Member</span>`;
     bar.innerHTML = `
-      <span class="user-bar-name">Hi, ${profile.first_name}</span>
-      <span class="user-bar-badge ${isMem ? 'member' : ''}">${isMem ? '✦ Member' : 'Non-Member'}</span>
-      <a class="user-bar-portal" href="../index.html">← Portal</a>`;
+      <div class="usc-user-bar">
+        <div class="usc-user-info">
+          <span class="usc-user-name">${profile.first_name}</span>
+          ${badge}
+        </div>
+        <button class="usc-signout-btn" onclick="doSignOut()">Sign out</button>
+      </div>`;
     bar.style.display = 'flex';
   }
 }
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  window.location.href = '../index.html';
+}
+window.doSignOut = doSignOut;
 
 /* ── Load booked slots from Supabase ── */
 async function loadBookedSlots(date) {

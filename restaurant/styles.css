@@ -61,7 +61,34 @@ body { background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--tex
 .usc-nav-brand { font-size: .88rem; font-weight: 800; color: #fff; line-height: 1.1; }
 .usc-nav-sub { font-size: .6rem; font-weight: 500; color: rgba(255,255,255,.5); letter-spacing: .06em; text-transform: uppercase; }
 .usc-nav-left { justify-self: start; }
-.usc-nav-right { justify-self: end; }
+.usc-nav-right { justify-self: end; display: flex; align-items: center; }
+
+/* ── Unified User Bar ── */
+.usc-user-bar { display: flex; align-items: center; gap: .45rem; }
+.usc-user-info { display: flex; align-items: center; gap: .35rem; }
+.usc-user-name { font-size: .76rem; font-weight: 700; color: rgba(255,255,255,.88); white-space: nowrap; }
+.usc-member-badge {
+    display: inline-flex; align-items: center; gap: .18rem; padding: .18rem .5rem; border-radius: 20px;
+    font-size: .55rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    background: linear-gradient(135deg, rgba(201,168,76,.22) 0%, rgba(255,215,100,.12) 100%);
+    border: 1px solid rgba(201,168,76,.38); color: #e0b84a; white-space: nowrap;
+}
+.usc-member-badge .diamond { font-size: .62rem; color: #c9a84c; filter: drop-shadow(0 0 2px rgba(201,168,76,.8)); }
+.usc-nonmember-badge {
+    display: inline-flex; align-items: center; padding: .18rem .5rem; border-radius: 20px;
+    font-size: .55rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+    color: rgba(255,255,255,.4); white-space: nowrap;
+}
+.usc-signout-btn {
+    font-size: .7rem; font-weight: 600; color: rgba(255,255,255,.45);
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 7px; padding: .25rem .6rem; cursor: pointer; font-family: inherit;
+    transition: all .15s ease; white-space: nowrap;
+}
+.usc-signout-btn:hover { background: rgba(255,255,255,.12); color: rgba(255,255,255,.88); border-color: rgba(255,255,255,.25); }
+@media(max-width: 480px) { .usc-user-name { display: none; } }
+
 .usc-back-link {
     display: flex;
     align-items: center;
