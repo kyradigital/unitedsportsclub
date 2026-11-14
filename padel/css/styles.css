@@ -80,7 +80,7 @@ ul{list-style:none}
 .nav-dash-link{display:flex;align-items:center;gap:.28rem;font-size:.74rem;font-weight:600;color:rgba(255,255,255,.42);text-decoration:none;padding:.28rem .5rem;border-radius:20px;transition:all .15s ease;white-space:nowrap}
 .nav-dash-link:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8)}
 .nav-logo{display:flex;align-items:center;gap:.6rem;justify-self:center}
-.nav-logo-icon{width:36px;height:36px;object-fit:cover;object-position:left center;border-radius:6px;flex-shrink:0}
+.nav-logo-icon{height:36px;width:auto;max-width:130px;object-fit:contain;flex-shrink:0}
 .nav-logo-text .brand{font-size:.88rem;font-weight:800;color:var(--white);line-height:1.1}
 .nav-logo-text .sub{font-size:.6rem;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.06em}
 .nav-right{justify-self:end;display:flex;align-items:center;gap:.7rem}
