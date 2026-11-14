@@ -1,114 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
-    <title>USC Restaurant</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual">
+  <title>United Sports Club — Restaurant · Mombasa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="usc-nav">
-  <div class="usc-nav-left">
-    <a href="../index.html" class="usc-back-link">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      Dashboard
-    </a>
-  </div>
-  <div class="usc-nav-logo">
-    <img src="images/usclogo.png" alt="USC" class="usc-nav-logo-icon"/>
-    <div>
-      <div class="usc-nav-brand">United Sports Club</div>
-      <div class="usc-nav-sub">Restaurant</div>
+<!-- ============================================================
+     SPLASH SCREEN
+     ============================================================ -->
+<div id="splash">
+  <div class="splash-orb splash-orb-1"></div>
+  <div class="splash-orb splash-orb-2"></div>
+  <div class="splash-inner">
+    <img src="images/usclogo.png" alt="United Sports Club" class="splash-logo"/>
+    <div class="splash-brand">United Sports Club</div>
+    <div class="splash-tagline">Restaurant · Mombasa</div>
+    <div class="splash-loader">
+      <span></span><span></span><span></span>
     </div>
   </div>
-  <div class="usc-nav-right"></div>
-</header>
-
-<div class="search-container">
-    <input type="text" id="menuSearch" placeholder="Search for dishes..." oninput="filterMenu()">
 </div>
 
-<div id="nav-buttons"></div>
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div id="app" class="app-hidden">
 
-<div id="menu-app"></div>
+  <!-- Navbar -->
+  <header class="usc-nav">
+    <div class="usc-nav-left">
+      <a href="../index.html" class="usc-back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="usc-nav-logo">
+      <img src="images/usclogo.png" alt="USC" class="usc-nav-logo-icon"/>
+      <div>
+        <div class="usc-nav-brand">United Sports Club</div>
+        <div class="usc-nav-sub">Restaurant</div>
+      </div>
+    </div>
+    <div class="usc-nav-right"></div>
+  </header>
 
+  <!-- Step Progress Bar -->
+  <div id="step-progress">
+    <div class="steps-track">
+      <div class="step-node active" id="node-1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Starters</div>
+      </div>
+      <div class="step-connector" id="conn-12"></div>
+      <div class="step-node" id="node-2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Mains</div>
+      </div>
+      <div class="step-connector" id="conn-23"></div>
+      <div class="step-node" id="node-3">
+        <div class="step-circle">3</div>
+        <div class="step-label">Extras</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       STEP 1 — STARTERS
+       ====================================================== -->
+  <div class="step-view" id="step-1">
+
+    <div class="step-hero">
+      <div class="step-hero-bg" style="background-image:url('images/food.jpg')"></div>
+      <div class="step-hero-overlay"></div>
+      <div class="step-hero-content">
+        <span class="step-badge">Step 1 of 3</span>
+        <h2>Let's Start with<br>Starters</h2>
+        <p>Bhajia, chapatis, chips, paneer — something to get things going</p>
+      </div>
+    </div>
+
+    <div class="step-body">
+      <div class="inline-search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="menuSearch" placeholder="Search starters…" oninput="filterMenu()"/>
+      </div>
+
+      <div class="type-tabs" id="starter-tabs">
+        <button class="type-tab active" onclick="switchStarterType('veg', this)">🌿 Veg Starters</button>
+        <button class="type-tab" onclick="switchStarterType('nonveg', this)">🍗 Non-Veg Starters</button>
+      </div>
+
+      <div id="starters-veg"></div>
+      <div id="starters-nonveg" class="type-hidden"></div>
+    </div>
+
+    <div class="step-footer">
+      <div class="step-footer-hint">Add anything you like, then move on</div>
+      <button class="btn-step-next" onclick="goStep(2)">
+        Next: Mains
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ======================================================
+       STEP 2 — MAINS
+       ====================================================== -->
+  <div class="step-view step-hidden" id="step-2">
+
+    <div class="step-hero mains-hero">
+      <div class="step-hero-overlay" style="background:linear-gradient(135deg,rgba(4,10,22,.78) 0%,rgba(14,45,85,.55) 100%)"></div>
+      <div class="step-hero-content">
+        <span class="step-badge">Step 2 of 3</span>
+        <h2>Choose Your Mains</h2>
+        <p>Pick from vegetarian or non-vegetarian mains — or both</p>
+      </div>
+    </div>
+
+    <div class="step-body">
+      <div class="mains-choice-row">
+        <div class="mains-card" id="choice-veg" onclick="selectMainsType('veg')">
+          <div class="mains-card-icon">🌿</div>
+          <div class="mains-card-title">Veg Mains</div>
+          <div class="mains-card-sub">Paneer · Curries · Rice · Salads</div>
+          <div class="mains-card-toggle" id="toggle-veg">+</div>
+        </div>
+        <div class="mains-card nonveg" id="choice-nonveg" onclick="selectMainsType('nonveg')">
+          <div class="mains-card-icon">🍗</div>
+          <div class="mains-card-title">Non-Veg Mains</div>
+          <div class="mains-card-sub">Chicken · Mutton · Fish · Prawns</div>
+          <div class="mains-card-toggle" id="toggle-nonveg">+</div>
+        </div>
+      </div>
+
+      <div id="mains-veg-content" class="type-hidden"></div>
+      <div id="mains-nonveg-content" class="type-hidden"></div>
+    </div>
+
+    <div class="step-footer two-btn">
+      <button class="btn-step-back" onclick="goStep(1)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button class="btn-step-next" onclick="goStep(3)">
+        Next: Extras
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ======================================================
+       STEP 3 — EXTRAS
+       ====================================================== -->
+  <div class="step-view step-hidden" id="step-3">
+
+    <div class="step-hero extras-hero">
+      <div class="step-hero-overlay" style="background:linear-gradient(135deg,rgba(4,10,22,.78) 0%,rgba(60,20,70,.5) 100%)"></div>
+      <div class="step-hero-content">
+        <span class="step-badge">Step 3 of 3</span>
+        <h2>Anything Else?</h2>
+        <p>Biryani, Italian, Koroga, Naan, Chaat &amp; Kulfi</p>
+      </div>
+    </div>
+
+    <div class="step-body">
+      <div class="type-tabs" id="extras-tabs"></div>
+      <div id="extras-content"></div>
+    </div>
+
+    <div class="step-footer two-btn">
+      <button class="btn-step-back" onclick="goStep(2)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <button class="btn-step-order" onclick="toggleCart()">
+        View Order
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+</div><!-- /app -->
+
+<!-- ============================================================
+     FLOATING CART BAR
+     ============================================================ -->
 <div id="cart-bar" onclick="toggleCart()">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <i data-lucide="shopping-cart" style="width:20px"></i>
-        <span id="cart-count" style="font-weight:800">0</span> Items
-    </div>
-    <span id="cart-total" style="font-weight:800">KES 0</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    <span id="cart-count" style="font-weight:800">0</span> Items
+  </div>
+  <span id="cart-total" style="font-weight:800">KES 0</span>
 </div>
 
-<div id="cart-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Order Summary</h3>
-            <button class="close-btn" onclick="toggleCart()">&times;</button>
-        </div>
-        
-        <div class="modal-body-scroll">
-            
-            <div class="customer-info-grid">
-                <div class="input-group full-width">
-                    <label>Name</label>
-                    <input type="text" id="cust-name" placeholder="Enter your name" class="modern-input">
-                </div>
-                <div class="input-group">
-                    <label>Date</label>
-                    <input type="date" id="order-date" class="modern-input">
-                </div>
-                <div class="input-group">
-                    <label>Order Time</label>
-                    <input type="time" id="order-time-now" class="modern-input">
-                </div>
-                <div class="input-group">
-                    <label>Serving Time</label>
-                    <input type="time" id="order-time" class="modern-input">
-                </div>
-                <div class="input-group">
-                    <label>No. of People (Pax)</label>
-                    <input type="number" id="cust-people" value="1" class="modern-input">
-                </div>
-                <div class="input-group full-width">
-                    <label>Order Type</label>
-                    <div class="order-type-toggle">
-                        <button type="button" class="order-type-btn active" onclick="setOrderType(this)">Dine In</button>
-                        <button type="button" class="order-type-btn" onclick="setOrderType(this)">Takeaway</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="order-items-container">
-                <h4 class="section-title">Your Selection</h4>
-                <div id="cart-items-list">
-                    </div>
-            </div>
-        </div>
-
-        <div class="modal-footer-fixed">
-            <div class="modal-footer-total">
-                <span>Total Amount:</span>
-                <span id="modal-total">KES 0</span>
-            </div>
-
-            <div class="modal-actions">
-                <button class="clear-cart-btn" onclick="clearCart()">Clear All</button>
-                <button class="whatsapp-btn" onclick="placeOrder()">
-                    <i data-lucide="send" style="width:16px; margin-right:5px;"></i> Order via WhatsApp
-                </button>
-            </div>
-        </div>
+<!-- ============================================================
+     CART MODAL
+     ============================================================ -->
+<div id="cart-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Order Summary</h3>
+      <button class="close-btn" onclick="toggleCart()">&times;</button>
     </div>
+
+    <div class="modal-body-scroll">
+      <div class="customer-info-grid">
+        <div class="input-group full-width">
+          <label>Name</label>
+          <input type="text" id="cust-name" placeholder="Enter your name" class="modern-input">
+        </div>
+        <div class="input-group">
+          <label>Date</label>
+          <input type="date" id="order-date" class="modern-input">
+        </div>
+        <div class="input-group">
+          <label>Order Time</label>
+          <input type="time" id="order-time-now" class="modern-input">
+        </div>
+        <div class="input-group">
+          <label>Serving Time</label>
+          <input type="time" id="order-time" class="modern-input">
+        </div>
+        <div class="input-group">
+          <label>No. of People (Pax)</label>
+          <input type="number" id="cust-people" value="1" class="modern-input">
+        </div>
+        <div class="input-group full-width">
+          <label>Order Type</label>
+          <div class="order-type-toggle">
+            <button type="button" class="order-type-btn active" onclick="setOrderType(this)">Dine In</button>
+            <button type="button" class="order-type-btn" onclick="setOrderType(this)">Takeaway</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-items-container">
+        <h4 class="section-title">Your Selection</h4>
+        <div id="cart-items-list"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer-fixed">
+      <div class="modal-footer-total">
+        <span>Total Amount:</span>
+        <span id="modal-total">KES 0</span>
+      </div>
+      <div class="modal-actions">
+        <button class="clear-cart-btn" onclick="clearCart()">Clear All</button>
+        <button class="whatsapp-btn" onclick="placeOrder()">Order via WhatsApp</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
