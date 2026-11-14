@@ -43,6 +43,7 @@ const SECS = [];
 const SEL = {};
 
 /* Sub-type shortcuts shown under the category tiles when at least two dishes match. */
+const TAG_IMG = { Kebabs: 'images/menu/type-kebabs' };
 const TAGS = [
   ['Kebabs', /kebab|mishakiki|boti/i], ['Wings', /wings/i], ['Sausages', /sausage/i], ['Lollipops', /lollipop/i],
   ['Samosas', /samosa/i], ['Tikka & Tandoori', /tikka|tandoori/i], ['Chilly', /chill?[yi]/i], ['Pousin', /pousin/i],
@@ -94,6 +95,7 @@ function tagsFor(step, group) {
 /* ---------- Images (optional photos dropped into images/menu/) ---------- */
 const IMG_FALLBACK = { 'images/menu/starters-veg': 'images/chips.webp', 'images/menu/mains-veg': 'images/paneermakhni.webp' };
 const imgCache = new Map();
+const CUTOUT = new Set(['starters-poultry', 'starters-lamb-chop', 'starters-fish', 'type-kebabs']);
 function probe(base) {
   if (!imgCache.has(base)) {
     imgCache.set(base, new Promise(resolve => {
@@ -117,6 +119,7 @@ function hydrateImages(root) {
     if (!url || !el.isConnected) return;
     el.style.backgroundImage = `url("${url}")`;
     el.classList.add('has-img');
+    if (CUTOUT.has(el.dataset.img.split('/').pop())) el.classList.add('cutout');
   }));
 }
 
@@ -254,7 +257,7 @@ function catsHTML(route) {
         ${tags.length ? `
         <div class="type-block">
           <div class="type-title">Or browse by type</div>
-          <div class="type-chips">${tags.map(t => `<button type="button" class="type-chip" data-act="go" data-to="tag-${n}-${group}-${t.k}">${escH(t.label)}<span>${t.ids.length}</span></button>`).join('')}</div>
+          <div class="type-chips">${tags.map(t => `<button type="button" class="type-chip" data-act="go" data-to="tag-${n}-${group}-${t.k}">${TAG_IMG[t.label] ? `<i class="chip-img" data-img="${TAG_IMG[t.label]}"></i>` : ''}${escH(t.label)}<span>${t.ids.length}</span></button>`).join('')}</div>
         </div>` : ''}
       </div>
       <div class="dish-list results" hidden></div>

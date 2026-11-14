@@ -534,3 +534,9 @@ body.ch-mode #bar { transform: translateY(110%); opacity: 0; pointer-events: non
 .bar-inner { padding: 6px 18px 6px 6px; }
 .line .stepper { width: 84px; height: 34px; animation: none; }
 .line .stepper button { height: 34px; }
+
+/* Cut-out photos (transparent plates) and chip thumbnails */
+.tile-bg.cutout { background-size: 94% auto; background-position: center 36%; filter: drop-shadow(0 12px 14px rgba(0,0,0,.5)); }
+.tile:hover .tile-bg.cutout { transform: scale(1.04); }
+.chip-img { display: none; width: 34px; height: 24px; margin-left: -6px; background: center / contain no-repeat; }
+.chip-img.has-img { display: block; }
