@@ -3,11 +3,17 @@ const SUPABASE_URL = 'https://itzfanrkpvpfucgkbkff.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const SIGNOUT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
+
 function buildNavUserBar(name, isMember) {
     const badge = isMember
         ? `<span class="usc-member-badge"><span class="diamond">◆</span> Member</span>`
         : `<span class="usc-nonmember-badge">Non-Member</span>`;
-    return `<div class="usc-user-bar"><div class="usc-user-info"><span class="usc-user-name">${name}</span>${badge}</div><button class="usc-signout-btn" onclick="doSignOut()">Sign out</button></div>`;
+    return `<div class="usc-user-bar">
+        <span class="usc-user-name">${name}</span>
+        <button class="usc-signout-btn" onclick="doSignOut()">${SIGNOUT_ICON} Sign out</button>
+        ${badge}
+    </div>`;
 }
 
 async function doSignOut() {
