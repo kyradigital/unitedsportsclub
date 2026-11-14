@@ -493,15 +493,8 @@ function buildExtras() {
   const content = document.getElementById('extras-content');
 
   tabs.innerHTML = categories.map((cat, i) =>
-    `<button class="type-tab${i===0?' active':''}" onclick="switchExtrasTab('${esc(cat)}', this)">${cat}</button>`
+    `<button class="type-tab${i===0?' active':''}" onclick="switchExtrasTab('${esc(cat)}', this)" data-ext-index="${i}">${cat}</button>`
   ).join('');
-
-  const data = categories.map(cat => ({
-    cat,
-    html: `<div id="extras-${esc(cat)}" class="${i===0?'':'type-hidden'}">` +
-          buildSections(menuData.find(c => c.category === cat)?.sections || [], undefined) +
-          `</div>`
-  }));
 
   content.innerHTML = categories.map((cat, i) =>
     `<div id="ext-${i}" class="${i===0?'':'type-hidden'}">${
@@ -509,10 +502,6 @@ function buildExtras() {
     }</div>`
   ).join('');
 
-  /* store mapping */
-  tabs.querySelectorAll('.type-tab').forEach((btn, i) => {
-    btn.setAttribute('data-ext-index', i);
-  });
 }
 
 /* ============================================================
