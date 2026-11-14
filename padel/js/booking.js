@@ -453,23 +453,24 @@ async function initAuth() {
     .eq('id', currentUser.id).single();
   currentProfile = profile;
 
-  // Show user bar in header
+  // Show account chip in header
   const bar = document.getElementById('userBar');
   if (bar && profile) {
-    const isMem = profile.is_member;
-    const badge = isMem
-      ? `<span class="usc-member-badge"><span class="diamond">◆</span> Member</span>`
-      : `<span class="usc-nonmember-badge">Non-Member</span>`;
+    const isMem  = profile.is_member;
+    const initial = (profile.first_name || '?')[0].toUpperCase();
     bar.innerHTML = `
-      <div class="usc-user-bar">
-        <span class="usc-user-name">${profile.first_name}</span>
-        <button class="usc-signout-btn" onclick="doSignOut()">
+      <div class="usc-account">
+        <div class="usc-chip${isMem ? ' is-member' : ''}">
+          <div class="usc-avatar${isMem ? ' is-member' : ''}">${initial}</div>
+          <span class="usc-chip-name">${profile.first_name}</span>
+          <div class="usc-chip-sep"></div>
+          <span class="usc-chip-role ${isMem ? 'member' : 'guest'}">${isMem ? '◆ Member' : 'Guest'}</span>
+        </div>
+        <button class="usc-logout" onclick="doSignOut()" title="Sign out">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sign out
         </button>
-        ${badge}
       </div>`;
-    bar.style.display = 'block';
+    bar.style.display = 'flex';
   }
 }
 
