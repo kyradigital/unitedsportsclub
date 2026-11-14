@@ -1,717 +1,447 @@
-/* ============================================================
-   USC RESTAURANT — CHAPTER/MENU EXPERIENCE
-   ============================================================ */
+/* USC Restaurant — guided ordering. Menu content lives in menu-data.js. */
 
 const SUPABASE_URL  = 'https://itzfanrkpvpfucgkbkff.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
 const WHATSAPP_NO   = '254722850525';
 
-let supabaseClient = null;
+const $ = id => document.getElementById(id);
+const fmt = n => 'KES ' + Number(n).toLocaleString('en-US');
+const escH = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const titleCase = s => s.toLowerCase().replace(/(^|[\s(&/-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
 
-/* ============================================================
-   MENU DATA
-   ============================================================ */
-const menuData = [
-  {
-    category: 'STARTERS',
-    type: 'VEG',
-    sections: [
-      {
-        name: 'BHAJIA',
-        items: [
-          { name: 'Potato Bhajia',   prices: { Half: 350, Full: 650 } },
-          { name: 'Cassava Bhajia',  prices: { Half: 350, Full: 650 } },
-          { name: 'Yam Bhajia',      prices: { Half: 350, Full: 650 } },
-          { name: 'Mix Bhajia',      prices: { Half: 400, Full: 750 } },
-        ]
-      },
-      {
-        name: 'CHIPS',
-        items: [
-          { name: 'Plain Chips',     prices: { Half: 300, Full: 550 } },
-          { name: 'Masala Chips',    prices: { Half: 350, Full: 650 } },
-          { name: 'Chips Mayai',     prices: { Half: 450, Full: 800 } },
-        ]
-      },
-      {
-        name: 'PANEER',
-        items: [
-          { name: 'Paneer Tikka',    prices: { Half: 850, Full: 1500 } },
-          { name: 'Paneer 65',       prices: { Half: 850, Full: 1500 } },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'STARTERS',
-    type: 'NON-VEG',
-    sections: [
-      {
-        name: 'CHICKEN',
-        items: [
-          { name: 'Chicken Tikka',   prices: { Half: 850, Full: 1500 } },
-          { name: 'Chicken 65',      prices: { Half: 850, Full: 1500 } },
-          { name: 'Chicken Wings',   prices: { Half: 850, Full: 1500 } },
-          { name: 'Chicken Lollipop',prices: { Half: 900, Full: 1600 } },
-        ]
-      },
-      {
-        name: 'SEEKH',
-        items: [
-          { name: 'Seekh Kebab',     prices: { Half: 900, Full: 1600 } },
-          { name: 'Beef Tikka',      prices: { Half: 950, Full: 1700 } },
-        ]
-      },
-      {
-        name: 'FISH & PRAWNS',
-        items: [
-          { name: 'Fish Tikka',      prices: { Half: 1000, Full: 1800 } },
-          { name: 'Prawn Tikka',     prices: { Half: 1100, Full: 2000 } },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'VEG MAINS',
-    sections: [
-      {
-        name: 'PANEER',
-        items: [
-          { name: 'Paneer Butter Masala',   prices: { Half: 850, Full: 1500 } },
-          { name: 'Palak Paneer',           prices: { Half: 850, Full: 1500 } },
-          { name: 'Paneer Tikka Masala',    prices: { Half: 900, Full: 1600 } },
-          { name: 'Kadai Paneer',           prices: { Half: 900, Full: 1600 } },
-        ]
-      },
-      {
-        name: 'DAL & VEGETABLES',
-        items: [
-          { name: 'Dal Tadka',              prices: { Half: 650, Full: 1200 } },
-          { name: 'Dal Makhani',            prices: { Half: 700, Full: 1300 } },
-          { name: 'Mix Vegetable',          prices: { Half: 750, Full: 1400 } },
-          { name: 'Aloo Gobi',              prices: { Half: 700, Full: 1300 } },
-          { name: 'Chana Masala',           prices: { Half: 700, Full: 1300 } },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'NON-VEG MAINS',
-    sections: [
-      {
-        name: 'CHICKEN',
-        items: [
-          { name: 'Butter Chicken',         prices: { Half: 950, Full: 1700 } },
-          { name: 'Chicken Tikka Masala',   prices: { Half: 950, Full: 1700 } },
-          { name: 'Kadai Chicken',          prices: { Half: 950, Full: 1700 } },
-          { name: 'Chicken Do Pyaza',       prices: { Half: 950, Full: 1700 } },
-          { name: 'Chicken Saag',           prices: { Half: 950, Full: 1700 } },
-        ]
-      },
-      {
-        name: 'MUTTON & BEEF',
-        items: [
-          { name: 'Mutton Curry',           prices: { Half: 1100, Full: 2000 } },
-          { name: 'Mutton Rogan Josh',      prices: { Half: 1100, Full: 2000 } },
-          { name: 'Beef Masala',            prices: { Half: 1050, Full: 1900 } },
-        ]
-      },
-      {
-        name: 'FISH & PRAWNS',
-        items: [
-          { name: 'Fish Curry',             prices: { Half: 1000, Full: 1800 } },
-          { name: 'Prawn Masala',           prices: { Half: 1150, Full: 2100 } },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'CHAAT & KULFI',
-    sections: [
-      {
-        name: 'CHAAT',
-        items: [
-          { name: 'Pani Puri',              price: 450 },
-          { name: 'Bhel Puri',              price: 450 },
-          { name: 'Sev Puri',               price: 450 },
-          { name: 'Dahi Puri',              price: 500 },
-          { name: 'Ragda Pattice',          price: 500 },
-        ]
-      },
-      {
-        name: 'KULFI',
-        items: [
-          { name: 'Plain Kulfi',            price: 350 },
-          { name: 'Mango Kulfi',            price: 400 },
-          { name: 'Pista Kulfi',            price: 400 },
-          { name: 'Rose Kulfi',             price: 400 },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'ITALIAN',
-    sections: [
-      {
-        name: 'PIZZA',
-        items: [
-          { name: 'Margherita',             prices: { Regular: 950, Large: 1500 } },
-          { name: 'Farmhouse',              prices: { Regular: 1050, Large: 1700 } },
-          { name: 'Paneer Tikka Pizza',     prices: { Regular: 1100, Large: 1800 } },
-          { name: 'Chicken BBQ',            prices: { Regular: 1100, Large: 1800 } },
-          { name: 'Spicy Chicken',          prices: { Regular: 1100, Large: 1800 } },
-          { name: 'Beef & Mushroom',        prices: { Regular: 1150, Large: 1900 } },
-        ]
-      },
-      {
-        name: 'PASTA',
-        items: [
-          { name: 'Spaghetti Bolognese',    price: 950 },
-          { name: 'Pasta Arrabiata',        price: 850 },
-          { name: 'Fettuccine Alfredo',     price: 900 },
-          { name: 'Pasta Pesto',            price: 900 },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'BIRYANI',
-    sections: [
-      {
-        name: 'VEG BIRYANI',
-        items: [
-          { name: 'Vegetable Biryani',      prices: { Half: 750, Full: 1400 } },
-          { name: 'Paneer Biryani',         prices: { Half: 850, Full: 1550 } },
-        ]
-      },
-      {
-        name: 'NON-VEG BIRYANI',
-        items: [
-          { name: 'Chicken Biryani',        prices: { Half: 900, Full: 1650 } },
-          { name: 'Mutton Biryani',         prices: { Half: 1050, Full: 1900 } },
-          { name: 'Beef Biryani',           prices: { Half: 1000, Full: 1850 } },
-          { name: 'Prawn Biryani',          prices: { Half: 1100, Full: 2000 } },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'NAAN',
-    sections: [
-      {
-        name: 'BREADS',
-        items: [
-          { name: 'Plain Naan',             price: 150 },
-          { name: 'Butter Naan',            price: 180 },
-          { name: 'Garlic Naan',            price: 200 },
-          { name: 'Cheese Naan',            price: 250 },
-          { name: 'Stuffed Paratha',        price: 300 },
-          { name: 'Puri (2 pc)',            price: 200 },
-          { name: 'Steamed Rice',           price: 300 },
-          { name: 'Jeera Rice',             price: 350 },
-        ]
-      },
-    ]
-  },
-  {
-    category: 'KOROGA',
-    sections: [
-      {
-        name: 'KOROGA SPECIAL',
-        items: [
-          { name: 'Chicken Koroga',         prices: { Half: 1200, Full: 2200 } },
-          { name: 'Beef Koroga',            prices: { Half: 1200, Full: 2200 } },
-          { name: 'Goat Koroga',            prices: { Half: 1300, Full: 2400 } },
-          { name: 'Mix Koroga',             prices: { Half: 1350, Full: 2500 } },
-        ]
-      },
-    ]
-  },
-];
-
-/* ============================================================
-   VEG / NON-VEG INDICATOR SVGS
-   ============================================================ */
-const VEG_SVG  = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="#4caf50" stroke-width="1.6"/><circle cx="8" cy="8" r="4" fill="#4caf50"/></svg>`;
-const NVEG_SVG = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="#c62828" stroke-width="1.6"/><polygon points="8,3.5 13,11.5 3,11.5" fill="#c62828"/></svg>`;
-
-/* ============================================================
-   CART
-   ============================================================ */
-let cart = [];
-
-function addToCart(name, price, size) {
-  const key = size ? `${name} (${size})` : name;
-  const existing = cart.find(i => i.key === key);
-  if (existing) { existing.qty++; }
-  else { cart.push({ key, name, size: size || '', price, qty: 1 }); }
-  updateCartUI();
+/* ---------- Veg / non-veg marks (Indian food labelling symbols) ---------- */
+function mark(diet, size = 16) {
+  const veg = diet === 'veg';
+  const c = veg ? '#0a8a3a' : '#a5281b';
+  const shape = veg
+    ? `<circle cx="10" cy="10" r="4.6" fill="${c}"/>`
+    : `<path d="M10 4.900l5.300 9.400H4.700z" fill="${c}"/>`;
+  return `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 20 20" role="img" aria-label="${veg ? 'Vegetarian' : 'Non-vegetarian'}"><rect x="1.500" y="1.500" width="17" height="17" rx="2.500" fill="#fff" stroke="${c}" stroke-width="2"/>${shape}</svg>`;
 }
 
-function removeOneFromCart(key) {
-  const item = cart.find(i => i.key === key);
-  if (!item) return;
-  item.qty--;
-  if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
-  updateCartUI();
+function dietOf(name, fallback) {
+  if (/egg ?plant|soya/i.test(name)) return 'veg';
+  if (/\b(eggs?|mutton|chicken|fish|prawns?|shrimp|lamb|khima|kheema)\b/i.test(name)) return 'nonveg';
+  return fallback || 'veg';
 }
 
-function removeFromCart(key) {
-  cart = cart.filter(i => i.key !== key);
-  updateCartUI();
-}
+/* ---------- Build menus ---------- */
+const ITEMS = [];
+let secSeq = 0;
 
-function clearCart() {
-  cart = [];
-  updateCartUI();
-}
-
-function getCartTotal() {
-  return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-}
-
-function updateCartUI() {
-  const count = cart.reduce((s, i) => s + i.qty, 0);
-  const total = getCartTotal();
-  document.getElementById('cart-count').textContent = count;
-  document.getElementById('cart-total').textContent = `KES ${total.toLocaleString()}`;
-  document.getElementById('modal-total').textContent = `KES ${total.toLocaleString()}`;
-
-  const bar = document.getElementById('cart-bar');
-  if (count > 0) bar.classList.add('visible');
-  else           bar.classList.remove('visible');
-
-  const list = document.getElementById('cart-items-list');
-  if (cart.length === 0) {
-    list.innerHTML = '<div class="cart-empty">No items yet</div>';
-    return;
-  }
-
-  list.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        ${item.size ? `<div class="cart-item-size">${item.size}</div>` : ''}
-      </div>
-      <div class="cart-item-controls">
-        <button class="cart-qty-btn" onclick="removeOneFromCart('${esc(item.key)}')">−</button>
-        <span style="min-width:22px;text-align:center;font-size:.82rem;font-weight:700;color:#fff">${item.qty}</span>
-        <button class="cart-qty-btn" onclick="addToCart('${esc(item.name)}',${item.price},'${esc(item.size)}')">+</button>
-        <div class="cart-item-price">KES ${(item.price * item.qty).toLocaleString()}</div>
-        <button class="cart-remove-btn" onclick="removeFromCart('${esc(item.key)}')">✕</button>
-      </div>
-    </div>
-  `).join('');
-
-  /* update inline qty displays */
-  document.querySelectorAll('[data-item-key]').forEach(el => {
-    const key = el.getAttribute('data-item-key');
-    const found = cart.find(i => i.key === key);
-    const qty = found ? found.qty : 0;
-    const disp = el.querySelector('.qty-display');
-    if (disp) disp.textContent = qty;
-  });
-}
-
-function esc(s) {
-  return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-function toggleCart() {
-  const modal = document.getElementById('cart-modal');
-  modal.classList.toggle('open');
-}
-
-function setOrderType(btn) {
-  document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function placeOrder() {
-  if (cart.length === 0) { alert('Your cart is empty!'); return; }
-
-  const name   = document.getElementById('cust-name').value.trim() || 'Guest';
-  const date   = document.getElementById('order-date').value;
-  const timeNow= document.getElementById('order-time-now').value;
-  const serve  = document.getElementById('order-time').value;
-  const people = document.getElementById('cust-people').value;
-  const type   = document.querySelector('.order-type-btn.active')?.textContent || 'Dine In';
-
-  let msg = `*United Sports Club — Restaurant Order*\n\n`;
-  msg += `Name: ${name}\n`;
-  msg += `Date: ${date || '—'}\n`;
-  msg += `Order Time: ${timeNow || '—'}\n`;
-  msg += `Serving Time: ${serve || '—'}\n`;
-  msg += `Covers: ${people}\n`;
-  msg += `Type: ${type}\n\n`;
-  msg += `*Order:*\n`;
-  cart.forEach(i => {
-    msg += `• ${i.name}${i.size ? ` (${i.size})` : ''} ×${i.qty} — KES ${(i.price * i.qty).toLocaleString()}\n`;
-  });
-  msg += `\n*Total: KES ${getCartTotal().toLocaleString()}*`;
-
-  window.open(`https://wa.me/${WHATSAPP_NO}?text=${encodeURIComponent(msg)}`);
-}
-
-/* ============================================================
-   RENDER ITEM
-   ============================================================ */
-function renderItem(item, isVeg) {
-  const hasSize = item.prices && Object.keys(item.prices).length > 1;
-  const sizes   = hasSize ? Object.keys(item.prices) : null;
-  const basePrice = hasSize
-    ? item.prices[sizes[0]]
-    : (item.price || (item.prices && Object.values(item.prices)[0]) || 0);
-
-  const defaultSize = sizes ? sizes[0] : '';
-  const itemKey = defaultSize ? `${item.name} (${defaultSize})` : item.name;
-
-  const vegDot = isVeg !== undefined
-    ? `<span class="item-veg-dot">${isVeg ? VEG_SVG : NVEG_SVG}</span>`
-    : '';
-
-  const sizePillsHtml = sizes ? `
-    <div class="item-sizes">
-      ${sizes.map((s, i) => `
-        <button class="size-pill${i===0?' active':''}"
-          onclick="selectSize(this, '${esc(item.name)}', '${esc(s)}', ${item.prices[s]})"
-          data-size="${esc(s)}"
-        >${s} · KES ${item.prices[s].toLocaleString()}</button>
-      `).join('')}
-    </div>` : '';
-
-  const cartInCart = cart.find(i => i.key === itemKey);
-  const qty = cartInCart ? cartInCart.qty : 0;
-
+function dishHTML(item, secDiet, sec) {
+  const id = ITEMS.length;
+  const diet = dietOf(item.n, secDiet);
+  ITEMS.push({ item, diet, sec });
+  const sizes = item.sizes ? Object.entries(item.sizes) : [];
+  const price = sizes.length ? sizes[0][1] : item.p;
+  const opts = (kind, list) => list.length ? `<div class="opts" data-kind="${kind}">${list.map(([label, p], i) =>
+    `<button type="button" class="opt${i === 0 ? ' on' : ''}" data-act="opt" data-val="${escH(label)}"${p != null ? ` data-price="${p}"` : ''}>${escH(label)}</button>`).join('')}</div>` : '';
   return `
-    <div class="item-card" data-item-key="${esc(itemKey)}" data-base-name="${esc(item.name)}">
-      <div class="item-left">
-        <div class="item-name-row">
-          ${vegDot}
-          <span class="item-name">${item.name}</span>
-        </div>
-        ${sizePillsHtml}
+    <div class="dish" data-id="${id}" data-name="${escH(item.n.toLowerCase())}">
+      <div class="dish-main">
+        <div class="dish-title">${mark(diet)}<span class="dish-name">${escH(item.n)}</span></div>
+        ${opts('size', sizes)}${opts('style', (item.styles || []).map(s => [s, null]))}
       </div>
-      <div class="item-right">
-        <div class="item-price" id="price-${esc(itemKey)}">KES ${basePrice.toLocaleString()}</div>
-        ${qty > 0 ? `
-          <div class="item-controls">
-            <button class="qty-btn" onclick="handleRemove('${esc(itemKey)}')">−</button>
-            <div class="qty-display">${qty}</div>
-            <button class="qty-btn" onclick="handleAdd(this)">+</button>
-          </div>
-        ` : `
-          <button class="item-add-btn" onclick="handleAdd(this)">+ Add</button>
-        `}
+      <div class="dish-side">
+        <div class="dish-price">${fmt(price)}</div>
+        <div class="dish-ctl"><button type="button" class="add-btn" data-act="inc">Add</button></div>
       </div>
     </div>`;
 }
 
-function selectSize(btn, name, size, price) {
-  const card = btn.closest('.item-card');
-  card.querySelectorAll('.size-pill').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-
-  const newKey = `${name} (${size})`;
-  card.setAttribute('data-item-key', newKey);
-  const priceEl = card.querySelector('.item-price');
-  if (priceEl) priceEl.textContent = `KES ${price.toLocaleString()}`;
+function sectionHTML(sec, diet) {
+  const id = secSeq++;
+  const m = sec.name.match(/^([^(]+)\((.+)\)\s*$/);
+  const title = titleCase(m ? m[1].trim() : sec.name);
+  let note = m ? m[2].trim() : '';
+  if (note && note === note.toUpperCase()) note = titleCase(note);
+  return `
+    <div class="sec" data-sec="${id}" data-title="${escH(sec.name.toLowerCase())}">
+      <button type="button" class="sec-head" data-act="sec" aria-expanded="false">
+        <span class="sec-text">
+          <span class="sec-name">${escH(title)}</span>
+          ${note ? `<span class="sec-note">${escH(note)}</span>` : ''}
+        </span>
+        <span class="sec-meta">
+          <span class="sec-badge" hidden></span>
+          <span class="sec-count">${sec.items.length} ${sec.items.length === 1 ? 'dish' : 'dishes'}</span>
+          <span class="sec-chev"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg></span>
+        </span>
+      </button>
+      <div class="sec-body"><div class="sec-inner">${sec.items.map(it => dishHTML(it, diet, id)).join('')}</div></div>
+    </div>`;
 }
 
-function handleAdd(btn) {
-  const card  = btn.closest('.item-card');
-  const key   = card.getAttribute('data-item-key');
-  const name  = card.getAttribute('data-base-name');
-  const priceText = card.querySelector('.item-price')?.textContent || 'KES 0';
-  const price = parseInt(priceText.replace(/[^0-9]/g, ''), 10) || 0;
-  const size  = key.includes('(') ? key.match(/\(([^)]+)\)/)?.[1] || '' : '';
-  addToCart(name, price, size);
-  reRenderItemControls(card, key);
-}
+const STEP_INFO = [
+  { title: 'Starters', next: 'Continue to Mains',  search: 'Search starters' },
+  { title: 'Mains',    next: 'Continue to Extras', search: 'Search mains' },
+  { title: 'Extras',   next: 'Review Order',       search: 'Search extras' },
+];
 
-function handleRemove(key) {
-  removeOneFromCart(key);
-  const card = document.querySelector(`[data-item-key="${CSS.escape(key)}"]`);
-  if (card) reRenderItemControls(card, key);
-}
+function buildMenus() {
+  const starters = menuData[0].sections;
+  const steps = [
+    [ { label: 'Veg', diet: 'veg', sections: starters.filter(s => s.type === 'VEG') },
+      { label: 'Non-Veg', diet: 'nonveg', sections: starters.filter(s => s.type === 'NON-VEG') } ],
+    [ { label: 'Veg', diet: 'veg', sections: menuData[1].sections },
+      { label: 'Non-Veg', diet: 'nonveg', sections: menuData[2].sections } ],
+    menuData.slice(3).map(c => ({ label: titleCase(c.name), sections: c.sections })),
+  ];
 
-function reRenderItemControls(card, key) {
-  const right  = card.querySelector('.item-right');
-  const priceEl= card.querySelector('.item-price');
-  const priceHtml = priceEl ? priceEl.outerHTML : '';
-  const item   = cart.find(i => i.key === key);
-  const qty    = item ? item.qty : 0;
-
-  right.innerHTML = priceHtml + (qty > 0 ? `
-    <div class="item-controls">
-      <button class="qty-btn" onclick="handleRemove('${esc(key)}')">−</button>
-      <div class="qty-display">${qty}</div>
-      <button class="qty-btn" onclick="handleAdd(this)">+</button>
-    </div>
-  ` : `
-    <button class="item-add-btn" onclick="handleAdd(this)">+ Add</button>
-  `);
-}
-
-/* ============================================================
-   BUILD SECTIONS
-   ============================================================ */
-function buildSections(sections, isVeg) {
-  return sections.map(sec => {
-    const items = sec.items.map(item => renderItem(item, isVeg)).join('');
+  $('menus').innerHTML = steps.map((tabs, i) => {
+    const n = i + 1, info = STEP_INFO[i];
+    const segmented = tabs.length === 2;
     return `
-      <div class="category-wrapper open">
-        <div class="category-header" onclick="this.parentElement.classList.toggle('open')">
-          <span class="cat-name">${sec.name}<span class="cat-count">${sec.items.length} items</span></span>
-          <svg class="cat-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+    <section id="menu-${n}" class="screen menu">
+      <div class="menu-head"><div class="menu-head-inner">
+        <div class="menu-head-row">
+          <button type="button" class="back-btn" data-act="go" data-to="ch-${n}">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+            <span>Back</span>
+          </button>
+          <div class="menu-title"><span class="menu-step">Step ${n} of 3</span><h2>${info.title}</h2></div>
+          <div class="mini-dots">${[1, 2, 3].map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
         </div>
-        <div class="category-content">${items}</div>
-      </div>`;
+        <label class="search">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7.500"/><path stroke-linecap="round" d="M20.500 20.500l-4-4"/></svg>
+          <input class="search-input" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="${info.search}" aria-label="${info.search}"/>
+          <button type="button" class="search-clear" data-act="search-clear" aria-label="Clear search" hidden>
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </label>
+        <div class="tabs ${segmented ? 'seg' : 'chips'}">
+          ${tabs.map((t, k) => `<button type="button" class="tab${k === 0 ? ' on' : ''}" data-act="tab" data-i="${k}">${t.diet ? mark(t.diet, 18) : ''}${escH(t.label)}</button>`).join('')}
+        </div>
+      </div></div>
+      <div class="menu-body">
+        ${tabs.map((t, k) => `<div class="tab-panel${k === 0 ? ' on' : ''}">${t.sections.map(s => sectionHTML(s, t.diet)).join('')}</div>`).join('')}
+        <p class="empty" hidden>No dishes match your search.</p>
+      </div>
+    </section>`;
   }).join('');
 }
 
-/* ============================================================
-   BUILD MENUS
-   ============================================================ */
-function buildStarters() {
-  const vegData   = menuData.find(c => c.category === 'STARTERS' && c.type === 'VEG');
-  const nvegData  = menuData.find(c => c.category === 'STARTERS' && c.type === 'NON-VEG');
-  document.getElementById('starters-veg').innerHTML   = buildSections(vegData.sections, true);
-  document.getElementById('starters-nonveg').innerHTML= buildSections(nvegData.sections, false);
+/* ---------- Cart ---------- */
+let cart = [];
+
+function cardSel(card) {
+  const id = Number(card.dataset.id);
+  const s  = card.querySelector('.opts[data-kind="size"] .opt.on');
+  const st = card.querySelector('.opts[data-kind="style"] .opt.on');
+  const size = s ? s.dataset.val : '';
+  const style = st ? st.dataset.val : '';
+  const price = s ? Number(s.dataset.price) : Number(ITEMS[id].item.p);
+  return { id, size, style, price, key: `${id}|${size}|${style}` };
 }
 
-function buildMains() {
-  const vegData  = menuData.find(c => c.category === 'VEG MAINS');
-  const nvegData = menuData.find(c => c.category === 'NON-VEG MAINS');
-  document.getElementById('mains-veg-content').innerHTML   = buildSections(vegData.sections, true);
-  document.getElementById('mains-nonveg-content').innerHTML= buildSections(nvegData.sections, false);
-}
-
-function buildExtras() {
-  const categories = ['CHAAT & KULFI', 'ITALIAN', 'BIRYANI', 'NAAN', 'KOROGA'];
-  const tabs = document.getElementById('extras-tabs');
-  const content = document.getElementById('extras-content');
-
-  tabs.innerHTML = categories.map((cat, i) =>
-    `<button class="type-tab${i===0?' active':''}" onclick="switchExtrasTab('${esc(cat)}', this)" data-ext-index="${i}">${cat}</button>`
-  ).join('');
-
-  content.innerHTML = categories.map((cat, i) =>
-    `<div id="ext-${i}" class="${i===0?'':'type-hidden'}">${
-      buildSections(menuData.find(c => c.category === cat)?.sections || [], undefined)
-    }</div>`
-  ).join('');
-
-}
-
-/* ============================================================
-   MENU SWITCHING
-   ============================================================ */
-function switchStarterType(type, btn) {
-  document.querySelectorAll('#starter-tabs .type-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('starters-veg').classList.toggle('type-hidden', type !== 'veg');
-  document.getElementById('starters-nonveg').classList.toggle('type-hidden', type !== 'nonveg');
-}
-
-let mainsVegOpen    = false;
-let mainsNvegOpen   = false;
-
-function selectMainsType(type) {
-  const hint = document.getElementById('mains-select-hint');
-  if (hint) hint.style.display = 'none';
-
-  if (type === 'veg') {
-    mainsVegOpen = !mainsVegOpen;
-    document.getElementById('pill-veg').classList.toggle('active', mainsVegOpen);
-    document.getElementById('mains-veg-content').classList.toggle('type-hidden', !mainsVegOpen);
-  } else {
-    mainsNvegOpen = !mainsNvegOpen;
-    document.getElementById('pill-nonveg').classList.toggle('active', mainsNvegOpen);
-    document.getElementById('mains-nonveg-content').classList.toggle('type-hidden', !mainsNvegOpen);
+function changeQty(sel, delta) {
+  let line = cart.find(c => c.key === sel.key);
+  if (!line && delta > 0) {
+    line = { key: sel.key, id: sel.id, name: ITEMS[sel.id].item.n, size: sel.size, style: sel.style, price: sel.price, qty: 0, comment: '' };
+    cart.push(line);
   }
+  if (!line) return;
+  line.qty += delta;
+  if (line.qty <= 0) cart = cart.filter(c => c !== line);
+  renderCart();
+}
 
-  if (!mainsVegOpen && !mainsNvegOpen) {
-    if (hint) hint.style.display = '';
+const stepperHTML = qty => `<div class="stepper"><button type="button" data-act="dec" aria-label="Remove one">−</button><span>${qty}</span><button type="button" data-act="inc" aria-label="Add one">+</button></div>`;
+
+function refreshCard(card) {
+  const sel = cardSel(card);
+  const line = cart.find(c => c.key === sel.key);
+  const qty = line ? line.qty : 0;
+  card.querySelector('.dish-price').textContent = fmt(sel.price);
+  const ctl = card.querySelector('.dish-ctl');
+  if (Number(ctl.dataset.qty || 0) !== qty) {
+    ctl.dataset.qty = qty;
+    ctl.innerHTML = qty > 0 ? stepperHTML(qty) : '<button type="button" class="add-btn" data-act="inc">Add</button>';
   }
+  card.classList.toggle('in-cart', cart.some(c => c.id === sel.id));
 }
 
-function switchExtrasTab(cat, btn) {
-  document.querySelectorAll('#extras-tabs .type-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const idx = parseInt(btn.getAttribute('data-ext-index') || '0', 10);
-  document.querySelectorAll('#extras-content > div').forEach((el, i) => {
-    el.classList.toggle('type-hidden', i !== idx);
-  });
-}
+function renderCart() {
+  const count = cart.reduce((s, c) => s + c.qty, 0);
+  const total = cart.reduce((s, c) => s + c.qty * c.price, 0);
 
-function filterMenu() {
-  const q = (document.getElementById('menuSearch')?.value || '').toLowerCase().trim();
-  document.querySelectorAll('#menu-1 .item-card').forEach(card => {
-    const name = card.querySelector('.item-name')?.textContent?.toLowerCase() || '';
-    card.style.display = (!q || name.includes(q)) ? '' : 'none';
-  });
-}
+  document.querySelectorAll('.dish').forEach(refreshCard);
 
-/* ============================================================
-   CHAPTER / MENU NAVIGATION
-   ============================================================ */
-let currentScreen = 'ch-1';
-
-function showChapter(n) {
-  const all = document.querySelectorAll('.chapter-screen, .menu-screen');
-
-  /* hide current screen */
-  all.forEach(el => {
-    el.classList.remove('ch-visible', 'ms-visible');
+  const perSec = {};
+  cart.forEach(c => { const s = ITEMS[c.id].sec; perSec[s] = (perSec[s] || 0) + c.qty; });
+  document.querySelectorAll('.sec').forEach(sec => {
+    const n = perSec[sec.dataset.sec] || 0;
+    const badge = sec.querySelector('.sec-badge');
+    badge.hidden = !n;
+    badge.textContent = n;
   });
 
-  document.body.classList.add('ch-mode');
-  document.body.classList.remove('menu-mode');
+  const bc = $('bar-count');
+  if (bc.textContent !== String(count)) { bc.classList.remove('bump'); void bc.offsetWidth; bc.classList.add('bump'); }
+  bc.textContent = count;
+  bc.hidden = !count;
+  $('bar-total').textContent = count ? fmt(total) : 'No items yet';
+  $('modal-total').textContent = fmt(total);
 
-  const ch = document.getElementById(`ch-${n}`);
-  if (!ch) return;
+  $('cart-items-list').innerHTML = cart.length ? cart.map(c => `
+    <div class="line" data-key="${escH(c.key)}">
+      <div class="line-top">
+        <div class="line-info">${mark(ITEMS[c.id].diet)}
+          <div><div class="line-name">${escH(c.name)}</div>
+          ${c.size || c.style ? `<div class="line-sub">${escH([c.size, c.style].filter(Boolean).join(' · '))}</div>` : ''}</div>
+        </div>
+        <div class="line-price">${fmt(c.price * c.qty)}</div>
+      </div>
+      <div class="line-bottom">
+        <input class="note" type="text" placeholder="Add a note (e.g. no onions)" value="${escH(c.comment)}" aria-label="Note for ${escH(c.name)}"/>
+        <div class="stepper"><button type="button" data-act="cart-dec" aria-label="Remove one">−</button><span>${c.qty}</span><button type="button" data-act="cart-inc" aria-label="Add one">+</button></div>
+        <button type="button" class="line-del" data-act="cart-del" aria-label="Remove ${escH(c.name)}">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+        </button>
+      </div>
+    </div>`).join('') : '<div class="cart-empty">Nothing here yet. Add dishes from the menu.</div>';
+}
 
-  /* restart ken burns */
-  const img = ch.querySelector('.ch-img');
-  if (img) {
-    img.style.animation = 'none';
-    img.getBoundingClientRect();
-    img.style.animation = '';
+function openCart() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  if (!$('order-date').value) $('order-date').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  if (!$('order-time-now').value) $('order-time-now').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  $('cart-modal').classList.add('open');
+  $('cart-modal').setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+}
+function closeCart() {
+  $('cart-modal').classList.remove('open');
+  $('cart-modal').setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+}
+
+function placeOrder() {
+  if (!cart.length) { alert('Please add some dishes to your order first.'); return; }
+  const nameInput = $('cust-name');
+  const name = nameInput.value.trim();
+  if (!name) {
+    nameInput.classList.add('invalid');
+    nameInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    nameInput.focus({ preventScroll: true });
+    return;
   }
+  const date = $('order-date').value;
+  const orderTime = $('order-time-now').value;
+  const serveTime = $('order-time').value;
+  const pax = $('cust-people').value || '1';
+  const type = document.querySelector('.order-type-btn.active')?.textContent.trim() || 'Dine In';
+  const total = cart.reduce((s, c) => s + c.qty * c.price, 0);
 
-  /* animate in */
-  ch.classList.add('ch-enter');
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      ch.classList.remove('ch-enter');
-      ch.classList.add('ch-visible');
+  const lines = [
+    '*USC PREMIUM ORDER*',
+    '--------------------------',
+    `👤 *Customer:* ${name}`,
+    `👥 *Pax:* ${pax}`,
+    `${type === 'Takeaway' ? '🥡' : '🍽'} *Order Type:* ${type}`,
+  ];
+  if (date) { const d = date.split('-'); lines.push(`📅 *Date:* ${d[2]}/${d[1]}/${d[0]}`); }
+  if (orderTime) lines.push(`🕐 *Order Time:* ${orderTime}`);
+  if (serveTime) lines.push(`⏰ *Serving Time:* ${serveTime}`);
+  lines.push('--------------------------', '', '*ITEMS ORDERED:*');
+  cart.forEach(c => {
+    let l = `✅ ${c.qty}x ${c.name}`;
+    if (c.size) l += ` (${c.size})`;
+    if (c.style) l += ` - ${c.style}`;
+    l += ` — ${fmt(c.price * c.qty)}`;
+    lines.push(l);
+    if (c.comment.trim()) lines.push(`   _Note: ${c.comment.trim()}_`);
+  });
+  lines.push('', `💰 *Grand Total: ${fmt(total)}*`);
+
+  window.open(`https://wa.me/${WHATSAPP_NO}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+}
+
+/* ---------- Search ---------- */
+function applySearch(menu, raw) {
+  const q = raw.trim().toLowerCase();
+  menu.classList.toggle('searching', !!q);
+  menu.querySelector('.search-clear').hidden = !raw;
+  let any = false;
+  menu.querySelectorAll('.sec').forEach(sec => {
+    const whole = q && sec.dataset.title.includes(q);
+    let hits = 0;
+    sec.querySelectorAll('.dish').forEach(d => {
+      const ok = !q || whole || d.dataset.name.includes(q);
+      d.classList.toggle('miss', !ok);
+      if (ok) hits++;
     });
+    sec.classList.toggle('no-hit', !!q && !hits);
+    if (hits) any = true;
   });
+  menu.querySelector('.empty').hidden = !q || any;
+}
+function clearSearch(menu) {
+  const input = menu.querySelector('.search-input');
+  if (input.value || menu.classList.contains('searching')) { input.value = ''; applySearch(menu, ''); }
+}
 
-  currentScreen = `ch-${n}`;
+/* ---------- Navigation ---------- */
+let current = null;
+let navTimer = null;
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'leaving'));
+  document.querySelectorAll('.menu').forEach(clearSearch);
+  const isChapter = id.startsWith('ch-');
+  document.body.classList.toggle('ch-mode', isChapter);
+  if (!isChapter) $('bar-next-label').textContent = STEP_INFO[Number(id.split('-')[1]) - 1].next;
+  $(id).classList.add('active');
   window.scrollTo(0, 0);
 }
 
-function showMenu(n) {
-  const ch = document.getElementById(`ch-${n}`);
-
-  /* exit chapter */
-  if (ch) {
-    ch.classList.add('ch-exit');
-    setTimeout(() => ch.classList.remove('ch-visible', 'ch-exit'), 350);
-  }
-
-  setTimeout(() => {
-    document.body.classList.remove('ch-mode');
-    document.body.classList.add('menu-mode');
-
-    document.querySelectorAll('.menu-screen').forEach(el => el.classList.remove('ms-visible'));
-    const menu = document.getElementById(`menu-${n}`);
-    if (menu) menu.classList.add('ms-visible');
-
-    currentScreen = `menu-${n}`;
-    window.scrollTo(0, 0);
-  }, 300);
+function go(id, push = true) {
+  if (!$(id) || (id === current && !navTimer)) return;
+  clearTimeout(navTimer);
+  const from = current && $(current);
+  if (from) from.classList.add('leaving');
+  current = id;
+  if (push) history.pushState({ s: id }, '');
+  navTimer = setTimeout(() => { navTimer = null; show(id); }, from ? 200 : 0);
 }
 
-function doneWithMenu(n) {
-  if (n >= 3) {
-    toggleCart();
-    return;
-  }
-  const menu = document.getElementById(`menu-${n}`);
-  if (menu) menu.classList.remove('ms-visible');
-  showChapter(n + 1);
-}
+window.addEventListener('popstate', e => {
+  if ($('cart-modal').classList.contains('open')) closeCart();
+  go((e.state && e.state.s) || 'ch-1', false);
+});
 
-/* ============================================================
-   SEARCH FILTER
-   ============================================================ */
-// filterMenu already defined above
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  if (e.target.id === 'cart-modal') { closeCart(); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  const card = el.closest('.dish');
+  const line = el.closest('.line');
+  const lineSel = () => cart.find(c => c.key === line.dataset.key);
 
-/* ============================================================
-   AUTH
-   ============================================================ */
-function initAuth() {
-  if (typeof window.supabase === 'undefined') return;
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  supabaseClient.auth.getSession().then(({ data }) => {
-    if (data?.session) buildNavUserBar(data.session.user);
-  });
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
-    if (session) buildNavUserBar(session.user);
-    else {
-      const bar = document.getElementById('nav-user-bar');
-      if (bar) bar.remove();
+  switch (act) {
+    case 'go': go(el.dataset.to); break;
+    case 'continue': {
+      const n = Number(current.split('-')[1]);
+      if (n < 3) go(`ch-${n + 1}`); else openCart();
+      break;
     }
-  });
-}
-
-function buildNavUserBar(user) {
-  if (!user) return;
-  let bar = document.getElementById('nav-user-bar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'nav-user-bar';
-    bar.style.cssText = 'display:flex;align-items:center;gap:10px;';
-    const right = document.querySelector('.usc-nav-right');
-    if (right) right.appendChild(bar);
+    case 'tab': {
+      const menu = el.closest('.menu');
+      clearSearch(menu);
+      const i = Number(el.dataset.i);
+      menu.querySelectorAll('.tab').forEach((t, k) => t.classList.toggle('on', k === i));
+      menu.querySelectorAll('.tab-panel').forEach((p, k) => p.classList.toggle('on', k === i));
+      el.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+      break;
+    }
+    case 'sec': {
+      const open = el.parentElement.classList.toggle('open');
+      el.setAttribute('aria-expanded', open);
+      break;
+    }
+    case 'opt':
+      el.parentElement.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', o === el));
+      refreshCard(card);
+      break;
+    case 'inc': changeQty(cardSel(card), 1); break;
+    case 'dec': changeQty(cardSel(card), -1); break;
+    case 'cart-inc': changeQty(lineSel(), 1); break;
+    case 'cart-dec': changeQty(lineSel(), -1); break;
+    case 'cart-del': cart = cart.filter(c => c.key !== line.dataset.key); renderCart(); break;
+    case 'cart-open': openCart(); break;
+    case 'cart-close': closeCart(); break;
+    case 'clear':
+      if (cart.length && confirm('Clear your entire order?')) { cart = []; renderCart(); }
+      break;
+    case 'order': placeOrder(); break;
+    case 'otype':
+      document.querySelectorAll('.order-type-btn').forEach(b => b.classList.toggle('active', b === el));
+      break;
+    case 'search-clear': {
+      const menu = el.closest('.menu');
+      clearSearch(menu);
+      menu.querySelector('.search-input').focus();
+      break;
+    }
   }
-  bar.innerHTML = `
-    <span style="font-size:.72rem;color:rgba(255,255,255,.45);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${user.email}</span>
-    <button onclick="doSignOut()" style="font-size:.72rem;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);cursor:pointer;">Sign out</button>`;
+});
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.classList.contains('search-input')) applySearch(t.closest('.menu'), t.value);
+  else if (t.classList.contains('note')) {
+    const line = cart.find(c => c.key === t.closest('.line').dataset.key);
+    if (line) line.comment = t.value;
+  } else if (t.id === 'cust-name') t.classList.remove('invalid');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) closeCart();
+});
+
+/* ---------- Auth ---------- */
+let sb = null;
+
+function navUserBar(name, isMember) {
+  const initial = escH((name || '?')[0].toUpperCase());
+  return `<div class="usc-account">
+    <div class="usc-chip">
+      <div class="usc-avatar${isMember ? ' is-member' : ''}">${initial}</div>
+      <span class="usc-chip-name">${escH(name)}</span>
+      <div class="usc-chip-sep"></div>
+      <span class="usc-chip-role ${isMember ? 'member' : 'guest'}">${isMember ? 'Member' : 'Guest'}</span>
+    </div>
+    <button class="usc-logout" id="signout-btn" title="Sign out" aria-label="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>`;
 }
 
-function doSignOut() {
-  if (supabaseClient) supabaseClient.auth.signOut();
-}
-
-/* ============================================================
-   INIT
-   ============================================================ */
-function runSplash() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const splash = document.getElementById('splash');
-      splash.classList.add('hidden');
-      resolve();
-    }, 2200);
-  });
-}
-
-async function init() {
-  /* set today's date */
-  const dateInput = document.getElementById('order-date');
-  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-
-  /* set current time */
-  const timeInput = document.getElementById('order-time-now');
-  if (timeInput) {
-    const now = new Date();
-    timeInput.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+async function initAuth() {
+  const navRight = document.querySelector('.usc-nav-right');
+  if (!window.supabase || !navRight) return;
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      navRight.innerHTML = '<a href="../index.html" class="usc-back-link">Sign In</a>';
+      return;
+    }
+    const user = session.user;
+    const name = user.user_metadata?.first_name || user.email.split('@')[0];
+    navRight.innerHTML = navUserBar(name, false);
+    const { data: profile } = await sb.from('profiles').select('first_name, is_member').eq('id', user.id).single();
+    if (profile) navRight.innerHTML = navUserBar(profile.first_name || name, !!profile.is_member);
+  } catch (err) {
+    console.warn('Auth unavailable', err);
   }
+}
 
-  /* build menu data */
-  buildStarters();
-  buildMains();
-  buildExtras();
+document.addEventListener('click', async e => {
+  if (!e.target.closest('#signout-btn') || !sb) return;
+  await sb.auth.signOut();
+  window.location.href = '../index.html';
+});
 
-  /* init auth */
+/* ---------- Init ---------- */
+function init() {
+  try {
+    buildMenus();
+    renderCart();
+  } catch (err) {
+    console.error('Menu failed to build', err);
+  }
   initAuth();
-
-  /* splash → chapter 1 */
-  await runSplash();
-
-  document.body.classList.add('ch-mode');
-  const ch1 = document.getElementById('ch-1');
-  if (ch1) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ch1.classList.add('ch-visible');
-      });
-    });
-  }
+  history.replaceState({ s: 'ch-1' }, '');
+  setTimeout(() => {
+    $('splash').classList.add('hidden');
+    go('ch-1', false);
+  }, 1500);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
