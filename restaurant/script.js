@@ -1,327 +1,263 @@
 /* ============================================================
-   USC RESTAURANT — STEP-BASED UX
+   USC RESTAURANT — CHAPTER/MENU EXPERIENCE
    ============================================================ */
 
 const SUPABASE_URL  = 'https://itzfanrkpvpfucgkbkff.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
 const WHATSAPP_NO   = '254722850525';
 
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+let supabaseClient = null;
 
 /* ============================================================
    MENU DATA
    ============================================================ */
-
 const menuData = [
   {
-    name: 'STARTERS',
+    category: 'STARTERS',
+    type: 'VEG',
     sections: [
-      /* ---- VEG STARTERS ---- */
-      { name: 'Breakfast', type: 'VEG', items: [
-        { n: 'Veg Omelette', p: 350 },
-        { n: 'Egg Omelette', p: 400 },
-        { n: 'Egg Bhurji', p: 400 },
-        { n: 'Omelette Sandwich', p: 500 },
-        { n: 'Egg Sandwich', p: 500 },
-        { n: 'Veg Sandwich', p: 450 },
-        { n: 'Club Sandwich', p: 650 },
-      ]},
-      { name: 'Sandwiches', type: 'VEG', items: [
-        { n: 'Veg Sandwich', p: 450 },
-        { n: 'Cheese Sandwich', p: 500 },
-        { n: 'Club Sandwich', p: 650 },
-      ]},
-      { name: 'Paneer', type: 'VEG', items: [
-        { n: 'Paneer Tikka', sizes: { Half: 850, Full: 1500 } },
-        { n: 'Paneer Malai Tikka', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Paneer Achari Tikka', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Paneer 65', sizes: { Half: 850, Full: 1500 } },
-        { n: 'Chilli Paneer (Dry)', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Chilli Paneer (Gravy)', sizes: { Half: 900, Full: 1600 } },
-      ]},
-      { name: 'Chapatis', type: 'VEG', items: [
-        { n: 'Plain Chapati', p: 100 },
-        { n: 'Butter Chapati', p: 120 },
-        { n: 'Veg Chapati Roll', p: 350 },
-        { n: 'Egg Chapati Roll', p: 400 },
-      ]},
-      { name: 'Bhajia', type: 'VEG', items: [
-        { n: 'Veg Bhajia', sizes: { Half: 350, Full: 600 } },
-        { n: 'Onion Bhajia', sizes: { Half: 350, Full: 600 } },
-        { n: 'Cassava Bhajia', sizes: { Half: 350, Full: 600 } },
-        { n: 'Potato Bhajia', sizes: { Half: 350, Full: 600 } },
-      ]},
-      { name: 'Chips', type: 'VEG', items: [
-        { n: 'Plain Chips', sizes: { Half: 300, Full: 500 } },
-        { n: 'Masala Chips', sizes: { Half: 350, Full: 600 } },
-        { n: 'Chilli Chips', sizes: { Half: 400, Full: 650 } },
-        { n: 'Chilli Cheese Chips', sizes: { Half: 500, Full: 800 } },
-      ]},
-      { name: 'Potatoes', type: 'VEG', items: [
-        { n: 'Veg Cutlet', sizes: { Half: 400, Full: 700 } },
-        { n: 'Aloo Tikki', sizes: { Half: 400, Full: 700 } },
-        { n: 'Aloo Chaat', sizes: { Half: 400, Full: 700 } },
-      ]},
-      { name: 'Sima', type: 'VEG', items: [
-        { n: 'Plain Sima', p: 250 },
-        { n: 'Butter Sima', p: 300 },
-        { n: 'Sima & Maharagwe', p: 400 },
-      ]},
-      { name: 'Drinks', type: 'VEG', items: [
-        { n: 'Juice (Fresh)', p: 300 },
-        { n: 'Soda', p: 150 },
-        { n: 'Water', p: 100 },
-        { n: 'Chai / Tea', p: 150 },
-        { n: 'Coffee', p: 200 },
-        { n: 'Mango Lassi', p: 350 },
-        { n: 'Rose Lassi', p: 350 },
-        { n: 'Plain Lassi', p: 300 },
-      ]},
-      { name: 'Other Starters', type: 'VEG', items: [
-        { n: 'Corn on Cob', p: 300 },
-        { n: 'Veg Spring Roll', sizes: { '3 pcs': 400, '6 pcs': 750 } },
-        { n: 'Chilli Mushroom (Dry)', sizes: { Half: 700, Full: 1200 } },
-        { n: 'Chilli Mushroom (Gravy)', sizes: { Half: 700, Full: 1200 } },
-      ]},
-      /* ---- NON-VEG STARTERS ---- */
-      { name: 'Poultry', type: 'NON-VEG', items: [
-        { n: 'Chicken Tikka', sizes: { Half: 900, Full: 1700 } },
-        { n: 'Chicken Malai Tikka', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Achari Tikka', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken 65', sizes: { Half: 900, Full: 1700 } },
-        { n: 'Chilli Chicken (Dry)', sizes: { Half: 950, Full: 1750 } },
-        { n: 'Chilli Chicken (Gravy)', sizes: { Half: 950, Full: 1750 } },
-        { n: 'Chicken Wings', sizes: { '4 pcs': 700, '8 pcs': 1300 } },
-        { n: 'Chicken Strips', sizes: { Half: 850, Full: 1600 } },
-        { n: 'Chicken Roll', p: 500 },
-        { n: 'Chicken Sandwich', p: 650 },
-      ]},
-      { name: 'Mutton', type: 'NON-VEG', items: [
-        { n: 'Mutton Tikka', sizes: { Half: 1100, Full: 2000 } },
-        { n: 'Mutton Seek Kebab', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Mutton Chops', sizes: { Half: 1200, Full: 2200 } },
-      ]},
-      { name: 'Lamb Chop', type: 'NON-VEG', items: [
-        { n: 'Lamb Chop', sizes: { Half: 1300, Full: 2400 } },
-        { n: 'Lamb Seek Kebab', sizes: { Half: 1100, Full: 2000 } },
-      ]},
-      { name: 'Fish', type: 'NON-VEG', items: [
-        { n: 'Fish Tikka', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Fish 65', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Fish Fry', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Prawn Starter', sizes: { Half: 1200, Full: 2200 } },
-      ]},
+      {
+        name: 'BHAJIA',
+        items: [
+          { name: 'Potato Bhajia',   prices: { Half: 350, Full: 650 } },
+          { name: 'Cassava Bhajia',  prices: { Half: 350, Full: 650 } },
+          { name: 'Yam Bhajia',      prices: { Half: 350, Full: 650 } },
+          { name: 'Mix Bhajia',      prices: { Half: 400, Full: 750 } },
+        ]
+      },
+      {
+        name: 'CHIPS',
+        items: [
+          { name: 'Plain Chips',     prices: { Half: 300, Full: 550 } },
+          { name: 'Masala Chips',    prices: { Half: 350, Full: 650 } },
+          { name: 'Chips Mayai',     prices: { Half: 450, Full: 800 } },
+        ]
+      },
+      {
+        name: 'PANEER',
+        items: [
+          { name: 'Paneer Tikka',    prices: { Half: 850, Full: 1500 } },
+          { name: 'Paneer 65',       prices: { Half: 850, Full: 1500 } },
+        ]
+      },
     ]
   },
   {
-    name: 'VEG MAINS',
+    category: 'STARTERS',
+    type: 'NON-VEG',
     sections: [
-      { name: 'Paneer Specialties', items: [
-        { n: 'Paneer Butter Masala', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Palak Paneer', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Paneer Do Pyaza', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Shahi Paneer', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Kadai Paneer', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Paneer Tikka Masala', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Matar Paneer', sizes: { Half: 850, Full: 1500 } },
-      ]},
-      { name: 'Egg Specialties', items: [
-        { n: 'Egg Curry', sizes: { Half: 500, Full: 900 } },
-        { n: 'Egg Masala', sizes: { Half: 550, Full: 1000 } },
-        { n: 'Egg Do Pyaza', sizes: { Half: 550, Full: 1000 } },
-        { n: 'Omelette Curry', sizes: { Half: 500, Full: 900 } },
-      ]},
-      { name: 'Curries & Daals', items: [
-        { n: 'Daal Makhani', sizes: { Half: 750, Full: 1300 } },
-        { n: 'Daal Fry', sizes: { Half: 650, Full: 1150 } },
-        { n: 'Daal Tadka', sizes: { Half: 600, Full: 1100 } },
-        { n: 'Mixed Veg Curry', sizes: { Half: 700, Full: 1250 } },
-        { n: 'Aloo Gobi', sizes: { Half: 650, Full: 1150 } },
-        { n: 'Chana Masala', sizes: { Half: 650, Full: 1150 } },
-        { n: 'Rajma Masala', sizes: { Half: 700, Full: 1250 } },
-        { n: 'Veg Korma', sizes: { Half: 750, Full: 1350 } },
-      ]},
-      { name: 'Salads', items: [
-        { n: 'Garden Salad', p: 400 },
-        { n: 'Greek Salad', p: 500 },
-        { n: 'Raita', p: 250 },
-        { n: 'Boondi Raita', p: 300 },
-      ]},
-      { name: 'Rice', items: [
-        { n: 'Steamed Rice', sizes: { Half: 300, Full: 500 } },
-        { n: 'Jeera Rice', sizes: { Half: 400, Full: 700 } },
-        { n: 'Veg Fried Rice', sizes: { Half: 500, Full: 900 } },
-        { n: 'Egg Fried Rice', sizes: { Half: 550, Full: 950 } },
-        { n: 'Veg Pulao', sizes: { Half: 500, Full: 900 } },
-      ]},
+      {
+        name: 'CHICKEN',
+        items: [
+          { name: 'Chicken Tikka',   prices: { Half: 850, Full: 1500 } },
+          { name: 'Chicken 65',      prices: { Half: 850, Full: 1500 } },
+          { name: 'Chicken Wings',   prices: { Half: 850, Full: 1500 } },
+          { name: 'Chicken Lollipop',prices: { Half: 900, Full: 1600 } },
+        ]
+      },
+      {
+        name: 'SEEKH',
+        items: [
+          { name: 'Seekh Kebab',     prices: { Half: 900, Full: 1600 } },
+          { name: 'Beef Tikka',      prices: { Half: 950, Full: 1700 } },
+        ]
+      },
+      {
+        name: 'FISH & PRAWNS',
+        items: [
+          { name: 'Fish Tikka',      prices: { Half: 1000, Full: 1800 } },
+          { name: 'Prawn Tikka',     prices: { Half: 1100, Full: 2000 } },
+        ]
+      },
     ]
   },
   {
-    name: 'NON-VEG MAINS',
+    category: 'VEG MAINS',
     sections: [
-      { name: 'Chicken (Boneless)', items: [
-        { n: 'Butter Chicken', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Tikka Masala', sizes: { Half: 1050, Full: 1900 } },
-        { n: 'Chicken Kadai', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Do Pyaza', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Korma', sizes: { Half: 1050, Full: 1900 } },
-        { n: 'Chicken Palak', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Handi', sizes: { Half: 1050, Full: 1900 } },
-      ]},
-      { name: 'Chicken (With Bones)', items: [
-        { n: 'Chicken Curry', sizes: { Half: 900, Full: 1650 } },
-        { n: 'Chicken Masala', sizes: { Half: 950, Full: 1700 } },
-        { n: 'Chicken Karahi', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Chicken Pepper Fry', sizes: { Half: 950, Full: 1700 } },
-      ]},
-      { name: 'Fish', items: [
-        { n: 'Fish Curry', sizes: { Half: 1000, Full: 1800 } },
-        { n: 'Fish Masala', sizes: { Half: 1050, Full: 1900 } },
-        { n: 'Fish Karahi', sizes: { Half: 1050, Full: 1900 } },
-        { n: 'Prawn Curry', sizes: { Half: 1300, Full: 2300 } },
-        { n: 'Prawn Masala', sizes: { Half: 1350, Full: 2400 } },
-      ]},
-      { name: 'Mutton', items: [
-        { n: 'Mutton Curry', sizes: { Half: 1200, Full: 2200 } },
-        { n: 'Mutton Masala', sizes: { Half: 1250, Full: 2300 } },
-        { n: 'Mutton Rogan Josh', sizes: { Half: 1300, Full: 2400 } },
-        { n: 'Mutton Karahi', sizes: { Half: 1300, Full: 2400 } },
-        { n: 'Mutton Pepper Fry', sizes: { Half: 1250, Full: 2300 } },
-      ]},
-      { name: 'Prawns', items: [
-        { n: 'Butter Garlic Prawns', sizes: { Half: 1400, Full: 2500 } },
-        { n: 'Prawn Pepper Fry', sizes: { Half: 1350, Full: 2400 } },
-      ]},
+      {
+        name: 'PANEER',
+        items: [
+          { name: 'Paneer Butter Masala',   prices: { Half: 850, Full: 1500 } },
+          { name: 'Palak Paneer',           prices: { Half: 850, Full: 1500 } },
+          { name: 'Paneer Tikka Masala',    prices: { Half: 900, Full: 1600 } },
+          { name: 'Kadai Paneer',           prices: { Half: 900, Full: 1600 } },
+        ]
+      },
+      {
+        name: 'DAL & VEGETABLES',
+        items: [
+          { name: 'Dal Tadka',              prices: { Half: 650, Full: 1200 } },
+          { name: 'Dal Makhani',            prices: { Half: 700, Full: 1300 } },
+          { name: 'Mix Vegetable',          prices: { Half: 750, Full: 1400 } },
+          { name: 'Aloo Gobi',              prices: { Half: 700, Full: 1300 } },
+          { name: 'Chana Masala',           prices: { Half: 700, Full: 1300 } },
+        ]
+      },
     ]
   },
   {
-    name: 'CHAAT & KULFI',
+    category: 'NON-VEG MAINS',
     sections: [
-      { name: 'Chaat', items: [
-        { n: 'Papdi Chaat', p: 400 },
-        { n: 'Dahi Puri', p: 400 },
-        { n: 'Pani Puri', p: 300 },
-        { n: 'Bhel Puri', p: 350 },
-        { n: 'Sev Puri', p: 350 },
-        { n: 'Aloo Chaat', p: 400 },
-        { n: 'Dahi Bhalla', p: 450 },
-      ]},
-      { name: 'Kulfi', items: [
-        { n: 'Malai Kulfi', p: 300 },
-        { n: 'Mango Kulfi', p: 300 },
-        { n: 'Pista Kulfi', p: 350 },
-        { n: 'Rose Kulfi', p: 300 },
-        { n: 'Kulfi Falooda', p: 500 },
-      ]},
+      {
+        name: 'CHICKEN',
+        items: [
+          { name: 'Butter Chicken',         prices: { Half: 950, Full: 1700 } },
+          { name: 'Chicken Tikka Masala',   prices: { Half: 950, Full: 1700 } },
+          { name: 'Kadai Chicken',          prices: { Half: 950, Full: 1700 } },
+          { name: 'Chicken Do Pyaza',       prices: { Half: 950, Full: 1700 } },
+          { name: 'Chicken Saag',           prices: { Half: 950, Full: 1700 } },
+        ]
+      },
+      {
+        name: 'MUTTON & BEEF',
+        items: [
+          { name: 'Mutton Curry',           prices: { Half: 1100, Full: 2000 } },
+          { name: 'Mutton Rogan Josh',      prices: { Half: 1100, Full: 2000 } },
+          { name: 'Beef Masala',            prices: { Half: 1050, Full: 1900 } },
+        ]
+      },
+      {
+        name: 'FISH & PRAWNS',
+        items: [
+          { name: 'Fish Curry',             prices: { Half: 1000, Full: 1800 } },
+          { name: 'Prawn Masala',           prices: { Half: 1150, Full: 2100 } },
+        ]
+      },
     ]
   },
   {
-    name: 'ITALIAN',
+    category: 'CHAAT & KULFI',
     sections: [
-      { name: 'Pizza', items: [
-        { n: 'Margherita', sizes: { '8"': 900, '12"': 1500 } },
-        { n: 'Veg Supreme', sizes: { '8"': 1000, '12"': 1700 } },
-        { n: 'Chicken Pizza', sizes: { '8"': 1100, '12"': 1900 } },
-        { n: 'BBQ Chicken', sizes: { '8"': 1200, '12"': 2000 } },
-        { n: 'Pepperoni', sizes: { '8"': 1200, '12"': 2000 } },
-        { n: 'Meat Lovers', sizes: { '8"': 1400, '12"': 2400 } },
-      ]},
-      { name: 'Pasta', items: [
-        { n: 'Veg Pasta Arrabbiata', p: 800 },
-        { n: 'Veg Pasta Alfredo', p: 850 },
-        { n: 'Chicken Pasta Arrabbiata', p: 1000 },
-        { n: 'Chicken Pasta Alfredo', p: 1050 },
-        { n: 'Prawn Pasta', p: 1300 },
-      ]},
-      { name: 'Garlic Bread', items: [
-        { n: 'Plain Garlic Bread', p: 400 },
-        { n: 'Cheese Garlic Bread', p: 500 },
-        { n: 'Herb Garlic Bread', p: 450 },
-      ]},
+      {
+        name: 'CHAAT',
+        items: [
+          { name: 'Pani Puri',              price: 450 },
+          { name: 'Bhel Puri',              price: 450 },
+          { name: 'Sev Puri',               price: 450 },
+          { name: 'Dahi Puri',              price: 500 },
+          { name: 'Ragda Pattice',          price: 500 },
+        ]
+      },
+      {
+        name: 'KULFI',
+        items: [
+          { name: 'Plain Kulfi',            price: 350 },
+          { name: 'Mango Kulfi',            price: 400 },
+          { name: 'Pista Kulfi',            price: 400 },
+          { name: 'Rose Kulfi',             price: 400 },
+        ]
+      },
     ]
   },
   {
-    name: 'BIRYANI',
+    category: 'ITALIAN',
     sections: [
-      { name: 'Veg Biryani', items: [
-        { n: 'Veg Biryani', sizes: { Half: 700, Full: 1200 } },
-        { n: 'Paneer Biryani', sizes: { Half: 900, Full: 1600 } },
-        { n: 'Mushroom Biryani', sizes: { Half: 850, Full: 1500 } },
-      ]},
-      { name: 'Non-Veg Biryani', items: [
-        { n: 'Chicken Biryani', sizes: { Half: 900, Full: 1650 } },
-        { n: 'Mutton Biryani', sizes: { Half: 1200, Full: 2200 } },
-        { n: 'Fish Biryani', sizes: { Half: 1100, Full: 2000 } },
-        { n: 'Prawn Biryani', sizes: { Half: 1400, Full: 2500 } },
-        { n: 'Mixed Biryani', sizes: { Half: 1300, Full: 2400 } },
-        { n: 'Egg Biryani', sizes: { Half: 750, Full: 1350 } },
-      ]},
+      {
+        name: 'PIZZA',
+        items: [
+          { name: 'Margherita',             prices: { Regular: 950, Large: 1500 } },
+          { name: 'Farmhouse',              prices: { Regular: 1050, Large: 1700 } },
+          { name: 'Paneer Tikka Pizza',     prices: { Regular: 1100, Large: 1800 } },
+          { name: 'Chicken BBQ',            prices: { Regular: 1100, Large: 1800 } },
+          { name: 'Spicy Chicken',          prices: { Regular: 1100, Large: 1800 } },
+          { name: 'Beef & Mushroom',        prices: { Regular: 1150, Large: 1900 } },
+        ]
+      },
+      {
+        name: 'PASTA',
+        items: [
+          { name: 'Spaghetti Bolognese',    price: 950 },
+          { name: 'Pasta Arrabiata',        price: 850 },
+          { name: 'Fettuccine Alfredo',     price: 900 },
+          { name: 'Pasta Pesto',            price: 900 },
+        ]
+      },
     ]
   },
   {
-    name: 'NAAN',
+    category: 'BIRYANI',
     sections: [
-      { name: 'Naan Varieties', items: [
-        { n: 'Plain Naan', p: 150 },
-        { n: 'Butter Naan', p: 180 },
-        { n: 'Garlic Naan', p: 200 },
-        { n: 'Cheese Naan', p: 300 },
-        { n: 'Chilli Garlic Naan', p: 250 },
-        { n: 'Stuffed Paneer Naan', p: 400 },
-        { n: 'Kulcha', p: 200 },
-        { n: 'Paratha', p: 180 },
-        { n: 'Aloo Paratha', p: 300 },
-      ]},
+      {
+        name: 'VEG BIRYANI',
+        items: [
+          { name: 'Vegetable Biryani',      prices: { Half: 750, Full: 1400 } },
+          { name: 'Paneer Biryani',         prices: { Half: 850, Full: 1550 } },
+        ]
+      },
+      {
+        name: 'NON-VEG BIRYANI',
+        items: [
+          { name: 'Chicken Biryani',        prices: { Half: 900, Full: 1650 } },
+          { name: 'Mutton Biryani',         prices: { Half: 1050, Full: 1900 } },
+          { name: 'Beef Biryani',           prices: { Half: 1000, Full: 1850 } },
+          { name: 'Prawn Biryani',          prices: { Half: 1100, Full: 2000 } },
+        ]
+      },
     ]
   },
   {
-    name: 'KOROGA',
+    category: 'NAAN',
     sections: [
-      { name: 'Koroga (serves 2–4)', items: [
-        { n: 'Chicken Koroga', p: 2800 },
-        { n: 'Goat Koroga', p: 3200 },
-        { n: 'Mixed Koroga (Chicken + Goat)', p: 3600 },
-        { n: 'Fish Koroga', p: 3000 },
-        { n: 'Prawn Koroga', p: 3800 },
-        { n: 'Veg Koroga', p: 2200 },
-      ]},
+      {
+        name: 'BREADS',
+        items: [
+          { name: 'Plain Naan',             price: 150 },
+          { name: 'Butter Naan',            price: 180 },
+          { name: 'Garlic Naan',            price: 200 },
+          { name: 'Cheese Naan',            price: 250 },
+          { name: 'Stuffed Paratha',        price: 300 },
+          { name: 'Puri (2 pc)',            price: 200 },
+          { name: 'Steamed Rice',           price: 300 },
+          { name: 'Jeera Rice',             price: 350 },
+        ]
+      },
+    ]
+  },
+  {
+    category: 'KOROGA',
+    sections: [
+      {
+        name: 'KOROGA SPECIAL',
+        items: [
+          { name: 'Chicken Koroga',         prices: { Half: 1200, Full: 2200 } },
+          { name: 'Beef Koroga',            prices: { Half: 1200, Full: 2200 } },
+          { name: 'Goat Koroga',            prices: { Half: 1300, Full: 2400 } },
+          { name: 'Mix Koroga',             prices: { Half: 1350, Full: 2500 } },
+        ]
+      },
     ]
   },
 ];
 
 /* ============================================================
-   CART STATE
+   VEG / NON-VEG INDICATOR SVGS
    ============================================================ */
+const VEG_SVG  = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="#4caf50" stroke-width="1.6"/><circle cx="8" cy="8" r="4" fill="#4caf50"/></svg>`;
+const NVEG_SVG = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="#c62828" stroke-width="1.6"/><polygon points="8,3.5 13,11.5 3,11.5" fill="#c62828"/></svg>`;
 
+/* ============================================================
+   CART
+   ============================================================ */
 let cart = [];
 
-function getItemKey(item, selectedSize, selectedStyle) {
-  return `${item.n}|${selectedSize || ''}|${selectedStyle || ''}`;
-}
-
-function addToCart(itemName, price, selectedSize, selectedStyle) {
-  const key = `${itemName}|${selectedSize || ''}|${selectedStyle || ''}`;
-  const existing = cart.find(c => c.key === key);
-  const label = selectedSize ? `${itemName} (${selectedSize})` : itemName;
-  if (existing) {
-    existing.qty++;
-  } else {
-    cart.push({ key, name: label, price: Number(price), qty: 1 });
-  }
+function addToCart(name, price, size) {
+  const key = size ? `${name} (${size})` : name;
+  const existing = cart.find(i => i.key === key);
+  if (existing) { existing.qty++; }
+  else { cart.push({ key, name, size: size || '', price, qty: 1 }); }
   updateCartUI();
 }
 
 function removeOneFromCart(key) {
-  const idx = cart.findIndex(c => c.key === key);
-  if (idx < 0) return;
-  cart[idx].qty--;
-  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  const item = cart.find(i => i.key === key);
+  if (!item) return;
+  item.qty--;
+  if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
   updateCartUI();
 }
 
 function removeFromCart(key) {
-  cart = cart.filter(c => c.key !== key);
+  cart = cart.filter(i => i.key !== key);
   updateCartUI();
 }
 
@@ -330,377 +266,463 @@ function clearCart() {
   updateCartUI();
 }
 
-function updateCartUI() {
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-  const count = cart.reduce((s, c) => s + c.qty, 0);
+function getCartTotal() {
+  return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+}
 
+function updateCartUI() {
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  const total = getCartTotal();
   document.getElementById('cart-count').textContent = count;
   document.getElementById('cart-total').textContent = `KES ${total.toLocaleString()}`;
   document.getElementById('modal-total').textContent = `KES ${total.toLocaleString()}`;
 
   const bar = document.getElementById('cart-bar');
   if (count > 0) bar.classList.add('visible');
-  else bar.classList.remove('visible');
+  else           bar.classList.remove('visible');
 
   const list = document.getElementById('cart-items-list');
-  if (!cart.length) {
-    list.innerHTML = '<div class="empty-cart">Your selection is empty.<br>Add items from the menu above.</div>';
+  if (cart.length === 0) {
+    list.innerHTML = '<div class="cart-empty">No items yet</div>';
     return;
   }
-  list.innerHTML = cart.map(c => `
+
+  list.innerHTML = cart.map(item => `
     <div class="cart-item">
-      <div class="cart-item-name">${c.name}</div>
-      <div class="cart-item-controls">
-        <button class="qty-btn" onclick="removeOneFromCart('${c.key.replace(/'/g,"\\'")}')">−</button>
-        <span class="qty-num">${c.qty}</span>
-        <button class="qty-btn" onclick="addToCart('${c.name.replace(/'/g,"\\'")}', ${c.price}, '', '')">+</button>
-        <button class="remove-btn" onclick="removeFromCart('${c.key.replace(/'/g,"\\'")}')">Remove</button>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        ${item.size ? `<div class="cart-item-size">${item.size}</div>` : ''}
       </div>
-      <div class="cart-item-price">KES ${(c.price * c.qty).toLocaleString()}</div>
-    </div>`).join('');
+      <div class="cart-item-controls">
+        <button class="cart-qty-btn" onclick="removeOneFromCart('${esc(item.key)}')">−</button>
+        <span style="min-width:22px;text-align:center;font-size:.82rem;font-weight:700;color:#fff">${item.qty}</span>
+        <button class="cart-qty-btn" onclick="addToCart('${esc(item.name)}',${item.price},'${esc(item.size)}')">+</button>
+        <div class="cart-item-price">KES ${(item.price * item.qty).toLocaleString()}</div>
+        <button class="cart-remove-btn" onclick="removeFromCart('${esc(item.key)}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  /* update inline qty displays */
+  document.querySelectorAll('[data-item-key]').forEach(el => {
+    const key = el.getAttribute('data-item-key');
+    const found = cart.find(i => i.key === key);
+    const qty = found ? found.qty : 0;
+    const disp = el.querySelector('.qty-display');
+    if (disp) disp.textContent = qty;
+  });
 }
 
-/* ============================================================
-   CART MODAL
-   ============================================================ */
+function esc(s) {
+  return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
 
 function toggleCart() {
   const modal = document.getElementById('cart-modal');
   modal.classList.toggle('open');
-  if (modal.classList.contains('open')) {
-    const now = new Date();
-    const dateEl = document.getElementById('order-date');
-    const timeEl = document.getElementById('order-time-now');
-    if (dateEl && !dateEl.value) dateEl.value = now.toISOString().split('T')[0];
-    if (timeEl && !timeEl.value) timeEl.value = now.toTimeString().slice(0,5);
-  }
 }
 
-let orderType = 'Dine In';
 function setOrderType(btn) {
   document.querySelectorAll('.order-type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  orderType = btn.textContent;
 }
-
-/* ============================================================
-   PLACE ORDER (WhatsApp)
-   ============================================================ */
 
 function placeOrder() {
-  if (!cart.length) { alert('Please add items to your order first.'); return; }
+  if (cart.length === 0) { alert('Your cart is empty!'); return; }
+
   const name   = document.getElementById('cust-name').value.trim() || 'Guest';
   const date   = document.getElementById('order-date').value;
-  const tNow   = document.getElementById('order-time-now').value;
-  const tServe = document.getElementById('order-time').value;
-  const pax    = document.getElementById('cust-people').value || '1';
+  const timeNow= document.getElementById('order-time-now').value;
+  const serve  = document.getElementById('order-time').value;
+  const people = document.getElementById('cust-people').value;
+  const type   = document.querySelector('.order-type-btn.active')?.textContent || 'Dine In';
 
-  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
-  const lines = cart.map(c => `• ${c.name} x${c.qty} — KES ${(c.price * c.qty).toLocaleString()}`).join('\n');
+  let msg = `*United Sports Club — Restaurant Order*\n\n`;
+  msg += `Name: ${name}\n`;
+  msg += `Date: ${date || '—'}\n`;
+  msg += `Order Time: ${timeNow || '—'}\n`;
+  msg += `Serving Time: ${serve || '—'}\n`;
+  msg += `Covers: ${people}\n`;
+  msg += `Type: ${type}\n\n`;
+  msg += `*Order:*\n`;
+  cart.forEach(i => {
+    msg += `• ${i.name}${i.size ? ` (${i.size})` : ''} ×${i.qty} — KES ${(i.price * i.qty).toLocaleString()}\n`;
+  });
+  msg += `\n*Total: KES ${getCartTotal().toLocaleString()}*`;
 
-  const msg = [
-    '🍽️ *New Restaurant Order — USC Mombasa*',
-    '',
-    `👤 Name: ${name}`,
-    `📅 Date: ${date}`,
-    `🕐 Order Time: ${tNow}`,
-    `🕑 Serving Time: ${tServe}`,
-    `👥 Pax: ${pax}`,
-    `🍴 Type: ${orderType}`,
-    '',
-    '*Order Items:*',
-    lines,
-    '',
-    `💰 *Total: KES ${total.toLocaleString()}*`,
-  ].join('\n');
-
-  const url = `https://wa.me/${WHATSAPP_NO}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  window.open(`https://wa.me/${WHATSAPP_NO}?text=${encodeURIComponent(msg)}`);
 }
 
 /* ============================================================
-   STEP NAVIGATION
+   RENDER ITEM
    ============================================================ */
+function renderItem(item, isVeg) {
+  const hasSize = item.prices && Object.keys(item.prices).length > 1;
+  const sizes   = hasSize ? Object.keys(item.prices) : null;
+  const basePrice = hasSize
+    ? item.prices[sizes[0]]
+    : (item.price || (item.prices && Object.values(item.prices)[0]) || 0);
 
-let currentStep = 1;
+  const defaultSize = sizes ? sizes[0] : '';
+  const itemKey = defaultSize ? `${item.name} (${defaultSize})` : item.name;
 
-function goStep(n) {
-  if (n === currentStep) return;
-  const from = document.getElementById(`step-${currentStep}`);
-  const to   = document.getElementById(`step-${n}`);
+  const vegDot = isVeg !== undefined
+    ? `<span class="item-veg-dot">${isVeg ? VEG_SVG : NVEG_SVG}</span>`
+    : '';
 
-  from.classList.add('step-hidden');
-  to.classList.remove('step-hidden');
+  const sizePillsHtml = sizes ? `
+    <div class="item-sizes">
+      ${sizes.map((s, i) => `
+        <button class="size-pill${i===0?' active':''}"
+          onclick="selectSize(this, '${esc(item.name)}', '${esc(s)}', ${item.prices[s]})"
+          data-size="${esc(s)}"
+        >${s} · KES ${item.prices[s].toLocaleString()}</button>
+      `).join('')}
+    </div>` : '';
 
-  /* re-trigger animation */
-  to.style.animation = 'none';
-  to.offsetHeight; /* reflow */
-  to.style.animation = '';
+  const cartInCart = cart.find(i => i.key === itemKey);
+  const qty = cartInCart ? cartInCart.qty : 0;
 
-  currentStep = n;
-  updateStepDots();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return `
+    <div class="item-card" data-item-key="${esc(itemKey)}" data-base-name="${esc(item.name)}">
+      <div class="item-left">
+        <div class="item-name-row">
+          ${vegDot}
+          <span class="item-name">${item.name}</span>
+        </div>
+        ${sizePillsHtml}
+      </div>
+      <div class="item-right">
+        <div class="item-price" id="price-${esc(itemKey)}">KES ${basePrice.toLocaleString()}</div>
+        ${qty > 0 ? `
+          <div class="item-controls">
+            <button class="qty-btn" onclick="handleRemove('${esc(itemKey)}')">−</button>
+            <div class="qty-display">${qty}</div>
+            <button class="qty-btn" onclick="handleAdd(this)">+</button>
+          </div>
+        ` : `
+          <button class="item-add-btn" onclick="handleAdd(this)">+ Add</button>
+        `}
+      </div>
+    </div>`;
 }
 
-function updateStepDots() {
-  for (let i = 1; i <= 3; i++) {
-    const node = document.getElementById(`node-${i}`);
-    if (i < currentStep)      node.className = 'step-node done';
-    else if (i === currentStep) node.className = 'step-node active';
-    else                        node.className = 'step-node';
-  }
-  document.getElementById('conn-12').className = 'step-connector' + (currentStep > 1 ? ' filled' : '');
-  document.getElementById('conn-23').className = 'step-connector' + (currentStep > 2 ? ' filled' : '');
+function selectSize(btn, name, size, price) {
+  const card = btn.closest('.item-card');
+  card.querySelectorAll('.size-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+
+  const newKey = `${name} (${size})`;
+  card.setAttribute('data-item-key', newKey);
+  const priceEl = card.querySelector('.item-price');
+  if (priceEl) priceEl.textContent = `KES ${price.toLocaleString()}`;
+}
+
+function handleAdd(btn) {
+  const card  = btn.closest('.item-card');
+  const key   = card.getAttribute('data-item-key');
+  const name  = card.getAttribute('data-base-name');
+  const priceText = card.querySelector('.item-price')?.textContent || 'KES 0';
+  const price = parseInt(priceText.replace(/[^0-9]/g, ''), 10) || 0;
+  const size  = key.includes('(') ? key.match(/\(([^)]+)\)/)?.[1] || '' : '';
+  addToCart(name, price, size);
+  reRenderItemControls(card, key);
+}
+
+function handleRemove(key) {
+  removeOneFromCart(key);
+  const card = document.querySelector(`[data-item-key="${CSS.escape(key)}"]`);
+  if (card) reRenderItemControls(card, key);
+}
+
+function reRenderItemControls(card, key) {
+  const right  = card.querySelector('.item-right');
+  const priceEl= card.querySelector('.item-price');
+  const priceHtml = priceEl ? priceEl.outerHTML : '';
+  const item   = cart.find(i => i.key === key);
+  const qty    = item ? item.qty : 0;
+
+  right.innerHTML = priceHtml + (qty > 0 ? `
+    <div class="item-controls">
+      <button class="qty-btn" onclick="handleRemove('${esc(key)}')">−</button>
+      <div class="qty-display">${qty}</div>
+      <button class="qty-btn" onclick="handleAdd(this)">+</button>
+    </div>
+  ` : `
+    <button class="item-add-btn" onclick="handleAdd(this)">+ Add</button>
+  `);
 }
 
 /* ============================================================
-   STARTER TYPE SWITCH
+   BUILD SECTIONS
    ============================================================ */
+function buildSections(sections, isVeg) {
+  return sections.map(sec => {
+    const items = sec.items.map(item => renderItem(item, isVeg)).join('');
+    return `
+      <div class="category-wrapper open">
+        <div class="category-header" onclick="this.parentElement.classList.toggle('open')">
+          <span class="cat-name">${sec.name}<span class="cat-count">${sec.items.length} items</span></span>
+          <svg class="cat-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="category-content">${items}</div>
+      </div>`;
+  }).join('');
+}
 
-let starterType = 'veg';
+/* ============================================================
+   BUILD MENUS
+   ============================================================ */
+function buildStarters() {
+  const vegData   = menuData.find(c => c.category === 'STARTERS' && c.type === 'VEG');
+  const nvegData  = menuData.find(c => c.category === 'STARTERS' && c.type === 'NON-VEG');
+  document.getElementById('starters-veg').innerHTML   = buildSections(vegData.sections, true);
+  document.getElementById('starters-nonveg').innerHTML= buildSections(nvegData.sections, false);
+}
 
+function buildMains() {
+  const vegData  = menuData.find(c => c.category === 'VEG MAINS');
+  const nvegData = menuData.find(c => c.category === 'NON-VEG MAINS');
+  document.getElementById('mains-veg-content').innerHTML   = buildSections(vegData.sections, true);
+  document.getElementById('mains-nonveg-content').innerHTML= buildSections(nvegData.sections, false);
+}
+
+function buildExtras() {
+  const categories = ['CHAAT & KULFI', 'ITALIAN', 'BIRYANI', 'NAAN', 'KOROGA'];
+  const tabs = document.getElementById('extras-tabs');
+  const content = document.getElementById('extras-content');
+
+  tabs.innerHTML = categories.map((cat, i) =>
+    `<button class="type-tab${i===0?' active':''}" onclick="switchExtrasTab('${esc(cat)}', this)">${cat}</button>`
+  ).join('');
+
+  const data = categories.map(cat => ({
+    cat,
+    html: `<div id="extras-${esc(cat)}" class="${i===0?'':'type-hidden'}">` +
+          buildSections(menuData.find(c => c.category === cat)?.sections || [], undefined) +
+          `</div>`
+  }));
+
+  content.innerHTML = categories.map((cat, i) =>
+    `<div id="ext-${i}" class="${i===0?'':'type-hidden'}">${
+      buildSections(menuData.find(c => c.category === cat)?.sections || [], undefined)
+    }</div>`
+  ).join('');
+
+  /* store mapping */
+  tabs.querySelectorAll('.type-tab').forEach((btn, i) => {
+    btn.setAttribute('data-ext-index', i);
+  });
+}
+
+/* ============================================================
+   MENU SWITCHING
+   ============================================================ */
 function switchStarterType(type, btn) {
-  starterType = type;
   document.querySelectorAll('#starter-tabs .type-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('starters-veg').classList.toggle('type-hidden', type !== 'veg');
   document.getElementById('starters-nonveg').classList.toggle('type-hidden', type !== 'nonveg');
 }
 
-/* ============================================================
-   MAINS TYPE SELECTION (toggle accordion)
-   ============================================================ */
+let mainsVegOpen    = false;
+let mainsNvegOpen   = false;
 
 function selectMainsType(type) {
-  const vegCard    = document.getElementById('choice-veg');
-  const nvCard     = document.getElementById('choice-nonveg');
-  const vegContent = document.getElementById('mains-veg-content');
-  const nvContent  = document.getElementById('mains-nonveg-content');
+  const hint = document.getElementById('mains-select-hint');
+  if (hint) hint.style.display = 'none';
 
   if (type === 'veg') {
-    const wasSelected = vegCard.classList.contains('selected');
-    vegCard.classList.toggle('selected');
-    document.getElementById('toggle-veg').textContent = wasSelected ? '+' : '−';
-    vegContent.classList.toggle('type-hidden', wasSelected);
+    mainsVegOpen = !mainsVegOpen;
+    document.getElementById('pill-veg').classList.toggle('active', mainsVegOpen);
+    document.getElementById('mains-veg-content').classList.toggle('type-hidden', !mainsVegOpen);
   } else {
-    const wasSelected = nvCard.classList.contains('selected');
-    nvCard.classList.toggle('selected');
-    document.getElementById('toggle-nonveg').textContent = wasSelected ? '+' : '−';
-    nvContent.classList.toggle('type-hidden', wasSelected);
+    mainsNvegOpen = !mainsNvegOpen;
+    document.getElementById('pill-nonveg').classList.toggle('active', mainsNvegOpen);
+    document.getElementById('mains-nonveg-content').classList.toggle('type-hidden', !mainsNvegOpen);
+  }
+
+  if (!mainsVegOpen && !mainsNvegOpen) {
+    if (hint) hint.style.display = '';
   }
 }
 
-/* ============================================================
-   EXTRAS CATEGORY TABS
-   ============================================================ */
-
-function openExtrasCategory(idx, btn) {
+function switchExtrasTab(cat, btn) {
   document.querySelectorAll('#extras-tabs .type-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('[id^="extras-block-"]').forEach(b => b.classList.add('type-hidden'));
-  document.getElementById(`extras-block-${idx}`).classList.remove('type-hidden');
+  const idx = parseInt(btn.getAttribute('data-ext-index') || '0', 10);
+  document.querySelectorAll('#extras-content > div').forEach((el, i) => {
+    el.classList.toggle('type-hidden', i !== idx);
+  });
 }
-
-/* ============================================================
-   CATEGORY ACCORDION TOGGLE
-   ============================================================ */
-
-function toggleCat(id) {
-  const wrapper = document.getElementById(id);
-  if (!wrapper) return;
-  wrapper.classList.toggle('open');
-}
-
-/* ============================================================
-   RENDER ITEM
-   ============================================================ */
-
-function renderItem(item) {
-  const hasSizes  = item.sizes && Object.keys(item.sizes).length > 0;
-  const hasStyles = item.styles && item.styles.length > 0;
-
-  let defaultSize  = hasSizes  ? Object.keys(item.sizes)[0] : null;
-  let defaultPrice = hasSizes  ? Object.values(item.sizes)[0] : item.p;
-  let priceLabel   = defaultPrice ? `KES ${Number(defaultPrice).toLocaleString()}` : '';
-
-  /* safe ids for use in inline handlers */
-  const uid = Math.random().toString(36).slice(2, 8);
-
-  let controls = '';
-
-  if (hasSizes) {
-    const btns = Object.entries(item.sizes).map(([label, price], i) => `
-      <button class="portion-btn${i === 0 ? ' active' : ''}"
-        onclick="changeSize('${uid}', '${label}', ${price}, this)">${label} · KES ${Number(price).toLocaleString()}</button>`
-    ).join('');
-    controls += `<div class="portion-select" id="ps-${uid}">${btns}</div>`;
-  }
-
-  if (hasStyles) {
-    const opts = item.styles.map(s => `<option value="${s}">${s}</option>`).join('');
-    controls += `<div class="style-select"><select id="ss-${uid}">${opts}</select></div>`;
-  }
-
-  controls += `<button class="add-btn" onclick="handleAdd('${uid}', '${item.n.replace(/'/g,"\\'")}', ${defaultPrice || 0})">+ Add</button>`;
-
-  return `
-    <div class="food-item" id="fi-${uid}">
-      <div class="item-name">${item.n}</div>
-      ${!hasSizes && defaultPrice ? `<div class="item-price">KES ${Number(defaultPrice).toLocaleString()}</div>` : ''}
-      <div class="item-controls" data-price="${defaultPrice || 0}" data-size="${defaultSize || ''}">${controls}</div>
-    </div>`;
-}
-
-function changeSize(uid, label, price, btn) {
-  document.querySelectorAll(`#ps-${uid} .portion-btn`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const controls = btn.closest('.item-controls');
-  controls.dataset.price = price;
-  controls.dataset.size  = label;
-}
-
-function handleAdd(uid, name, defaultPrice) {
-  const controls  = document.querySelector(`#fi-${uid} .item-controls`);
-  const price     = Number(controls.dataset.price) || defaultPrice;
-  const size      = controls.dataset.size || '';
-  const styleEl   = document.getElementById(`ss-${uid}`);
-  const style     = styleEl ? styleEl.value : '';
-  addToCart(name, price, size, style);
-
-  /* flash feedback on the button */
-  const btn = controls.querySelector('.add-btn');
-  const orig = btn.textContent;
-  btn.textContent = '✓ Added';
-  btn.style.background = '#2a7a3a';
-  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 800);
-}
-
-/* ============================================================
-   BUILD SECTIONS HTML
-   ============================================================ */
-
-function buildSections(sections, prefix) {
-  return sections.map((sec, i) => {
-    const id = `cat-${prefix}-${i}`;
-    const count = sec.items.length;
-    return `
-      <div class="category-wrapper" id="${id}">
-        <div class="category-header" onclick="toggleCat('${id}')">
-          <span class="cat-title">${sec.name} <span class="cat-count">${count} items</span></span>
-          <svg class="cat-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-        </div>
-        <div class="category-content">
-          <div class="items-grid">${sec.items.map(renderItem).join('')}</div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-/* ============================================================
-   FILTER / SEARCH (applies to current step's visible items)
-   ============================================================ */
 
 function filterMenu() {
-  const q = document.getElementById('menuSearch').value.toLowerCase().trim();
-  document.querySelectorAll('#step-1 .food-item').forEach(el => {
-    const name = el.querySelector('.item-name').textContent.toLowerCase();
-    el.style.display = (!q || name.includes(q)) ? '' : 'none';
+  const q = (document.getElementById('menuSearch')?.value || '').toLowerCase().trim();
+  document.querySelectorAll('#menu-1 .item-card').forEach(card => {
+    const name = card.querySelector('.item-name')?.textContent?.toLowerCase() || '';
+    card.style.display = (!q || name.includes(q)) ? '' : 'none';
   });
 }
 
 /* ============================================================
-   BUILD STEPS
+   CHAPTER / MENU NAVIGATION
    ============================================================ */
+let currentScreen = 'ch-1';
 
-function buildStarters() {
-  const starter = menuData[0];
-  const vegSecs   = starter.sections.filter(s => s.type === 'VEG');
-  const nvegSecs  = starter.sections.filter(s => s.type === 'NON-VEG');
-  document.getElementById('starters-veg').innerHTML   = buildSections(vegSecs,  'sv');
-  document.getElementById('starters-nonveg').innerHTML = buildSections(nvegSecs, 'sn');
-}
+function showChapter(n) {
+  const all = document.querySelectorAll('.chapter-screen, .menu-screen');
 
-function buildMains() {
-  const veg   = menuData[1];
-  const nveg  = menuData[2];
-  document.getElementById('mains-veg-content').innerHTML   = buildSections(veg.sections,  'mv');
-  document.getElementById('mains-nonveg-content').innerHTML = buildSections(nveg.sections, 'mn');
-}
-
-function buildExtras() {
-  const extras = menuData.slice(3); /* Chaat, Italian, Biryani, Naan, Koroga */
-  const nav     = document.getElementById('extras-tabs');
-  const content = document.getElementById('extras-content');
-
-  extras.forEach((cat, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'type-tab' + (i === 0 ? ' active' : '');
-    btn.textContent = cat.name;
-    btn.onclick = () => openExtrasCategory(i, btn);
-    nav.appendChild(btn);
-
-    const block = document.createElement('div');
-    block.id = `extras-block-${i}`;
-    if (i !== 0) block.classList.add('type-hidden');
-    block.innerHTML = buildSections(cat.sections, `ex${i}`);
-    content.appendChild(block);
+  /* hide current screen */
+  all.forEach(el => {
+    el.classList.remove('ch-visible', 'ms-visible');
   });
+
+  document.body.classList.add('ch-mode');
+  document.body.classList.remove('menu-mode');
+
+  const ch = document.getElementById(`ch-${n}`);
+  if (!ch) return;
+
+  /* restart ken burns */
+  const img = ch.querySelector('.ch-img');
+  if (img) {
+    img.style.animation = 'none';
+    img.getBoundingClientRect();
+    img.style.animation = '';
+  }
+
+  /* animate in */
+  ch.classList.add('ch-enter');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ch.classList.remove('ch-enter');
+      ch.classList.add('ch-visible');
+    });
+  });
+
+  currentScreen = `ch-${n}`;
+  window.scrollTo(0, 0);
 }
+
+function showMenu(n) {
+  const ch = document.getElementById(`ch-${n}`);
+
+  /* exit chapter */
+  if (ch) {
+    ch.classList.add('ch-exit');
+    setTimeout(() => ch.classList.remove('ch-visible', 'ch-exit'), 350);
+  }
+
+  setTimeout(() => {
+    document.body.classList.remove('ch-mode');
+    document.body.classList.add('menu-mode');
+
+    document.querySelectorAll('.menu-screen').forEach(el => el.classList.remove('ms-visible'));
+    const menu = document.getElementById(`menu-${n}`);
+    if (menu) menu.classList.add('ms-visible');
+
+    currentScreen = `menu-${n}`;
+    window.scrollTo(0, 0);
+  }, 300);
+}
+
+function doneWithMenu(n) {
+  if (n >= 3) {
+    toggleCart();
+    return;
+  }
+  const menu = document.getElementById(`menu-${n}`);
+  if (menu) menu.classList.remove('ms-visible');
+  showChapter(n + 1);
+}
+
+/* ============================================================
+   SEARCH FILTER
+   ============================================================ */
+// filterMenu already defined above
 
 /* ============================================================
    AUTH
    ============================================================ */
-
-async function initAuth() {
-  const { data: { session } } = await sb.auth.getSession();
-  buildNavUserBar(session?.user ?? null);
-  sb.auth.onAuthStateChange((_event, session) => buildNavUserBar(session?.user ?? null));
+function initAuth() {
+  if (typeof window.supabase === 'undefined') return;
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data?.session) buildNavUserBar(data.session.user);
+  });
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    if (session) buildNavUserBar(session.user);
+    else {
+      const bar = document.getElementById('nav-user-bar');
+      if (bar) bar.remove();
+    }
+  });
 }
 
 function buildNavUserBar(user) {
-  const right = document.querySelector('.usc-nav-right');
-  if (!right) return;
-  if (!user) { right.innerHTML = ''; return; }
-  const initial = (user.email || 'U')[0].toUpperCase();
-  right.innerHTML = `
-    <div id="user-chip">
-      <div class="user-avatar">${initial}</div>
-      <button class="signout-btn" onclick="doSignOut()">Sign out</button>
-    </div>`;
+  if (!user) return;
+  let bar = document.getElementById('nav-user-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'nav-user-bar';
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    const right = document.querySelector('.usc-nav-right');
+    if (right) right.appendChild(bar);
+  }
+  bar.innerHTML = `
+    <span style="font-size:.72rem;color:rgba(255,255,255,.45);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${user.email}</span>
+    <button onclick="doSignOut()" style="font-size:.72rem;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);cursor:pointer;">Sign out</button>`;
 }
 
-async function doSignOut() {
-  await sb.auth.signOut();
-  window.location.href = '../index.html';
+function doSignOut() {
+  if (supabaseClient) supabaseClient.auth.signOut();
 }
 
 /* ============================================================
-   SPLASH & INIT
+   INIT
    ============================================================ */
-
 function runSplash() {
   return new Promise(resolve => {
     setTimeout(() => {
       const splash = document.getElementById('splash');
-      splash.classList.add('exit');
-      setTimeout(() => {
-        splash.style.display = 'none';
-        resolve();
-      }, 580);
+      splash.classList.add('hidden');
+      resolve();
     }, 2200);
   });
 }
 
 async function init() {
+  /* set today's date */
+  const dateInput = document.getElementById('order-date');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+  /* set current time */
+  const timeInput = document.getElementById('order-time-now');
+  if (timeInput) {
+    const now = new Date();
+    timeInput.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+
+  /* build menu data */
   buildStarters();
   buildMains();
   buildExtras();
-  updateCartUI();
+
+  /* init auth */
   initAuth();
+
+  /* splash → chapter 1 */
   await runSplash();
-  const app = document.getElementById('app');
-  app.classList.remove('app-hidden');
-  app.classList.add('app-visible');
+
+  document.body.classList.add('ch-mode');
+  const ch1 = document.getElementById('ch-1');
+  if (ch1) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ch1.classList.add('ch-visible');
+      });
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
