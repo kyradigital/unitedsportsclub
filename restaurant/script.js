@@ -10,13 +10,12 @@ const escH = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;
 const titleCase = s => s.toLowerCase().replace(/(^|[\s(&/-])([a-z])/g, (m, a, b) => a + b.toUpperCase());
 
 /* ---------- Veg / non-veg marks (Indian food labelling symbols) ---------- */
-function mark(diet, size = 16) {
+function mark(diet, size = 17) {
   const veg = diet === 'veg';
-  const c = veg ? '#0a8a3a' : '#a5281b';
-  const shape = veg
-    ? `<circle cx="10" cy="10" r="4.6" fill="${c}"/>`
-    : `<path d="M10 4.900l5.300 9.400H4.700z" fill="${c}"/>`;
-  return `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 20 20" role="img" aria-label="${veg ? 'Vegetarian' : 'Non-vegetarian'}"><rect x="1.500" y="1.500" width="17" height="17" rx="2.500" fill="#fff" stroke="${c}" stroke-width="2"/>${shape}</svg>`;
+  const art = veg
+    ? '<path d="M20.5 3.2c.6 9.800-3 17-10 17-1.700 0-3.300-.5-4.600-1.400C4.700 17.500 4 15.800 4 14 4 7.500 10.500 3.200 20.500 3.200z" fill="#35bd5e"/><path d="M20.5 3.200c.6 9.800-3 17-10 17-1.700 0-3.300-.5-4.600-1.400C10 16 16 10.500 20.500 3.200z" fill="#249a48"/><path d="M4 21.600C6.400 15.500 10.500 10.800 16 8" fill="none" stroke="#0f6a31" stroke-width="1.600" stroke-linecap="round"/>'
+    : '<path d="M9.900 14.100l-4.300 4.300" stroke="#f4ead9" stroke-width="2.800" stroke-linecap="round"/><circle cx="4.300" cy="18.200" r="2" fill="#f4ead9"/><circle cx="5.800" cy="19.700" r="2" fill="#f4ead9"/><path d="M14.500 2.500c3.900 0 7 3.100 7 7 0 3.300-2.300 6.200-6 6.800-2 .3-3.600-.3-4.800-1.500L9 13.100C7.800 11.900 7.200 10.300 7.500 8.300 8.100 4.800 11.200 2.500 14.500 2.500z" fill="#cf7a2c"/><path d="M21.500 9.500c0 3.300-2.300 6.200-6 6.800-2 .3-3.600-.3-4.800-1.500 5 .5 9.300-2.300 10.800-5.300z" fill="#a85a1c"/><path d="M12.500 5.800c1.300-.9 3-1.100 4.500-.5" fill="none" stroke="#f0b06a" stroke-width="1.300" stroke-linecap="round"/>';
+  return `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" role="img" aria-label="${veg ? 'Vegetarian' : 'Non-vegetarian'}">${art}</svg>`;
 }
 
 function dietOf(name, fallback) {
@@ -45,7 +44,7 @@ function dishHTML(item, secDiet, sec) {
       </div>
       <div class="dish-side">
         <div class="dish-price">${fmt(price)}</div>
-        <div class="dish-ctl"><button type="button" class="add-btn" data-act="inc">Add</button></div>
+        <div class="dish-ctl"><button type="button" class="add-btn" data-act="inc" aria-label="Add">+</button></div>
       </div>
     </div>`;
 }
@@ -103,6 +102,7 @@ function buildMenus() {
           <div class="menu-title"><span class="menu-step">Step ${n} of 3</span><h2>${info.title}</h2></div>
           <div class="mini-dots">${[1, 2, 3].map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
         </div>
+        <div class="menu-tools">
         <label class="search">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7.500"/><path stroke-linecap="round" d="M20.500 20.500l-4-4"/></svg>
           <input class="search-input" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" placeholder="${info.search}" aria-label="${info.search}"/>
@@ -111,12 +111,16 @@ function buildMenus() {
           </button>
         </label>
         <div class="tabs ${segmented ? 'seg' : 'chips'}">
-          ${tabs.map((t, k) => `<button type="button" class="tab${k === 0 ? ' on' : ''}" data-act="tab" data-i="${k}">${t.diet ? mark(t.diet, 18) : ''}${escH(t.label)}</button>`).join('')}
+          ${tabs.map((t, k) => `<button type="button" class="tab${k === 0 ? ' on' : ''}" data-act="tab" data-i="${k}">${t.diet ? mark(t.diet, 20) : ''}${escH(t.label)}</button>`).join('')}
+        </div>
         </div>
       </div></div>
       <div class="menu-body">
         ${tabs.map((t, k) => `<div class="tab-panel${k === 0 ? ' on' : ''}">${t.sections.map(s => sectionHTML(s, t.diet)).join('')}</div>`).join('')}
         <p class="empty" hidden>No dishes match your search.</p>
+        <button type="button" class="menu-next" data-act="continue">${info.next}
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.500"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
     </section>`;
   }).join('');
@@ -157,7 +161,7 @@ function refreshCard(card) {
   const ctl = card.querySelector('.dish-ctl');
   if (Number(ctl.dataset.qty || 0) !== qty) {
     ctl.dataset.qty = qty;
-    ctl.innerHTML = qty > 0 ? stepperHTML(qty) : '<button type="button" class="add-btn" data-act="inc">Add</button>';
+    ctl.innerHTML = qty > 0 ? stepperHTML(qty) : '<button type="button" class="add-btn" data-act="inc" aria-label="Add">+</button>';
   }
   card.classList.toggle('in-cart', cart.some(c => c.id === sel.id));
 }
@@ -181,7 +185,8 @@ function renderCart() {
   if (bc.textContent !== String(count)) { bc.classList.remove('bump'); void bc.offsetWidth; bc.classList.add('bump'); }
   bc.textContent = count;
   bc.hidden = !count;
-  $('bar-total').textContent = count ? fmt(total) : 'No items yet';
+  $('bar-total').textContent = fmt(total);
+  $('bar').classList.toggle('has-items', count > 0);
   $('modal-total').textContent = fmt(total);
 
   $('cart-items-list').innerHTML = cart.length ? cart.map(c => `
@@ -292,7 +297,6 @@ function show(id) {
   document.querySelectorAll('.menu').forEach(clearSearch);
   const isChapter = id.startsWith('ch-');
   document.body.classList.toggle('ch-mode', isChapter);
-  if (!isChapter) $('bar-next-label').textContent = STEP_INFO[Number(id.split('-')[1]) - 1].next;
   $(id).classList.add('active');
   window.scrollTo(0, 0);
 }
@@ -439,6 +443,7 @@ function init() {
   history.replaceState({ s: 'ch-1' }, '');
   setTimeout(() => {
     $('splash').classList.add('hidden');
+    setTimeout(() => $('splash').remove(), 700);
     go('ch-1', false);
   }, 1500);
 }
