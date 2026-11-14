@@ -38,7 +38,7 @@
     <div class="usc-nav-left">
       <a href="../index.html" class="usc-back-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-        Dashboard
+        <span>Dashboard</span>
       </a>
     </div>
     <div class="usc-nav-logo">
@@ -76,13 +76,18 @@
        ====================================================== -->
   <div class="step-view" id="step-1">
 
-    <div class="step-hero">
-      <div class="step-hero-bg" style="background-image:url('images/food.jpg')"></div>
-      <div class="step-hero-overlay"></div>
+    <div class="step-hero" style="background:linear-gradient(135deg,#06101e 0%,#0c1e3a 60%,#081525 100%)">
       <div class="step-hero-content">
         <span class="step-badge">Step 1 of 3</span>
         <h2>Let's Start with<br>Starters</h2>
         <p>Bhajia, chapatis, chips, paneer — something to get things going</p>
+      </div>
+      <div class="hero-food-wrap">
+        <img class="hero-food-img idle-float"
+          src="https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=520&q=85"
+          alt=""
+          loading="eager"
+          crossorigin="anonymous"/>
       </div>
     </div>
 
@@ -93,8 +98,12 @@
       </div>
 
       <div class="type-tabs" id="starter-tabs">
-        <button class="type-tab active" onclick="switchStarterType('veg', this)">🌿 Veg Starters</button>
-        <button class="type-tab" onclick="switchStarterType('nonveg', this)">🍗 Non-Veg Starters</button>
+        <button class="type-tab active" onclick="switchStarterType('veg', this)">
+          <span class="veg-dot"></span>Veg Starters
+        </button>
+        <button class="type-tab" onclick="switchStarterType('nonveg', this)">
+          <span class="nveg-dot"></span>Non-Veg Starters
+        </button>
       </div>
 
       <div id="starters-veg"></div>
@@ -116,25 +125,37 @@
        ====================================================== -->
   <div class="step-view step-hidden" id="step-2">
 
-    <div class="step-hero mains-hero">
-      <div class="step-hero-overlay" style="background:linear-gradient(135deg,rgba(4,10,22,.78) 0%,rgba(14,45,85,.55) 100%)"></div>
+    <div class="step-hero" style="background:linear-gradient(135deg,#06101e 0%,#0d2040 60%,#081525 100%)">
       <div class="step-hero-content">
         <span class="step-badge">Step 2 of 3</span>
         <h2>Choose Your Mains</h2>
         <p>Pick from vegetarian or non-vegetarian mains — or both</p>
+      </div>
+      <div class="hero-food-wrap">
+        <img class="hero-food-img idle-float"
+          src="https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=520&q=85"
+          alt=""
+          loading="lazy"
+          crossorigin="anonymous"/>
       </div>
     </div>
 
     <div class="step-body">
       <div class="mains-choice-row">
         <div class="mains-card" id="choice-veg" onclick="selectMainsType('veg')">
-          <div class="mains-card-icon">🌿</div>
+          <div class="mains-card-icon">
+            <!-- leaf / plant -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          </div>
           <div class="mains-card-title">Veg Mains</div>
           <div class="mains-card-sub">Paneer · Curries · Rice · Salads</div>
           <div class="mains-card-toggle" id="toggle-veg">+</div>
         </div>
         <div class="mains-card nonveg" id="choice-nonveg" onclick="selectMainsType('nonveg')">
-          <div class="mains-card-icon">🍗</div>
+          <div class="mains-card-icon">
+            <!-- meat / drumstick -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2.5c2.5 2.5 2.5 6.5 0 9l-9 9a2.12 2.12 0 0 1-3-3l9-9c2.5-2.5 2.5-6.5 0-9"/><path d="M19 7l3-3M17 5l3 3"/></svg>
+          </div>
           <div class="mains-card-title">Non-Veg Mains</div>
           <div class="mains-card-sub">Chicken · Mutton · Fish · Prawns</div>
           <div class="mains-card-toggle" id="toggle-nonveg">+</div>
@@ -163,12 +184,18 @@
        ====================================================== -->
   <div class="step-view step-hidden" id="step-3">
 
-    <div class="step-hero extras-hero">
-      <div class="step-hero-overlay" style="background:linear-gradient(135deg,rgba(4,10,22,.78) 0%,rgba(60,20,70,.5) 100%)"></div>
+    <div class="step-hero" style="background:linear-gradient(135deg,#06101e 0%,#141028 60%,#081525 100%)">
       <div class="step-hero-content">
         <span class="step-badge">Step 3 of 3</span>
         <h2>Anything Else?</h2>
         <p>Biryani, Italian, Koroga, Naan, Chaat &amp; Kulfi</p>
+      </div>
+      <div class="hero-food-wrap">
+        <img class="hero-food-img idle-float"
+          src="https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=520&q=85"
+          alt=""
+          loading="lazy"
+          crossorigin="anonymous"/>
       </div>
     </div>
 
