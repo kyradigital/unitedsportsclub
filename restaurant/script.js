@@ -1,3 +1,4 @@
+["gesturestart", "gesturechange"].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 /* USC Restaurant — guided ordering. Menu content lives in menu-data.js. */
 
 const SUPABASE_URL  = 'https://itzfanrkpvpfucgkbkff.supabase.co';

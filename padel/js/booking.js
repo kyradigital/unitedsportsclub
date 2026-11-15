@@ -26,6 +26,10 @@ const SPORTS = {
 };
 
 const $ = id => document.getElementById(id);
+/* No pinch-zoom (iOS ignores user-scalable) */
+['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
+
+/* Pickleball photo: "Pickleball Pros.jpg" by Picklerpeej, CC BY-SA 4.0, via Wikimedia Commons (cropped) */
 const fmt = n => 'KES ' + Number(n).toLocaleString('en-US');
 const escH = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pad2 = n => String(n).padStart(2, '0');
@@ -39,21 +43,14 @@ const BACK_ARROW = '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" 
 const PADDLE = '<svg class="sport-ico" viewBox="0 0 640 512" fill="currentColor" aria-hidden="true"><path d="M480 288c-50.1 0-93.6 28.8-114.6 70.8L132.9 126.3l.6-.6 60.1-60.1c87.5-87.5 229.3-87.5 316.8 0c67.1 67.1 82.7 166.3 46.8 248.3C535.8 297.6 509 288 480 288zM113.3 151.9L354.1 392.7c-1.4 7.5-2.1 15.3-2.1 23.3c0 23.2 6.2 44.9 16.9 63.7c-3 .2-6.1 .3-9.2 .3H357c-33.9 0-66.5-13.5-90.5-37.5l-9.8-9.8c-13.1-13.1-34.6-12.4-46.8 1.7L152.2 501c-5.8 6.7-14.2 10.7-23 11s-17.500-3.1-23.8-9.4l-32-32c-6.3-6.3-9.7-14.9-9.4-23.8s4.300-17.2 11-23l66.6-57.7c14-12.2 14.8-33.7 1.7-46.8l-9.8-9.8c-24-24-37.500-56.6-37.500-90.5v-2.7c0-22.8 6.1-44.9 17.3-64.3zM480 320a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></svg>';
 const CAL = '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 10h16M5 21h14a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>';
 
-/* ---------- Time slots: 10:00 AM → 12:30 AM (last slot ends 1:00 AM) ---------- */
+/* ---------- Time slots: 10:00 → 00:30 (24-hour; last slot ends 01:00) ---------- */
 const ALL_SLOTS = [];
 for (const h of [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0]) {
   for (const m of [0, 30]) {
-    const h12 = h % 12 === 0 ? 12 : h % 12;
-    ALL_SLOTS.push({ h, m, label: `${h12}:${pad2(m)}`, ampm: h >= 12 ? 'PM' : 'AM', value: `${pad2(h)}:${pad2(m)}` });
+    ALL_SLOTS.push({ h, m, label: `${pad2(h)}:${pad2(m)}`, value: `${pad2(h)}:${pad2(m)}` });
   }
 }
-const slotTime = idx => idx < ALL_SLOTS.length ? `${ALL_SLOTS[idx].label} ${ALL_SLOTS[idx].ampm}` : '1:00 AM';
-const SLOT_GROUPS = [
-  ['Morning', s => s.h >= 10 && s.h < 12],
-  ['Afternoon', s => s.h >= 12 && s.h < 17],
-  ['Evening', s => s.h >= 17 && s.h < 21],
-  ['Late night', s => s.h >= 21 || s.h === 0],
-];
+const slotTime = idx => idx < ALL_SLOTS.length ? ALL_SLOTS[idx].label : '01:00';
 
 /* ---------- State ---------- */
 let sb = null;
@@ -162,19 +159,19 @@ function datePillsHTML() {
   const today = new Date();
   const pills = [];
   let known = false;
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 3; i++) {
     const d = new Date(today); d.setDate(today.getDate() + i);
     const ds = dateStr(d);
     if (ds === state.date) known = true;
     pills.push(`
       <button type="button" class="date-pill${ds === state.date ? ' on' : ''}" data-act="date" data-date="${ds}">
-        <span class="dp-day">${i === 0 ? 'Today' : i === 1 ? 'Tmrw' : d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+        <span class="dp-day">${i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
         <span class="dp-date">${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
       </button>`);
   }
   pills.push(`
     <label class="date-pill${known ? '' : ' on'}">
-      <span class="dp-day">${known ? 'Other' : dateFrom(state.date).toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+      <span class="dp-day">${known ? 'Other date' : dateFrom(state.date).toLocaleDateString('en-GB', { weekday: 'short' })}</span>
       <span class="dp-date">${known ? CAL : dateFrom(state.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
       <input type="date" id="other-date" min="${dateStr(today)}" value="${state.date}" aria-label="Choose another date"/>
     </label>`);
@@ -189,17 +186,14 @@ function timesHTML() {
         <div class="court-head-text"><span class="court-name">${c.name}</span><span class="court-free"></span></div>
       </div>
       <div class="slots">
-        ${SLOT_GROUPS.map(([label, test]) => `
-          <div class="slot-group-label">${label}</div>
-          <div class="slot-grid">${ALL_SLOTS.map((sl, idx) => test(sl)
-            ? `<button type="button" class="slot" data-act="slot" data-court="${c.id}" data-idx="${idx}"><b>${sl.label}</b><i>${sl.ampm}</i></button>` : '').join('')}</div>`).join('')}
+        <div class="slot-grid">${ALL_SLOTS.map((sl, idx) => `<button type="button" class="slot" data-act="slot" data-court="${c.id}" data-idx="${idx}">${sl.label}</button>`).join('')}</div>
       </div>
     </section>`;
   return headHTML('times', s.name) + `
     <div class="stage-body">
       <p class="stage-note">Tap a start time for one hour. Tap a later slot to extend.</p>
       <div class="date-row">${datePillsHTML()}</div>
-      <div class="courts${s.courts.length > 1 ? ' two' : ''}">${s.courts.map(courtHTML).join('')}</div>
+      <div class="courts ${state.sport}${s.courts.length > 1 ? ' two' : ''}">${s.courts.map(courtHTML).join('')}</div>
     </div>`;
 }
 
@@ -215,7 +209,7 @@ function paintSlots() {
       if (ok) free++;
       btn.disabled = !ok;
       btn.classList.toggle('on', state.court === id && state.sel.includes(idx));
-      btn.querySelector('i').textContent = ok ? ALL_SLOTS[idx].ampm : state.booked[id].has(ALL_SLOTS[idx].value) ? 'Booked' : 'Passed';
+      btn.title = ok ? '' : state.booked[id].has(ALL_SLOTS[idx].value) ? 'Booked' : 'Passed';
     });
     el.querySelector('.court-free').textContent = state.loading ? 'Checking…' : free ? `${free / 2} hrs free` : 'Fully booked';
   });

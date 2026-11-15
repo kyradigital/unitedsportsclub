@@ -19,7 +19,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--bg);
@@ -173,35 +173,35 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .courts { display: grid; grid-template-columns: minmax(0,1fr); gap: 14px; }
 @media (min-width: 860px) { .courts.two { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
 .court {
+  --card: var(--panel);
   border: 1px solid var(--border); border-radius: 22px; overflow: hidden;
-  background: var(--panel);
+  background: var(--card);
 }
-.court-head { position: relative; height: 120px; background: linear-gradient(155deg, #1b3a66, var(--panel)) center / cover no-repeat; }
-.court-head::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,9,18,.05), rgba(8,17,31,.92)); }
+.courts.padel .court { --card: #123a73; border-color: rgba(120,170,245,.35); }
+.courts.pickleball .court { --card: #0e4a43; border-color: rgba(90,215,190,.32); }
+.court-head { position: relative; height: 120px; background: var(--card) center / cover no-repeat; }
+.court-head::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,9,18,.05), var(--card)); }
 .court-head-text { position: absolute; left: 16px; right: 16px; bottom: 12px; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .court-name { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: #fff; }
 .court-free { font-size: .72rem; font-weight: 600; color: rgba(255,255,255,.75); white-space: nowrap; }
-.slots { padding: 6px 14px 16px; transition: opacity .2s; }
-.slots.loading { opacity: .35; pointer-events: none; }
-.slot-group-label { font-size: .64rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 14px 2px 8px; }
+.slots { padding: 14px 14px 16px; }
+.slots.loading { pointer-events: none; }
 .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 @media (min-width: 520px) and (max-width: 859px) { .slot-grid { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 860px) { .slot-grid { grid-template-columns: repeat(5, 1fr); } }
 .slot {
-  height: 46px; border-radius: 12px;
+  height: 44px; border-radius: 12px;
   border: 1px solid var(--border); background: transparent;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15;
-  transition: background .15s, border-color .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums;
+  transition: border-color .15s, transform .1s;
 }
-.slot b { font-size: .86rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.slot i { font-style: normal; font-size: .58rem; font-weight: 600; letter-spacing: .06em; color: var(--muted); }
-.slot:hover:not(:disabled) { border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.1); }
+@media (hover: hover) { .slot:hover:not(:disabled):not(.on) { border-color: rgba(255,255,255,.6); } }
 .slot:active:not(:disabled) { transform: scale(.95); }
-.slot.on { background: #fff; border-color: #fff; }
-.slot.on b { color: var(--bg); }
-.slot.on i { color: rgba(8,17,31,.6); }
+.slot.on, .slot.on:hover { background: #fff; border-color: #fff; }
+.slot.on { color: var(--bg); }
 .slot:disabled { cursor: not-allowed; border-color: transparent; background: rgba(255,255,255,.025); }
-.slot:disabled b { color: rgba(255,255,255,.25); text-decoration: line-through; }
-.slot:disabled i { color: rgba(255,255,255,.22); }
+.slot:disabled { color: rgba(255,255,255,.25); text-decoration: line-through; }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 16px; font-size: .74rem; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 14px; height: 14px; border-radius: 5px; border: 1px solid var(--border2); background: rgba(255,255,255,.04); }
