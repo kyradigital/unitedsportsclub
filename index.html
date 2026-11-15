@@ -22,41 +22,34 @@
       --r:12px;
     }
 
-    html,body{height:100%;overflow:hidden}
+    html,body{height:100%;height:100dvh;overflow:hidden}
 
     body{
       font-family:'Inter',sans-serif;
       background:var(--bg);
       color:var(--white);
+      -webkit-font-smoothing:antialiased;
     }
 
     /* ═══ AMBIENT BACKGROUND ═══ */
     .bg-canvas{
-      position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-    }
-    .orb{
-      position:absolute;border-radius:50%;filter:blur(90px);opacity:.18;
-      animation:drift 18s ease-in-out infinite;
-    }
-    .orb1{width:600px;height:600px;background:#1a3a6b;top:-15%;left:-10%;animation-delay:0s;animation-duration:22s}
-    .orb2{width:400px;height:400px;background:#0e2d55;top:55%;right:-8%;animation-delay:-7s;animation-duration:18s}
-    .orb3{width:300px;height:300px;background:#163251;top:30%;left:40%;animation-delay:-12s;animation-duration:25s}
-    @keyframes drift{
-      0%,100%{transform:translate(0,0) scale(1)}
-      33%{transform:translate(30px,-40px) scale(1.05)}
-      66%{transform:translate(-20px,25px) scale(.97)}
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(1100px 620px at 85% -8%,rgba(46,98,170,.38) 0%,transparent 62%),
+        radial-gradient(900px 600px at -12% 105%,rgba(28,70,130,.32) 0%,transparent 60%),
+        linear-gradient(180deg,#0b1a30 0%,#08111f 48%,#050b15 100%);
     }
 
     /* ═══ SCREEN SYSTEM ═══ */
     .screen{
       display:none;position:relative;z-index:1;
-      width:100%;height:100vh;
-      animation:screenIn .45s cubic-bezier(.22,.68,0,1.2) both;
+      width:100%;height:100vh;height:100dvh;
+      animation:screenIn .45s cubic-bezier(.22,.8,.26,1) both;
     }
     .screen.active{display:flex}
     @keyframes screenIn{
-      from{opacity:0;transform:translateY(16px) scale(.98)}
-      to{opacity:1;transform:translateY(0) scale(1)}
+      from{opacity:0;transform:translateY(14px)}
+      to{opacity:1;transform:none}
     }
 
     /* ═══ AUTH LAYOUT (split) ═══ */
@@ -71,7 +64,7 @@
     }
     .auth-brand::before{
       content:'';position:absolute;inset:0;
-      background:url('./padel/court1.jpg') center/cover no-repeat;
+      background:url('./padel/images/court1.webp') center/cover no-repeat;
       opacity:.18;
     }
     .auth-brand::after{
@@ -96,7 +89,7 @@
     }
     .brand-big em{font-style:normal;color:rgba(255,255,255,.45)}
     .brand-sub{
-      margin-top:.9rem;font-size:.85rem;color:rgba(255,255,255,.5);
+      display:none;margin-top:.9rem;font-size:.85rem;color:rgba(255,255,255,.5);
       font-weight:400;line-height:1.6;max-width:320px;
     }
     .brand-dots{
@@ -111,8 +104,7 @@
       width:460px;min-width:380px;
       display:flex;flex-direction:column;justify-content:center;
       padding:3rem 3.5rem;
-      background:rgba(8,17,31,.85);
-      backdrop-filter:blur(32px);
+      background:var(--bg);
       border-left:1px solid var(--white-06);
     }
 
@@ -237,24 +229,21 @@
       border-radius:50px;padding:.3rem .7rem .3rem .3rem;
       transition:border-color .2s;
     }
-    .usc-chip.is-member{
-      background:linear-gradient(135deg,rgba(201,168,76,.14) 0%,rgba(255,215,100,.07) 100%);
-      border-color:rgba(201,168,76,.32);
-    }
+    .usc-chip.is-member{border-color:rgba(255,255,255,.3)}
     .usc-avatar{
       width:28px;height:28px;border-radius:50%;
       display:flex;align-items:center;justify-content:center;
       font-size:.72rem;font-weight:800;color:rgba(255,255,255,.75);
       background:rgba(255,255,255,.12);flex-shrink:0;user-select:none;
     }
-    .usc-avatar.is-member{background:linear-gradient(135deg,#c9a84c 0%,#8a6914 100%);color:#fff}
+    .usc-avatar.is-member{background:#fff;color:var(--bg)}
     .usc-chip-name{
       font-size:.8rem;font-weight:600;color:rgba(255,255,255,.88);
       white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;
     }
     .usc-chip-sep{width:1px;height:13px;background:rgba(255,255,255,.12);flex-shrink:0}
     .usc-chip-role{font-size:.58rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-    .usc-chip-role.member{color:#c9a84c}
+    .usc-chip-role.member{color:#fff}
     .usc-chip-role.guest{color:rgba(255,255,255,.32)}
     .usc-logout{
       width:28px;height:28px;border-radius:50%;
@@ -321,11 +310,12 @@
       font-size:clamp(1.8rem,3vw,2.6rem);font-weight:900;
       color:var(--white);line-height:1;letter-spacing:-.02em;margin-bottom:.55rem;
     }
-    .venue-meta{font-size:.75rem;color:var(--white-30);margin-bottom:1.3rem;font-weight:400}
+    .venue-meta{display:none}
+    .venue-title{margin-bottom:1.1rem !important}
     .venue-btn{
       display:inline-flex;align-items:center;gap:.5rem;
       background:var(--white);color:var(--bg);
-      padding:.55rem 1.25rem;border-radius:8px;
+      padding:.6rem 1.3rem;border-radius:100px;
       font-size:.78rem;font-weight:800;
       width:fit-content;
       transition:all .2s ease;
@@ -376,11 +366,7 @@
 <body>
 
 <!-- AMBIENT BG -->
-<div class="bg-canvas">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
+<div class="bg-canvas"></div>
 
 <!-- ══════════════════ LOGIN ══════════════════ -->
 <div class="screen active" id="screen-login">
@@ -400,7 +386,7 @@
 
   <div class="auth-form-panel">
     <div class="form-title">Welcome back</div>
-    <div class="form-sub">Sign in to your USC account</div>
+    <div class="form-sub">Sign in to continue</div>
     <div class="err-msg" id="loginErr"></div>
     <div class="fl">
       <input type="email" id="loginEmail" placeholder="email" autocomplete="email"/>
@@ -425,7 +411,7 @@
       </div>
     </div>
     <div class="brand-tagline">
-      <div class="brand-big">Join the<br>club.<br><em>It's free.</em></div>
+      <div class="brand-big">Join the<br>club.</div>
       <div class="brand-sub">Create your account and get access to padel bookings, the restaurant, and more.</div>
       <div class="brand-dots"><span></span><span></span><span></span></div>
     </div>
@@ -433,7 +419,7 @@
 
   <div class="auth-form-panel" style="overflow-y:auto">
     <div class="form-title">Create account</div>
-    <div class="form-sub">Join United Sports Club</div>
+    <div class="form-sub">Join the club</div>
     <div class="err-msg" id="signupErr"></div>
     <div class="form-2col">
       <div class="fl">
@@ -490,10 +476,10 @@
         </svg>
       </div>
       <div class="form-title">Check your email</div>
-      <div class="form-sub" style="text-align:center">We sent a confirmation link to</div>
+      <div class="form-sub" style="text-align:center">We sent a link to</div>
       <div class="verify-email-badge" id="verifyEmailLabel"></div>
       <div class="verify-note">
-        Click the link in the email. Even if your browser shows an error page, your email will be confirmed — then come back and sign in.
+        Tap the link in the email, then come back and sign in.
       </div>
       <div class="err-msg" id="verifyErr" style="margin-top:1rem;width:100%"></div>
       <div id="otpWrap" style="display:none"></div>
@@ -534,19 +520,19 @@
   </nav>
 
   <div class="venues-wrap">
-    <div class="venues-heading">Choose a venue</div>
+    <div class="venues-heading">Where to?</div>
     <div class="venues-grid">
 
       <!-- PADEL -->
       <a class="venue-card" href="./padel/index.html">
-        <div class="venue-bg" style="background-image:url('./padel/court1.jpg')"></div>
+        <div class="venue-bg" style="background-image:url('./padel/images/court1.webp')"></div>
         <div class="venue-overlay"></div>
         <div class="venue-content">
-          <div class="venue-label">Book a Court</div>
+          <div class="venue-label">Courts</div>
           <div class="venue-title">Padel</div>
           <div class="venue-meta">Court 1 · Court 2 · Pickleball</div>
           <div class="venue-btn">
-            Book now
+            Book
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
             </svg>
@@ -559,11 +545,11 @@
         <div class="venue-bg venue-rest-bg" style="background-image:url('./restaurant/images/food.jpg')"></div>
         <div class="venue-overlay"></div>
         <div class="venue-content">
-          <div class="venue-label">Order Food</div>
+          <div class="venue-label">Kitchen</div>
           <div class="venue-title">Restaurant</div>
           <div class="venue-meta">Full menu · In-club dining</div>
           <div class="venue-btn">
-            View menu
+            Order
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
             </svg>
@@ -732,7 +718,7 @@ async function loadDashboard(user) {
       if (isMember) {
         avatar.classList.add('is-member');
         chip.classList.add('is-member');
-        badge.textContent = '◆ Member';
+        badge.textContent = 'Member';
         badge.className   = 'usc-chip-role member';
       } else {
         badge.textContent = 'Guest';

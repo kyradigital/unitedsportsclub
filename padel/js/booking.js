@@ -146,14 +146,12 @@ function sportHTML() {
         <span class="sport-text">
           <span class="sport-name">${s.name}</span>
           <span class="sport-sub">${s.sub}</span>
-          <span class="sport-go">Choose${ARROW}</span>
         </span>
       </button>`;
   };
   return `
     <div class="stage-body">
       <div class="hello">
-        <span class="hello-eyebrow">Step 1 of 4</span>
         <h1>${me?.first ? `Hi ${escH(me.first)}, what` : 'What'} are we <em>playing?</em></h1>
       </div>
       <div class="sport-grid">${card('padel')}${card('pickleball')}</div>
@@ -199,11 +197,9 @@ function timesHTML() {
     </section>`;
   return headHTML('times', s.name) + `
     <div class="stage-body">
-      <h3 class="stage-lead">When do you want to play?</h3>
-      <p class="stage-note">Tap a start time and we'll hold one hour. Tap a later slot to play longer.</p>
+      <p class="stage-note">Tap a start time for one hour. Tap a later slot to extend.</p>
       <div class="date-row">${datePillsHTML()}</div>
       <div class="courts${s.courts.length > 1 ? ' two' : ''}">${s.courts.map(courtHTML).join('')}</div>
-      <div class="legend"><span><i></i>Available</span><span><i class="on"></i>Your pick</span><span><i class="off"></i>Booked</span></div>
     </div>`;
 }
 
@@ -273,7 +269,7 @@ function playerHTML(p, i) {
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7.500"/><path stroke-linecap="round" d="M20.500 20.500l-4-4"/></svg>
             <input type="text" class="player-input" placeholder="Search name or username" autocomplete="off" autocapitalize="words" aria-label="Search for player ${i + 1}"/>
           </label>
-          <div class="results"><div class="result-note">Type at least 2 letters to search USC accounts.</div></div>
+          <div class="results"></div>
         </div>
       </div>`;
   }
@@ -297,7 +293,6 @@ function teamHTML() {
   return headHTML('team', 'Your Team') + `
     <div class="stage-body narrow" style="max-width:820px">
       <h3 class="stage-lead">Who are you playing with?</h3>
-      <p class="stage-note">Add all ${TEAM_SIZE} players. Search for their USC account, or add them as a guest.</p>
       ${summaryHTML()}
       <div class="players">${state.players.map(playerHTML).join('')}</div>
       <div class="stage-foot" id="team-foot">${teamFootHTML()}</div>
@@ -315,8 +310,6 @@ function reviewHTML() {
   const members = state.players.filter(p => p.member).length;
   return headHTML('review', 'Confirm') + `
     <div class="stage-body narrow">
-      <h3 class="stage-lead">Everything look right?</h3>
-      <p class="stage-note">Check the details, then confirm to reserve your court.</p>
       <div class="review-card">
         <div class="review-rows">
           <div class="row"><span>Sport</span><span>${sport().name}</span></div>
@@ -331,7 +324,7 @@ function reviewHTML() {
         </div>
         <div class="review-total"><span>Total</span><b>${fmt(totalPrice())}</b></div>
       </div>
-      <p class="fine">Members ${fmt(MEMBER_PRICE)} · Non-members ${fmt(NON_MEMBER_PRICE)} per person, per 30 minutes. Payment is settled at the club.</p>
+      <p class="fine">Members ${fmt(MEMBER_PRICE)} · Non-members ${fmt(NON_MEMBER_PRICE)} per person, per 30 min</p>
       <div class="stage-foot">
         <button type="button" class="primary-btn" id="confirm-btn" data-act="confirm">Confirm booking</button>
       </div>
@@ -344,7 +337,6 @@ function doneHTML() {
     <div class="stage-body narrow">
       <div class="done-ico"><svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
       <h3 class="stage-lead">You're booked!</h3>
-      <p class="stage-note">Your court is reserved. We'll contact you shortly to finalise payment. See you on the court.</p>
       <div class="review-card">
         <div class="review-rows">
           <div class="row"><span>Court</span><span>${escH(b.sport)} · ${escH(b.court)}</span></div>
@@ -438,7 +430,7 @@ function resultsHTML(q, rows) {
   const guest = `
     <button type="button" class="result guest" data-act="guest" data-name="${escH(q)}">
       <span class="avatar">+</span>
-      <span class="result-info"><span class="result-name">Add "${escH(q)}" as a guest</span><span class="result-user" style="display:block">No USC account needed</span></span>
+      <span class="result-info"><span class="result-name">Add "${escH(q)}" as a guest</span><span class="result-user" style="display:block">Guest</span></span>
       <span class="badge">Non-member</span>
     </button>`;
   return (list.length ? list.map(r => `
@@ -455,7 +447,7 @@ function searchPlayers(input) {
   const q = input.value.trim().replace(/[,()%*\\]/g, '');
   clearTimeout(searchTimer);
   const seq = ++searchSeq;
-  if (q.length < 2) { box.innerHTML = '<div class="result-note">Type at least 2 letters to search USC accounts.</div>'; return; }
+  if (q.length < 2) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="result-note">Searching…</div>';
   searchTimer = setTimeout(async () => {
     let rows = [];

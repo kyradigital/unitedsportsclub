@@ -216,7 +216,6 @@ function pickHTML(route) {
           <span class="pick-name">${mark(group, 16)}${group === 'veg' ? 'Veg' : 'Non-Veg'}</span>
           <span class="pick-sub">${plural(secs.length, 'category', 'categories')} · ${plural(dishes, 'dish', 'dishes')}</span>
         </span>
-        <span class="pick-go">Choose${ARROW}</span>
       </button>`;
   };
   return headHTML(route, `Step ${n} of 3`, STEPS[n - 1].title) + `
