@@ -165,7 +165,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   font-size: clamp(2rem, 8vw, 2.9rem); font-weight: 700; line-height: 1.12;
   color: #fff; margin-top: 18px; text-wrap: balance;
 }
-.ch-title em { font-style: italic; font-weight: 600; }
+.ch-title em { font-style: normal; }
 
 .ch-visual {
   position: relative;
@@ -244,7 +244,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .mini-dots span { width: 6px; height: 6px; border-radius: 100px; background: rgba(255,255,255,.2); }
 .mini-dots span.done { background: rgba(255,255,255,.55); }
 .mini-dots span.active { width: 18px; background: #fff; }
-.stage-lead { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 600; font-size: clamp(1.25rem, 5vw, 1.6rem); color: #fff; text-align: center; margin: 4px 0 18px; }
+.stage-lead { font-family: 'Playfair Display', serif; font-weight: 700; font-size: clamp(1.25rem, 5vw, 1.6rem); color: #fff; text-align: center; margin: 4px 0 18px; }
 .stage-note { text-align: center; color: var(--muted); font-size: .82rem; line-height: 1.5; margin: -8px auto 16px; max-width: 420px; }
 .mark { flex-shrink: 0; display: block; color: #fff; }
 

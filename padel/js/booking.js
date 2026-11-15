@@ -217,7 +217,7 @@ function paintSlots() {
 }
 
 function paintBar() {
-  const show = current === 'times' && state.sel.length > 0;
+  const show = current === 'times' && state.sel.length > 0 && !busy;
   $('bar').classList.toggle('show', show);
   if (!show) return;
   $('bar-label').textContent = `${court().name} · ${longDate(state.date)}`;
@@ -240,71 +240,96 @@ function summaryHTML() {
 const badge = p => `<span class="badge${p.member ? ' member' : ''}">${p.member ? 'Member' : 'Non-member'}</span>`;
 const avatar = p => `<span class="avatar${p.member ? ' member' : ''}">${escH((p.name[0] || '?').toUpperCase())}</span>`;
 
-function playerHTML(p, i) {
+let justAdded = -1;
+const X_ICON = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
+
+/* One position on the court: a filled player or an empty spot to tap */
+function spotHTML(p, i) {
   if (p) {
     return `
-      <div class="player" data-i="${i}">
-        <div class="player-filled">
-          ${avatar(p)}
-          <div class="player-info">
-            <div class="player-name">${escH(p.name)}${p.you ? ' (you)' : ''}</div>
-            <div class="player-meta">${badge(p)}<span>${p.username ? '@' + escH(p.username) + ' · ' : p.you ? '' : 'Guest · '}${fmt(playerPrice(p))}</span></div>
-          </div>
-          ${p.you ? '' : `<button type="button" class="player-x" data-act="remove" aria-label="Remove ${escH(p.name)}"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></button>`}
-        </div>
-      </div>`;
-  }
-  if (state.editing === i) {
-    return `
-      <div class="player" data-i="${i}">
-        <div class="player-search">
-          <div class="player-slot">Player ${i + 1}</div>
-          <label class="player-search-row">
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7.500"/><path stroke-linecap="round" d="M20.500 20.500l-4-4"/></svg>
-            <input type="text" class="player-input" placeholder="Search name or username" autocomplete="off" autocapitalize="words" aria-label="Search for player ${i + 1}"/>
-          </label>
-          <div class="results"></div>
-        </div>
+      <div class="spot filled${justAdded === i ? ' pop' : ''}" data-i="${i}">
+        ${p.you ? '' : `<button type="button" class="spot-x" data-act="remove" aria-label="Remove ${escH(p.name)}">${X_ICON}</button>`}
+        <span class="spot-av${p.member ? ' member' : ''}">${escH((p.name[0] || '?').toUpperCase())}</span>
+        <span class="spot-name">${p.you ? 'You' : escH(p.name)}</span>
+        ${badge(p)}
+        <span class="spot-price">${fmt(playerPrice(p))}</span>
       </div>`;
   }
   return `
-    <div class="player empty" data-i="${i}">
-      <button type="button" class="player-add" data-act="edit">
-        <span class="player-plus">+</span>
-        <span><span class="player-slot">Player ${i + 1}</span><span class="player-name" style="display:block">Add a player</span></span>
-      </button>
-    </div>`;
+    <button type="button" class="spot empty" data-act="edit" data-i="${i}">
+      <span class="spot-av plus">+</span>
+      <span class="spot-name">Player ${i + 1}</span>
+      <span class="spot-hint">Tap to add</span>
+    </button>`;
 }
 
 function teamFootHTML() {
   const left = state.players.filter(p => !p).length;
   return `
-    <span class="foot-hint">${left ? `${left} more player${left > 1 ? 's' : ''} to add` : `Total for ${TEAM_SIZE} players: ${fmt(totalPrice())}`}</span>
+    <span class="foot-hint">${left ? `${left} more to add` : `Total ${fmt(totalPrice())}`}</span>
     <button type="button" class="primary-btn" data-act="to-review"${left ? ' disabled' : ''}>Review booking${ARROW}</button>`;
 }
 
 function teamHTML() {
-  return headHTML('team', 'Your Team') + `
-    <div class="stage-body narrow" style="max-width:820px">
-      <h3 class="stage-lead">Who are you playing with?</h3>
+  return headHTML('team', 'Add Players') + `
+    <div class="stage-body narrow">
       ${summaryHTML()}
-      <div class="players">${state.players.map(playerHTML).join('')}</div>
+      <div class="lineup ${state.sport}">
+        <div class="lineup-net"></div>
+        <div class="spots">${state.players.map(spotHTML).join('')}</div>
+      </div>
       <div class="stage-foot" id="team-foot">${teamFootHTML()}</div>
     </div>`;
 }
 
-function paintTeam(focus) {
+function paintTeam() {
   const stage = $('stage');
-  stage.querySelector('.players').innerHTML = state.players.map(playerHTML).join('');
+  stage.querySelector('.spots').innerHTML = state.players.map(spotHTML).join('');
   $('team-foot').innerHTML = teamFootHTML();
-  if (focus) stage.querySelector('.player-input')?.focus();
+  const sheet = $('sheet');
+  const open = state.editing !== null;
+  if (open && !sheet.classList.contains('open')) {
+    $('sheet-title').textContent = `Player ${state.editing + 1}`;
+    const input = sheet.querySelector('.player-input');
+    input.value = '';
+    sheet.querySelector('.results').innerHTML = '';
+    sheet.classList.add('open');
+    input.focus();
+  } else if (!open) {
+    sheet.classList.remove('open');
+    sheet.querySelector('.player-input').blur();
+  }
+}
+
+/* Short loading screen between steps */
+let interTimer = null;
+let busy = false;
+function interlude(text, route) {
+  if (busy) return;
+  busy = true;
+  paintBar();
+  const stage = $('stage');
+  stage.classList.add('leaving');
+  interTimer = setTimeout(() => {
+    stage.classList.remove('active', 'leaving');
+    stage.dataset.route = 'loading';
+    stage.innerHTML = `
+      <div class="loader-screen" role="status">
+        <svg class="loader-ring" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="32"/><circle class="fill" cx="36" cy="36" r="32"/></svg>
+        <div class="loader-text">${escH(text)}</div>
+      </div>`;
+    void stage.offsetWidth;
+    stage.classList.add('active');
+    window.scrollTo(0, 0);
+    interTimer = setTimeout(() => { busy = false; go(route); }, 2000);
+  }, 180);
 }
 
 function reviewHTML() {
   const members = state.players.filter(p => p.member).length;
   return headHTML('review', 'Confirm') + `
     <div class="stage-body narrow">
-      <div class="review-card">
+      <div class="review-card ticket">
         <div class="review-rows">
           <div class="row"><span>Sport</span><span>${sport().name}</span></div>
           <div class="row"><span>Court</span><span>${court().name}</span></div>
@@ -372,8 +397,12 @@ function allowed(route) {
 function show(route) {
   const stage = $('stage');
   stage.classList.remove('active', 'leaving');
+  stage.dataset.route = route;
+  state.editing = null;
+  $('sheet').classList.remove('open');
   stage.innerHTML = { sport: sportHTML, times: timesHTML, team: teamHTML, review: reviewHTML, done: doneHTML }[route]();
   hydrateImages(stage);
+  stage.querySelectorAll('.ticket .row, .ticket .rp, .ticket .review-total').forEach((el, k) => el.style.setProperty('--i', k));
   void stage.offsetWidth;
   stage.classList.add('active');
   window.scrollTo(0, 0);
@@ -381,8 +410,11 @@ function show(route) {
 }
 
 function go(route, push = true) {
+  clearTimeout(interTimer);
+  const wasBusy = busy;
+  busy = false;
   if (!allowed(route)) route = 'sport';
-  if (route === current && !navTimer) return;
+  if (route === current && !navTimer && !wasBusy) return;
   clearTimeout(navTimer);
   const from = current;
   if (from) $('stage').classList.add('leaving');
@@ -437,7 +469,7 @@ function resultsHTML(q, rows) {
 
 let lastRows = [];
 function searchPlayers(input) {
-  const box = input.closest('.player').querySelector('.results');
+  const box = input.closest('.sheet-panel').querySelector('.results');
   const q = input.value.trim().replace(/[,()%*\\]/g, '');
   clearTimeout(searchTimer);
   const seq = ++searchSeq;
@@ -460,10 +492,12 @@ function searchPlayers(input) {
 }
 
 function setPlayer(i, p) {
+  if (i === null || i < 1) return;
   state.players[i] = p;
-  const next = state.players.findIndex(x => !x);
-  state.editing = next === -1 ? null : next;
-  paintTeam(false);
+  state.editing = null;
+  justAdded = i;
+  paintTeam();
+  justAdded = -1;
 }
 
 /* ---------- Confirm ---------- */
@@ -536,15 +570,15 @@ async function confirmBooking() {
 
 function resetTeam() {
   state.players = [{ name: me.name, username: me.username, userId: me.id, member: me.member, you: true }, null, null, null];
-  state.editing = 1;
+  state.editing = null;
 }
 
 /* ---------- Events ---------- */
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
-  const slotEl = el.closest('.player');
-  const i = slotEl ? Number(slotEl.dataset.i) : -1;
+  const slotEl = el.closest('[data-i]');
+  const i = slotEl ? Number(slotEl.dataset.i) : state.editing;
   switch (el.dataset.act) {
     case 'back': go(PARENT[current] || 'sport'); break;
     case 'sport':
@@ -557,9 +591,10 @@ document.addEventListener('click', e => {
       loadBooked();
       break;
     case 'slot': pickSlot(Number(el.dataset.court), Number(el.dataset.idx)); break;
-    case 'to-team': if (validSel()) go('team'); break;
-    case 'edit': state.editing = i; paintTeam(true); break;
-    case 'remove': state.players[i] = null; state.editing = i; paintTeam(false); break;
+    case 'to-team': if (validSel()) interlude('Processing times', 'team'); break;
+    case 'edit': state.editing = i; paintTeam(); break;
+    case 'sheet-close': state.editing = null; paintTeam(); break;
+    case 'remove': if (i > 0) { state.players[i] = null; state.editing = null; paintTeam(); } break;
     case 'pick': {
       const r = lastRows.find(x => String(x.id) === el.dataset.id);
       if (r) setPlayer(i, { name: `${r.first_name} ${r.last_name}`.trim(), username: r.username, userId: r.id, member: !!r.is_member });
@@ -570,12 +605,15 @@ document.addEventListener('click', e => {
       if (name.length >= 2) setPlayer(i, { name, username: null, userId: null, member: false });
       break;
     }
-    case 'to-review': if (teamFull()) go('review'); break;
+    case 'to-review': if (teamFull()) interlude('Putting everything together', 'review'); break;
     case 'confirm': confirmBooking(); break;
     case 'again': state.last = null; go('sport'); break;
   }
 });
 
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && current === 'team' && state.editing !== null) { state.editing = null; paintTeam(); }
+});
 document.addEventListener('input', e => {
   if (e.target.classList.contains('player-input')) searchPlayers(e.target);
 });
