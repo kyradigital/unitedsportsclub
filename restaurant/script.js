@@ -93,9 +93,9 @@ function tagsFor(step, group) {
 }
 
 /* ---------- Images (optional photos dropped into images/menu/) ---------- */
-const IMG_FALLBACK = { 'images/menu/starters-veg': 'images/chips.webp', 'images/menu/mains-veg': 'images/paneermakhni.webp' };
+const IMG_FALLBACK = { 'images/menu/starters-veg': 'images/chips.webp', 'images/menu/mains-veg': 'images/paneermakhni.webp', 'images/menu/starters-chips': 'images/chips.webp' };
 const imgCache = new Map();
-const CUTOUT = new Set(['starters-poultry', 'starters-mutton', 'starters-lamb-chop', 'starters-fish', 'type-kebabs']);
+const CUTOUT = new Set(['starters-poultry', 'starters-mutton', 'starters-lamb-chop', 'starters-fish', 'type-kebabs', 'starters-breakfast', 'starters-sandwiches', 'starters-paneer-starters', 'starters-chapatis', 'starters-bhajia', 'starters-potatoes', 'starters-chips']);
 function probe(base) {
   if (!imgCache.has(base)) {
     imgCache.set(base, new Promise(resolve => {
