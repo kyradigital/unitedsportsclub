@@ -3,7 +3,6 @@
 
 const SUPABASE_URL  = 'https://itzfanrkpvpfucgkbkff.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emZhbnJrcHZwZnVjZ2tia2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MTk1NjgsImV4cCI6MjEwOTA5NTU2OH0.e1BzYQDZUxQUv4I1vrAGyRXwrUlel0zubrTkRXJPSeM';
-const WHATSAPP_NO   = '254722850525';
 
 const $ = id => document.getElementById(id);
 const fmt = n => 'KES ' + Number(n).toLocaleString('en-US');
@@ -180,6 +179,9 @@ function parentOf(route) {
   if (r.type === 'cats') return r.b === 'all' ? `ch-${r.a}` : `pick-${r.a}`;
   if (r.type === 'sec') { const s = SECS[Number(r.a)]; return `cats-${s.step}-${s.group}`; }
   if (r.type === 'tag') return `cats-${r.a}-${r.b}`;
+  if (r.type === 'order') return lastMenu;
+  if (r.type === 'otype') return 'order';
+  if (r.type === 'odetails') return 'otype';
   return 'ch-1';
 }
 
@@ -291,8 +293,10 @@ function listHTML(route) {
 function renderStage(route) {
   const stage = $('stage');
   const type = parse(route).type;
-  stage.innerHTML = type === 'pick' ? pickHTML(route) : type === 'cats' ? catsHTML(route) : listHTML(route);
+  stage.innerHTML = FLOW[type] ? FLOW[type]() : type === 'pick' ? pickHTML(route) : type === 'cats' ? catsHTML(route) : listHTML(route);
   stage.querySelectorAll('.dish').forEach(refreshCard);
+  if (type === 'order') paintOrder(true);
+  if ((type === 'otype' || type === 'odetails') && !cart.length) { stage.innerHTML = FLOW.order(); paintOrder(true); }
   hydrateImages(stage);
 }
 
@@ -355,10 +359,12 @@ function renderCart() {
   bc.hidden = !count;
   $('bar-total').textContent = fmt(total);
   $('bar').classList.toggle('has-items', count > 0);
-  $('modal-total').textContent = fmt(total);
+  if (current === 'order') paintOrder();
+}
 
-  $('cart-items-list').innerHTML = cart.length ? cart.map(c => `
-    <div class="line" data-key="${escH(c.key)}">
+function orderLinesHTML() {
+  return cart.length ? cart.map((c, i) => `
+    <div class="line oline" data-key="${escH(c.key)}" style="--i:${i}">
       <div class="line-top">
         <div class="line-info">${mark(ITEMS[c.id].diet)}
           <div><div class="line-name">${escH(c.name)}</div>
@@ -367,69 +373,161 @@ function renderCart() {
         <div class="line-price">${fmt(c.price * c.qty)}</div>
       </div>
       <div class="line-bottom">
-        <input class="note" type="text" placeholder="Add a note (e.g. no onions)" value="${escH(c.comment)}" aria-label="Note for ${escH(c.name)}"/>
         <div class="stepper"><button type="button" data-act="cart-dec" aria-label="Remove one">−</button><span>${c.qty}</span><button type="button" data-act="cart-inc" aria-label="Add one">+</button></div>
         <button type="button" class="line-del" data-act="cart-del" aria-label="Remove ${escH(c.name)}">
           <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
         </button>
       </div>
-    </div>`).join('') : '<div class="cart-empty">Nothing here yet. Add dishes from the menu.</div>';
+      <textarea class="note" rows="1" maxlength="160" placeholder="Requests, e.g. no onions, no garlic" aria-label="Requests for ${escH(c.name)}">${escH(c.comment)}</textarea>
+    </div>`).join('') : '<div class="cart-empty">Nothing here yet.</div>';
 }
 
-function openCart() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  if (!$('order-date').value) $('order-date').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  if (!$('order-time-now').value) $('order-time-now').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  $('cart-modal').classList.add('open');
-  $('cart-modal').setAttribute('aria-hidden', 'false');
-  document.body.classList.add('modal-open');
-}
-function closeCart() {
-  $('cart-modal').classList.remove('open');
-  $('cart-modal').setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('modal-open');
+/* ---------- Order flow: notes → dine in / takeaway → details → sent ---------- */
+const FLOW_ROUTES = ['order', 'otype', 'odetails', 'odone', 'loading'];
+const ORDER = { type: null, name: '', phone: '', people: '2', time: '' };
+let lastMenu = 'ch-1', busy = false, interTimer = null, lastOrder = null;
+const cartTotal = () => cart.reduce((s, c) => s + c.qty * c.price, 0);
+const cartCount = () => cart.reduce((s, c) => s + c.qty, 0);
+
+const ICONS = {
+  dine: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="26" r="11"/><circle cx="24" cy="26" r="6.5" opacity=".45"/><path d="M6 8v9a3 3 0 006 0V8M9 17v23"/><path d="M42 8c-3 0-5 4-5 10v5h5V8zM42 23v17"/></svg>',
+  take: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 16h28l-2.5 25h-23L10 16z"/><path d="M17 20v-6a7 7 0 0114 0v6"/><path d="M19 30l4 4 7-8" opacity=".55"/></svg>',
+  check: '<svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle class="tick-ring" cx="26" cy="26" r="23"/><path class="tick-mark" d="M15 27l7 7 15-16"/></svg>',
+};
+
+const flowHead = (title, back = true) => `
+  <div class="stage-head">
+    ${back ? `<button type="button" class="back-btn" data-act="back">${BACK_ARROW}<span>Back</span></button>` : '<span></span>'}
+    <div class="menu-title"><h2>${escH(title)}</h2></div><span></span>
+  </div>`;
+
+function defaultTime() {
+  const d = new Date(Date.now() + 30 * 60000);
+  d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function placeOrder() {
-  if (!cart.length) { alert('Please add some dishes to your order first.'); return; }
-  const nameInput = $('cust-name');
-  const name = nameInput.value.trim();
-  if (!name) {
-    nameInput.classList.add('invalid');
-    nameInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    nameInput.focus({ preventScroll: true });
+const FLOW = {
+  order: () => flowHead('Your Order') + `
+    <div class="stage-body flow-body">
+      <div class="olist" id="olist">${orderLinesHTML()}</div>
+      <div class="flow-foot" id="ofoot"></div>
+    </div>`,
+  otype: () => flowHead('How would you like it?') + `
+    <div class="stage-body flow-body">
+      <div class="type-grid">
+        <button type="button" class="type-card" data-act="otype" data-type="dine_in" style="--i:0">
+          <span class="type-ico">${ICONS.dine}</span><span class="type-name">Dine in</span><span class="type-sub">Served at the club</span>
+        </button>
+        <button type="button" class="type-card" data-act="otype" data-type="takeaway" style="--i:1">
+          <span class="type-ico">${ICONS.take}</span><span class="type-name">Takeaway</span><span class="type-sub">Packed for collection</span>
+        </button>
+      </div>
+    </div>`,
+  odetails: () => {
+    const dine = ORDER.type === 'dine_in';
+    if (!ORDER.time) ORDER.time = defaultTime();
+    const f = (k, label, type, extra = '') => `
+      <div class="input-group${k === 'name' || k === 'phone' ? ' full-width' : ''}" style="--i:${['name', 'phone', 'people', 'time'].indexOf(k)}">
+        <label for="f-${k}">${label}</label>
+        <input id="f-${k}" data-f="${k}" class="modern-input" type="${type}" value="${escH(ORDER[k] || '')}" ${extra}/>
+      </div>`;
+    return flowHead(dine ? 'Dine in' : 'Takeaway') + `
+      <div class="stage-body flow-body">
+        <div class="customer-info-grid details">
+          ${f('name', 'Name', 'text', 'autocomplete="name" maxlength="80" placeholder="Your name"')}
+          ${f('phone', 'Phone', 'tel', 'autocomplete="tel" maxlength="20" placeholder="07xx xxx xxx"')}
+          ${dine ? f('people', 'People', 'number', 'min="1" max="50" inputmode="numeric"') : ''}
+          ${f('time', dine ? 'Serving time' : 'Collection time', 'time')}
+        </div>
+        <div class="flow-foot">
+          <div class="flow-total"><span>${plural(cartCount(), 'item', 'items')}</span><b>${fmt(cartTotal())}</b></div>
+          <button type="button" class="menu-next" data-act="send">Send order${ARROW}</button>
+        </div>
+      </div>`;
+  },
+  odone: () => {
+    const o = lastOrder || {};
+    return `
+    <div class="stage-body flow-body done-body">
+      <div class="done-tick">${ICONS.check}</div>
+      <h2 class="done-title">Order sent</h2>
+      <div class="done-no">Order #${escH(o.id ?? '')}</div>
+      <div class="done-card">
+        <div class="done-row"><span>${o.type === 'dine_in' ? 'Dine in' : 'Takeaway'}</span><b>${escH(o.time || '')}</b></div>
+        <div class="done-row"><span>${escH(o.name || '')}</span><b>${fmt(o.total || 0)}</b></div>
+      </div>
+      <p class="done-note">The kitchen has your order.</p>
+      <button type="button" class="ghost-btn" data-act="restart">Back to menu</button>
+    </div>`;
+  },
+  loading: () => '',
+};
+
+function paintOrder(first) {
+  const list = $('olist'), foot = $('ofoot');
+  if (!list) return;
+  if (!first) {
+    list.innerHTML = orderLinesHTML();
+    list.querySelectorAll('.oline').forEach(l => l.classList.add('still'));
+  }
+  foot.innerHTML = cart.length
+    ? `<div class="flow-total"><span>${plural(cartCount(), 'item', 'items')}</span><b>${fmt(cartTotal())}</b></div>
+       <button type="button" class="menu-next" data-act="to-type">Proceed${ARROW}</button>`
+    : `<button type="button" class="menu-next" data-act="restart">Browse the menu${ARROW}</button>`;
+}
+
+function interlude(text, route) {
+  if (busy) return;
+  busy = true;
+  const stage = $('stage');
+  stage.classList.add('leaving');
+  setTimeout(() => {
+    stage.classList.remove('leaving');
+    stage.dataset.route = 'loading';
+    stage.innerHTML = `<div class="loader-screen"><svg class="loader-ring" viewBox="0 0 50 50"><circle cx="25" cy="25" r="21"/><circle class="fill" cx="25" cy="25" r="21"/></svg><div class="loader-text">${escH(text)}</div></div>`;
+    stage.classList.remove('active'); void stage.offsetWidth; stage.classList.add('active');
+    window.scrollTo(0, 0);
+  }, 180);
+  interTimer = setTimeout(() => { busy = false; route && go(route); }, 2000);
+}
+
+async function sendOrder() {
+  if (busy) return;
+  const fields = ['name', 'phone', 'time'].concat(ORDER.type === 'dine_in' ? ['people'] : []);
+  const bad = fields.filter(k => !String(ORDER[k] || '').trim() || (k === 'phone' && String(ORDER.phone).replace(/\D/g, '').length < 9));
+  if (bad.length) {
+    bad.forEach(k => $('f-' + k)?.classList.add('invalid'));
+    $('f-' + bad[0])?.focus();
     return;
   }
-  const date = $('order-date').value;
-  const orderTime = $('order-time-now').value;
-  const serveTime = $('order-time').value;
-  const pax = $('cust-people').value || '1';
-  const type = document.querySelector('.order-type-btn.active')?.textContent.trim() || 'Dine In';
-  const total = cart.reduce((s, c) => s + c.qty * c.price, 0);
-
-  const lines = [
-    '*USC PREMIUM ORDER*',
-    '--------------------------',
-    `👤 *Customer:* ${name}`,
-    `👥 *Pax:* ${pax}`,
-    `${type === 'Takeaway' ? '🥡' : '🍽'} *Order Type:* ${type}`,
-  ];
-  if (date) { const d = date.split('-'); lines.push(`📅 *Date:* ${d[2]}/${d[1]}/${d[0]}`); }
-  if (orderTime) lines.push(`🕐 *Order Time:* ${orderTime}`);
-  if (serveTime) lines.push(`⏰ *Serving Time:* ${serveTime}`);
-  lines.push('--------------------------', '', '*ITEMS ORDERED:*');
-  cart.forEach(c => {
-    let l = `✅ ${c.qty}x ${c.name}`;
-    if (c.size) l += ` (${c.size})`;
-    if (c.style) l += ` - ${c.style}`;
-    l += ` — ${fmt(c.price * c.qty)}`;
-    lines.push(l);
-    if (c.comment.trim()) lines.push(`   _Note: ${c.comment.trim()}_`);
-  });
-  lines.push('', `💰 *Grand Total: ${fmt(total)}*`);
-
-  window.open(`https://wa.me/${WHATSAPP_NO}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  const payload = {
+    p_type: ORDER.type, p_name: ORDER.name.trim(), p_phone: ORDER.phone.trim(),
+    p_people: ORDER.type === 'dine_in' ? Math.max(1, parseInt(ORDER.people, 10) || 1) : null,
+    p_time: ORDER.time,
+    p_items: cart.map(c => ({ name: c.name, size: c.size || null, style: c.style || null, qty: c.qty, price: c.price, note: c.comment.trim() || null })),
+    p_total: cartTotal(),
+  };
+  const preview = new URLSearchParams(location.search).has('preview') && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  interlude('Sending your order', null);
+  const started = Date.now();
+  let id = null, err = null;
+  try {
+    if (preview) id = 'TEST';
+    else {
+      sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const res = await sb.rpc('place_order', payload);
+      if (res.error) err = res.error; else id = res.data;
+    }
+  } catch (x) { err = x; }
+  setTimeout(() => {
+    busy = false;
+    if (err) { console.error(err); alert('Your order could not be sent. Please check your connection and try again.'); current = null; go('odetails', false); return; }
+    lastOrder = { id, type: ORDER.type, name: payload.p_name, time: payload.p_time, total: payload.p_total };
+    cart = []; ORDER.time = ''; renderCart();
+    history.replaceState({ s: 'ch-1' }, '');
+    go('odone');
+  }, Math.max(0, 2000 - (Date.now() - started)));
 }
 
 /* ---------- Navigation ---------- */
@@ -441,6 +539,9 @@ function show(route) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'leaving'));
   const isChapter = route.startsWith('ch-');
   document.body.classList.toggle('ch-mode', isChapter);
+  document.body.classList.toggle('flow-mode', FLOW_ROUTES.includes(parse(route).type));
+  if (!isChapter && !FLOW_ROUTES.includes(parse(route).type)) lastMenu = route;
+  $('stage').dataset.route = parse(route).type;
   const el = elOf(route);
   if (!isChapter) { renderStage(route); void el.offsetWidth; }
   el.classList.add('active');
@@ -450,6 +551,8 @@ function show(route) {
 function go(route, push = true) {
   if (route === current && !navTimer) return;
   clearTimeout(navTimer);
+  clearTimeout(interTimer);
+  busy = false;
   const from = current && elOf(current);
   if (from) from.classList.add('leaving');
   current = route;
@@ -458,13 +561,12 @@ function go(route, push = true) {
 }
 
 window.addEventListener('popstate', e => {
-  if ($('cart-modal').classList.contains('open')) closeCart();
+  if (busy) { history.pushState({ s: current }, ''); return; }
   go((e.state && e.state.s) || 'ch-1', false);
 });
 
 /* ---------- Events ---------- */
 document.addEventListener('click', e => {
-  if (e.target.id === 'cart-modal') { closeCart(); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const card = el.closest('.dish');
@@ -476,7 +578,7 @@ document.addEventListener('click', e => {
     case 'back': go(parentOf(current)); break;
     case 'continue': {
       const n = stepOf(current);
-      if (n < 3) go(`ch-${n + 1}`); else openCart();
+      if (n < 3) go(`ch-${n + 1}`); else go('order');
       break;
     }
     case 'opt': {
@@ -491,15 +593,11 @@ document.addEventListener('click', e => {
     case 'cart-inc': changeQty(lineSel(), 1); break;
     case 'cart-dec': changeQty(lineSel(), -1); break;
     case 'cart-del': cart = cart.filter(c => c.key !== line.dataset.key); renderCart(); break;
-    case 'cart-open': openCart(); break;
-    case 'cart-close': closeCart(); break;
-    case 'clear':
-      if (cart.length && confirm('Clear your entire order?')) { cart = []; renderCart(); }
-      break;
-    case 'order': placeOrder(); break;
-    case 'otype':
-      document.querySelectorAll('.order-type-btn').forEach(b => b.classList.toggle('active', b === el));
-      break;
+    case 'cart-open': go('order'); break;
+    case 'to-type': if (cart.length) interlude('Getting things ready', 'otype'); break;
+    case 'otype': ORDER.type = el.dataset.type; el.classList.add('chosen'); setTimeout(() => go('odetails'), 260); break;
+    case 'send': sendOrder(); break;
+    case 'restart': go('ch-1'); break;
     case 'search-clear': {
       const input = $('stage').querySelector('.search-input');
       input.value = '';
@@ -516,12 +614,10 @@ document.addEventListener('input', e => {
   else if (t.classList.contains('note')) {
     const line = cart.find(c => c.key === t.closest('.line').dataset.key);
     if (line) line.comment = t.value;
-  } else if (t.id === 'cust-name') t.classList.remove('invalid');
+    t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px';
+  } else if (t.classList.contains('modern-input')) { t.classList.remove('invalid'); ORDER[t.dataset.f] = t.value; }
 });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) closeCart();
-});
 
 /* ---------- Auth ---------- */
 let sb = null;
@@ -545,7 +641,7 @@ async function initAuth() {
   const navRight = document.querySelector('.usc-nav-right');
   if (!window.supabase || !navRight) return;
   try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
       navRight.innerHTML = '<a href="../index.html" class="usc-back-link">Sign In</a>';
@@ -556,6 +652,9 @@ async function initAuth() {
     navRight.innerHTML = navUserBar(name, false);
     const { data: profile } = await sb.from('profiles').select('first_name, is_member').eq('id', user.id).single();
     if (profile) navRight.innerHTML = navUserBar(profile.first_name || name, !!profile.is_member);
+    if (!ORDER.name) ORDER.name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || name;
+    const { data: ph } = await sb.from('profiles').select('phone').eq('id', user.id).single();
+    if (!ORDER.phone && ph?.phone) ORDER.phone = ph.phone;
   } catch (err) {
     console.warn('Auth unavailable', err);
   }
