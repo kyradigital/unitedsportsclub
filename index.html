@@ -338,76 +338,98 @@
       background-color:#0a1f3d;
     }
 
-    /* ═══ BANNERS ═══ */
-    .promo{position:relative;flex-shrink:0;margin-bottom:1.75rem;border-radius:22px;overflow:hidden;background:#0b1a30;border:1px solid rgba(255,255,255,.08);animation:fadeUp .45s .05s ease both;touch-action:pan-y}
+    /* ═══ BANNERS (edge to edge) ═══ */
+    .promo{position:relative;flex-shrink:0;margin:0 -2.5rem 1.75rem;overflow:hidden;background:#0b1a30;animation:fadeUp .45s .05s ease both;touch-action:pan-y}
     .promo[hidden]{display:none}
-    @media(max-width:700px){.promo{border-radius:18px;margin-bottom:1.25rem}}
-    .promo-track{display:flex;min-height:clamp(250px,30vw,340px);transition:transform .7s cubic-bezier(.22,.8,.26,1)}
-    .slide{position:relative;flex:0 0 100%;overflow:hidden;display:flex;align-items:center;padding:clamp(1.3rem,3.4vw,2.6rem) clamp(1.2rem,3.4vw,2.6rem) 2.2rem}
-    .slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.06);transition:transform 2.4s ease}
+    .promo-track{display:flex;min-height:clamp(260px,28vw,360px);transition:transform .8s cubic-bezier(.22,.8,.26,1)}
+    .slide{position:relative;flex:0 0 100%;overflow:hidden;display:flex;align-items:center;padding:2.2rem 2.5rem 2.6rem}
+    .slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.08);transition:transform 4.6s ease-out}
     .slide.is-on .slide-bg{transform:scale(1)}
     .slide-shade{position:absolute;inset:0}
-    .slide-body{position:relative;z-index:1;max-width:62%;opacity:0;transform:translateY(14px);transition:opacity .55s .15s ease,transform .55s .15s cubic-bezier(.22,.8,.26,1)}
+    .slide-body{position:relative;z-index:1;max-width:min(620px,60%);opacity:0;transform:translateY(14px);transition:opacity .6s .15s ease,transform .6s .15s cubic-bezier(.22,.8,.26,1)}
     .slide.is-on .slide-body{opacity:1;transform:none}
-    @media(max-width:700px){.promo-track{min-height:300px}.slide.promo-k .s-chips{display:none}.slide{align-items:flex-end}.slide-body{max-width:100%}}
-    .s-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:.55rem}
-    .s-title{font-size:clamp(1.55rem,4.4vw,2.9rem);font-weight:900;letter-spacing:-.035em;line-height:1.02;color:#fff}
-    .s-sub{margin-top:.55rem;font-size:clamp(.85rem,1.6vw,1.05rem);color:rgba(255,255,255,.78);font-weight:500}
+    .s-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.55rem}
+    .s-title{font-size:clamp(1.6rem,4.2vw,3rem);font-weight:900;letter-spacing:-.035em;line-height:1.02;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+    .s-sub{margin-top:.55rem;font-size:clamp(.85rem,1.5vw,1.05rem);color:rgba(255,255,255,.82);font-weight:500}
     .s-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.95rem}
-    .s-chip{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.35rem .65rem;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#fff;white-space:nowrap}
+    .s-chip{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.35rem .65rem;border-radius:100px;background:rgba(8,17,31,.55);border:1px solid rgba(255,255,255,.2);color:#fff;white-space:nowrap}
     .s-cta{display:inline-flex;align-items:center;gap:.4rem;margin-top:1.05rem;height:38px;padding:0 1.05rem;border-radius:100px;background:#fff;color:#08111f;font-size:.78rem;font-weight:800;text-decoration:none}
 
-    /* membership */
-    .slide.promo-k .slide-shade{background:linear-gradient(90deg,rgba(8,17,31,.96) 0%,rgba(8,17,31,.82) 42%,rgba(8,17,31,.15) 100%)}
-    @media(max-width:700px){.slide.promo-k .slide-shade{background:linear-gradient(0deg,rgba(8,17,31,.97) 8%,rgba(8,17,31,.7) 55%,rgba(8,17,31,.2) 100%)}}
-    .s-offer{display:inline-flex;align-items:baseline;gap:.35rem;margin-top:.7rem;padding:.4rem .8rem;border-radius:12px;background:#fff;color:#08111f}
+    .slide.promo-k .slide-shade,.slide.dishes-k .slide-shade{background:linear-gradient(90deg,rgba(8,17,31,.95) 0%,rgba(8,17,31,.8) 40%,rgba(8,17,31,.25) 100%)}
+    .s-offer{display:inline-flex;align-items:baseline;gap:.35rem;margin-top:.75rem;padding:.4rem .8rem;border-radius:12px;background:#fff;color:#08111f}
     .s-offer b{font-size:1.5rem;font-weight:900;letter-spacing:-.03em}
     .s-offer span{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
 
     /* match poster */
-    .slide.match-k{justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 0%,#173a6b 0%,#0b1a30 55%,#060d18 100%)}
-    .pitch{position:absolute;inset:0;opacity:.13;pointer-events:none}
+    .slide.match-k{justify-content:center;text-align:center}
+    .slide.match-k .slide-shade{background:radial-gradient(ellipse at 50% 40%,rgba(8,17,31,.55) 0%,rgba(8,17,31,.88) 70%),linear-gradient(180deg,rgba(8,17,31,.5),rgba(8,17,31,.9))}
     .slide.match-k .slide-body{max-width:100%;width:100%}
-    .m-teams{display:flex;align-items:center;justify-content:center;gap:clamp(.6rem,2.4vw,1.6rem)}
-    .m-team{flex:1;font-size:clamp(1.2rem,3.6vw,2.5rem);font-weight:900;letter-spacing:-.03em;line-height:1.02;color:#fff;text-transform:uppercase}
-    .m-team:first-child{text-align:right}.m-team:last-child{text-align:left}
-    .m-vs{flex-shrink:0;width:clamp(36px,5vw,54px);height:clamp(36px,5vw,54px);border-radius:50%;display:grid;place-items:center;background:#fff;color:#08111f;font-size:clamp(.72rem,1.3vw,.95rem);font-weight:900}
-    .m-when{margin-top:.7rem;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7)}
+    .m-teams{display:flex;align-items:center;justify-content:center;gap:clamp(.7rem,2.6vw,2rem)}
+    .m-team{flex:1;display:flex;align-items:center;gap:clamp(.5rem,1.4vw,1rem);font-size:clamp(1.1rem,3.2vw,2.4rem);font-weight:900;letter-spacing:-.03em;line-height:1.02;color:#fff;text-transform:uppercase}
+    .m-team:first-child{justify-content:flex-end;text-align:right}
+    .m-team:last-child{justify-content:flex-start;text-align:left}
+    .m-crest{width:clamp(44px,6.5vw,86px);height:clamp(44px,6.5vw,86px);object-fit:contain;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+    .m-vs{flex-shrink:0;width:clamp(34px,4.6vw,52px);height:clamp(34px,4.6vw,52px);border-radius:50%;display:grid;place-items:center;background:#fff;color:#08111f;font-size:clamp(.7rem,1.2vw,.95rem);font-weight:900}
+    .m-when{margin-top:.75rem;font-size:.82rem;font-weight:600;color:rgba(255,255,255,.75)}
     .m-count{display:flex;justify-content:center;gap:.45rem;margin-top:.8rem}
-    .m-count div{min-width:clamp(48px,6.4vw,66px);padding:.45rem .3rem;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
-    .m-count b{display:block;font-size:clamp(1.15rem,2.6vw,1.7rem);font-weight:900;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05}
-    .m-count span{font-size:.55rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+    .m-count div{min-width:clamp(48px,6vw,66px);padding:.45rem .3rem;border-radius:12px;background:rgba(8,17,31,.6);border:1px solid rgba(255,255,255,.18)}
+    .m-count b{display:block;font-size:clamp(1.1rem,2.4vw,1.7rem);font-weight:900;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05}
+    .m-count span{font-size:.55rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55)}
     .m-live{display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;padding:.45rem .9rem;border-radius:100px;background:#e11d48;color:#fff;font-size:.78rem;font-weight:900;letter-spacing:.12em}
     .m-live i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
     @keyframes blink{50%{opacity:.25}}
     .slide.match-k .s-chips{justify-content:center}
 
-    /* chef specials */
-    .slide.dishes-k{background:linear-gradient(120deg,#0d2240 0%,#0a1628 60%,#08111f 100%);gap:1.5rem}
-    .slide.dishes-k .slide-body{max-width:36%;flex-shrink:0}
-    .d-row{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;align-self:stretch;align-items:center}
+    /* top picks */
+    .slide.dishes-k{gap:2rem}
+    .slide.dishes-k .slide-body{max-width:34%;flex-shrink:0}
+    .d-row{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;align-items:center}
     .d-card{display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.26,1)}
     .slide.is-on .d-card{opacity:1;transform:none}
-    .slide.is-on .d-card:nth-child(2){transition-delay:.1s}.slide.is-on .d-card:nth-child(3){transition-delay:.2s}.slide.is-on .d-card:nth-child(4){transition-delay:.3s}
-    .d-img{width:100%;aspect-ratio:16/10;background:center/contain no-repeat;filter:drop-shadow(0 12px 14px rgba(0,0,0,.5))}
-    .d-name{margin-top:.35rem;font-size:.78rem;font-weight:700;color:#fff;line-height:1.2}
-    .d-price{font-size:.7rem;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums}
-    @media(max-width:700px){
-      .slide.dishes-k{flex-direction:column;align-items:stretch;justify-content:space-between;gap:.4rem}
-      .slide.dishes-k .slide-body{max-width:100%;order:-1}
-      .slide.dishes-k .s-cta{display:none}
-      .d-row{grid-template-columns:1fr 1fr;gap:.2rem .6rem;align-self:auto}
-      .d-img{aspect-ratio:16/8}
-      .d-name{font-size:.72rem;margin-top:.1rem}
-    }
+    .slide.is-on .d-card:nth-child(2){transition-delay:.12s}.slide.is-on .d-card:nth-child(3){transition-delay:.24s}.slide.is-on .d-card:nth-child(4){transition-delay:.36s}
+    .d-img{width:100%;aspect-ratio:16/10;background:center/contain no-repeat;filter:drop-shadow(0 14px 16px rgba(0,0,0,.6))}
+    .d-name{margin-top:.35rem;font-size:.8rem;font-weight:700;color:#fff;line-height:1.2;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+    .d-price{font-size:.7rem;color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums}
 
-    .promo-dots{position:absolute;z-index:2;left:50%;bottom:.7rem;transform:translateX(-50%);display:flex;gap:.35rem}
-    .promo-dot{width:22px;height:3px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden;border:none;padding:0;cursor:pointer}
+    .promo-dots{position:absolute;z-index:2;left:50%;bottom:.85rem;transform:translateX(-50%);display:flex;gap:.35rem}
+    .promo-dot{width:24px;height:3px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;border:none;padding:0;cursor:pointer}
     .promo-dot i{display:block;height:100%;width:0;background:#fff}
-    .promo-dot.on i{animation:dotFill var(--dur,2s) linear forwards}
+    .promo-dot.on i{animation:dotFill var(--dur,4s) linear forwards}
     .promo.paused .promo-dot.on i{animation-play-state:paused}
     .promo-dot.done i{width:100%}
     @keyframes dotFill{to{width:100%}}
+
+    /* phones: shorter banner, edge to edge */
+    @media(max-width:800px){
+      .promo{margin:0 -1rem 1.25rem}
+      .promo-track{min-height:210px}
+      .slide{padding:1.1rem 1.1rem 1.7rem;align-items:flex-end}
+      .slide-body{max-width:100%}
+      .slide.promo-k .slide-shade,.slide.dishes-k .slide-shade{background:linear-gradient(0deg,rgba(8,17,31,.96) 10%,rgba(8,17,31,.65) 60%,rgba(8,17,31,.3) 100%)}
+      .s-eyebrow{font-size:.56rem;margin-bottom:.3rem}
+      .s-title{font-size:1.5rem}
+      .s-sub{font-size:.8rem;margin-top:.3rem}
+      .s-chips,.s-cta{display:none}
+      .s-offer{margin-top:.45rem;padding:.25rem .6rem;border-radius:9px}
+      .s-offer b{font-size:1.1rem}
+      .slide.match-k{align-items:center}
+      .m-team{flex-direction:column;gap:.35rem;font-size:.9rem}
+      .m-team:first-child,.m-team:last-child{justify-content:center;text-align:center}
+      .m-team:first-child .m-crest{order:-1}
+      .m-crest{width:46px;height:46px}
+      .m-when{margin-top:.45rem;font-size:.72rem}
+      .m-count{margin-top:.5rem;gap:.3rem}
+      .m-count div{min-width:42px;padding:.3rem .2rem;border-radius:9px}
+      .m-count b{font-size:1rem}
+      .m-count span{font-size:.48rem}
+      .slide.dishes-k{flex-direction:column;align-items:stretch;justify-content:flex-end;gap:.55rem}
+      .slide.dishes-k .slide-body{max-width:100%}
+      .slide.dishes-k .s-sub{display:none}
+      .d-row{grid-template-columns:repeat(4,1fr);gap:.35rem;align-self:auto}
+      .d-img{aspect-ratio:4/3}
+      .d-name{font-size:.62rem;margin-top:.15rem}
+      .d-price{display:none}
+    }
 
     /* ═══ WALLET ═══ */
     .wallet{grid-column:1/-1;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.1rem;border-radius:16px;background:var(--panel);border:1px solid rgba(255,255,255,.08)}
@@ -929,17 +951,18 @@ async function cancelGame(id, btn) {
 
 
 /* ── Dashboard banners (managed in the admin panel) ── */
-const SLIDE_MS = 2000;
+const SLIDE_MS = 4000;
 let slides = [], slideIdx = 0, slideTimer = null, countTimer = null;
-const PITCH = '<svg class="pitch" viewBox="0 0 1050 400" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#fff" stroke-width="3"><rect x="20" y="20" width="1010" height="360"/><line x1="525" y1="20" x2="525" y2="380"/><circle cx="525" cy="200" r="70"/><rect x="20" y="110" width="120" height="180"/><rect x="910" y="110" width="120" height="180"/></svg>';
+const bgHTML = b => b.image ? `<div class="slide-bg" style="background-image:url('./${escP(b.image)}')"></div>` : '';
+const crest = src => src ? `<img class="m-crest" src="./${escP(src)}" alt="" onerror="this.remove()"/>` : '';
 function slideHTML(b) {
   const chips = (b.items || []).filter(x => typeof x === 'string').map(x => `<span class="s-chip">${escP(x)}</span>`).join('');
   const cta = b.cta_label ? (b.cta_url ? `<a class="s-cta" href="./${escP(b.cta_url.replace(/^\.?\//, ''))}">${escP(b.cta_label)} &rarr;</a>` : `<span class="s-cta">${escP(b.cta_label)}</span>`) : '';
   if (b.kind === 'match') {
     const [h, a] = String(b.title).split(/\s+vs\.?\s+/i);
-    return `<div class="slide match-k">${PITCH}<div class="slide-body">
+    return `<div class="slide match-k">${bgHTML(b)}<div class="slide-shade"></div><div class="slide-body">
       <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
-      <div class="m-teams"><div class="m-team">${escP(h || b.title)}</div>${a ? `<div class="m-vs">VS</div><div class="m-team">${escP(a)}</div>` : ''}</div>
+      <div class="m-teams"><div class="m-team"><span>${escP(h || b.title)}</span>${crest(b.crest_home)}</div>${a ? `<div class="m-vs">VS</div><div class="m-team">${crest(b.crest_away)}<span>${escP(a)}</span></div>` : ''}</div>
       <div class="m-when">${escP(b.subtitle || '')}</div>
       <div class="m-clock" data-at="${escP(b.event_at || '')}"></div>
       ${chips ? `<div class="s-chips">${chips}</div>` : ''}
@@ -947,14 +970,14 @@ function slideHTML(b) {
   }
   if (b.kind === 'dishes') {
     const dishes = (b.items || []).filter(x => x && typeof x === 'object').slice(0, 4);
-    return `<div class="slide dishes-k"><div class="slide-body">
+    return `<div class="slide dishes-k">${bgHTML(b)}<div class="slide-shade"></div><div class="slide-body">
       <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
       <div class="s-title">${escP(b.title)}</div>
       ${b.subtitle ? `<div class="s-sub">${escP(b.subtitle)}</div>` : ''}${cta}
     </div><div class="d-row">${dishes.map(d => `<div class="d-card"><div class="d-img" style="background-image:url('./${escP(d.img || '')}')"></div><div class="d-name">${escP(d.name)}</div>${d.price ? `<div class="d-price">${kes(d.price)}</div>` : ''}</div>`).join('')}</div></div>`;
   }
   const offer = /(\d+%)\s*off/i.exec(b.subtitle || '');
-  return `<div class="slide promo-k">${b.image ? `<div class="slide-bg" style="background-image:url('./${escP(b.image)}')"></div>` : ''}<div class="slide-shade"></div><div class="slide-body">
+  return `<div class="slide promo-k">${bgHTML(b)}<div class="slide-shade"></div><div class="slide-body">
     <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
     <div class="s-title">${escP(b.title)}</div>
     ${offer ? `<div class="s-offer"><b>${offer[1]}</b><span>off padel</span></div>` : ''}

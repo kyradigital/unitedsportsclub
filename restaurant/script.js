@@ -666,11 +666,10 @@ async function initAuth() {
     const user = session.user;
     const name = user.user_metadata?.first_name || user.email.split('@')[0];
     navRight.innerHTML = navUserBar(name, false);
-    const { data: profile } = await sb.from('profiles').select('first_name, is_member').eq('id', user.id).single();
+    const { data: profile } = await sb.from('profiles').select('first_name, last_name, phone, is_member').eq('id', user.id).single();
     if (profile) navRight.innerHTML = navUserBar(profile.first_name || name, !!profile.is_member);
     if (!ORDER.name) ORDER.name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || name;
-    const { data: ph } = await sb.from('profiles').select('phone').eq('id', user.id).single();
-    if (!ORDER.phone && ph?.phone) ORDER.phone = ph.phone;
+    if (!ORDER.phone && profile?.phone) ORDER.phone = profile.phone;
     const { data: w } = await sb.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
     walletBalance = w?.balance || 0;
   } catch (err) {
