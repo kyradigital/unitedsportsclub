@@ -73,8 +73,16 @@ const state = {
   weeks: 1,                      // weekly repeat count
   credit: 0,                     // wallet balance
   useCredit: false,
+  hire: {},                      // { itemKey: qty }
+  bundle: null,                  // chosen food bundle id
   join: null,                    // booking loaded from an invite link
 };
+let HIRE = [], BUNDLES = [];
+const hireItems = () => HIRE.filter(h => h.sport === state.sport);
+const hireTotal = () => hireItems().reduce((t, h) => t + (state.hire[h.key] || 0) * h.price, 0);
+const bundleObj = () => BUNDLES.find(b => b.id === state.bundle) || null;
+const bundlePrice = () => (state.weeks === 1 && bundleObj() ? bundleObj().price : 0);
+const grandTotal = () => totalPrice() + hireTotal() + bundlePrice();
 
 const sport = () => SPORTS[state.sport];
 const court = () => sport().courts.find(c => c.id === state.court);
@@ -372,8 +380,9 @@ function reviewHTML() {
             ? `<div class="rp"><span class="avatar open-av">${LINK_ICON}</span><span class="rp-name">Open spot</span><span class="badge">Invite</span><span class="rp-price">On joining</span></div>`
             : `<div class="rp">${avatar(p)}<span class="rp-name">${escH(p.name)}${p.you ? ' (you)' : ''}</span>${badge(p)}<span class="rp-price">${fmt(playerPrice(p))}</span></div>`).join('')}
         </div>
-        <div class="review-total"><span>Total${state.weeks > 1 ? ' per game' : ''}</span><b>${fmt(totalPrice())}</b></div>
+        <div class="review-total"><span id="grand-label">Total${state.weeks > 1 ? ' per game' : ''}</span><b id="grand">${fmt(grandTotal())}</b></div>
       </div>
+      <div class="extras" id="extras">${extrasHTML()}</div>
       <div class="repeat">
         <span class="repeat-label">Repeat weekly</span>
         <div class="repeat-pills">${[1, 2, 4, 8].map(w => `<button type="button" class="repeat-pill${state.weeks === w ? ' on' : ''}" data-act="weeks" data-w="${w}">${w === 1 ? 'Once' : w + ' weeks'}</button>`).join('')}</div>
@@ -382,7 +391,7 @@ function reviewHTML() {
       <button type="button" class="credit-toggle${state.useCredit ? ' on' : ''}" data-act="credit">
         <span class="ct-box"></span>
         <span class="ct-text">Use my credit<small>${fmt(state.credit)} available</small></span>
-        <b id="credit-amt">${state.useCredit ? '− ' + fmt(Math.min(state.credit, totalPrice())) : ''}</b>
+        <b id="credit-amt">${state.useCredit ? '− ' + fmt(Math.min(state.credit, grandTotal())) : ''}</b>
       </button>` : ''}
       <p class="fine">Per person, per 30 min: members ${fmt(MEMBER_PRICE)}, non-members ${fmt(NON_MEMBER_PRICE)}. Off-peak (Mon–Fri before 16:00): ${fmt(OFF_MEMBER)} / ${fmt(OFF_NON_MEMBER)}.</p>
       <div class="stage-foot">
@@ -433,11 +442,53 @@ async function shareLink(text, url) {
   catch (e) { window.open('https://wa.me/?text=' + encodeURIComponent(`${text}\n${url}`), '_blank', 'noopener'); }
 }
 
+async function enableAlerts(btn) {
+  btn.disabled = true;
+  try { await USCPush.enable(sb); btn.innerHTML = ICO.bell + 'Reminder on'; btn.classList.add('primary'); toast("We'll remind you 1 hour before"); }
+  catch (e) { btn.disabled = false; if (e.message === 'blocked') toast('Notifications are blocked in your browser settings'); else if (e.message !== 'dismissed') toast("Couldn't turn on reminders on this device"); }
+}
+async function paintAlertsBtn() {
+  const btn = $('alerts-btn'); if (!btn) return;
+  if (await USCPush.state() === 'on') { btn.innerHTML = ICO.bell + 'Reminder on'; btn.classList.add('primary'); btn.disabled = true; }
+}
+
 const ICO = {
+  bell: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>',
   link: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>',
   cal: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 10h16M5 21h14a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>',
   chat: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.8 7L4 20l1.1-4.6A8 8 0 1121 12z"/></svg>',
 };
+
+function extrasHTML() {
+  const items = hireItems();
+  const hire = items.length ? `
+    <div class="ex-block">
+      <div class="ex-head">Hire</div>
+      ${items.map(h => { const q = state.hire[h.key] || 0; return `
+      <div class="ex-row">
+        <div class="ex-info"><span class="ex-name">${escH(h.name)}</span><span class="ex-price">${fmt(h.price)} each</span></div>
+        <div class="ex-step"><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="-1"${q ? '' : ' disabled'} aria-label="Less">−</button><span>${q}</span><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="1"${q >= h.max_qty ? ' disabled' : ''} aria-label="More">+</button></div>
+      </div>`; }).join('')}
+    </div>` : '';
+  const food = BUNDLES.length ? `
+    <div class="ex-block">
+      <div class="ex-head">Food after the game<small>Ready at ${escH(slotTime(state.sel[state.sel.length - 1] + 1))}</small></div>
+      ${state.weeks > 1 ? '<p class="ex-note">Food bundles are for single bookings.</p>' : BUNDLES.map(b => `
+      <button type="button" class="ex-bundle${state.bundle === b.id ? ' on' : ''}" data-act="bundle" data-id="${b.id}">
+        <span class="ex-radio"></span>
+        <span class="ex-info"><span class="ex-name">${escH(b.title)}</span><span class="ex-price">${escH(b.description || '')}</span></span>
+        <b>${fmt(b.price)}</b>
+      </button>`).join('')}
+    </div>` : '';
+  return hire + food;
+}
+
+function paintTotals() {
+  const g = $('grand'); if (!g) return;
+  g.textContent = fmt(grandTotal());
+  $('grand-label').textContent = state.weeks > 1 ? 'Total per game' : 'Total';
+  const c = $('credit-amt'); if (c) c.textContent = state.useCredit ? '− ' + fmt(Math.min(state.credit, grandTotal())) : '';
+}
 
 function doneHTML() {
   const b = state.last;
@@ -453,7 +504,9 @@ function doneHTML() {
           <div class="row"><span>Time</span><span>${escH(b.startTime)} – ${escH(b.endTime)}</span></div>
           <div class="row"><span>Players</span><span>${b.players.map(p => escH(p.name)).join(', ')}${b.open ? ` + ${b.open} open` : ''}</span></div>
         </div>
-        <div class="review-total"><span>Total${many ? ' per game' : ''}</span><b>${fmt(b.totalPrice)}</b></div>
+        ${b.hire && b.hire.length ? `<div class="review-rows" style="padding-top:0"><div class="row"><span>Hire</span><span>${b.hire.map(h => `${h.qty}× ${escH(h.name)}`).join('<br>')}</span></div></div>` : ''}
+        ${b.bundle ? `<div class="review-rows" style="padding-top:0"><div class="row"><span>Food</span><span>${escH(b.bundle.title)}<br><small style="color:var(--muted);font-weight:500">Ready at ${escH(b.endTime)}</small></span></div></div>` : ''}
+        <div class="review-total"><span>Total${many ? ' per game' : ''}</span><b>${fmt(b.totalPrice + (b.hireTotal || 0) + (b.bundle ? b.bundle.price : 0))}</b></div>
       </div>
       ${b.credit ? `<p class="fine">${fmt(b.credit)} paid with credit${b.dates.length > 1 ? ' (used across your games)' : ''}.</p>` : ''}
       ${b.skipped.length ? `<p class="fine warn">Already taken, not booked: ${b.skipped.map(longDate).join(', ')}</p>` : ''}
@@ -461,6 +514,7 @@ function doneHTML() {
         ${b.open ? `<button type="button" class="share-btn primary" data-act="invite">${ICO.link}Invite players</button>` : ''}
         <button type="button" class="share-btn" data-act="calendar">${ICO.cal}Add to calendar</button>
         <button type="button" class="share-btn" data-act="whatsapp">${ICO.chat}WhatsApp</button>
+        ${window.USCPush && USCPush.supported() && !PREVIEW ? `<button type="button" class="share-btn" data-act="alerts" id="alerts-btn">${ICO.bell}Remind me</button>` : ''}
       </div>
       <p class="fine">Add it to your calendar for a reminder 1 hour before.</p>
       <div class="stage-foot">
@@ -558,6 +612,7 @@ function show(route) {
   stage.classList.add('active');
   window.scrollTo(0, 0);
   if (route === 'times') loadBooked(); else paintBar();
+  if (route === 'done' && window.USCPush) paintAlertsBtn().catch(() => {});
 }
 
 function go(route, push = true) {
@@ -680,7 +735,10 @@ async function confirmBooking() {
   };
 
   booking.weeks = state.weeks;
-  booking.credit = PREVIEW && state.useCredit ? Math.min(state.credit, totalPrice()) : 0;
+  booking.credit = PREVIEW && state.useCredit ? Math.min(state.credit, grandTotal()) : 0;
+  booking.hire = hireItems().filter(h => state.hire[h.key]).map(h => ({ name: h.name, qty: state.hire[h.key], price: h.price }));
+  booking.hireTotal = hireTotal();
+  booking.bundle = state.weeks === 1 && bundleObj() ? { title: bundleObj().title, price: bundleObj().price } : null;
   booking.open = openCount();
   booking.dates = [state.date];
   booking.skipped = [];
@@ -691,6 +749,8 @@ async function confirmBooking() {
       p_start: booking.startTime, p_end: booking.endTime, p_weeks: state.weeks,
       p_players: state.players.filter(p => !p.open).map(p => ({ user_id: p.userId || null, name: p.name })),
       p_use_credit: state.useCredit && state.credit > 0,
+      p_hire: hireItems().filter(h => state.hire[h.key]).map(h => ({ key: h.key, qty: state.hire[h.key] })),
+      p_bundle: state.weeks === 1 ? state.bundle : null,
     });
     if (error || !res) { console.error('[USC] booking failed', error); return fail('Booking failed. Please try again.'); }
     if (!res.booked.length) {
@@ -720,6 +780,8 @@ async function confirmBooking() {
 function resetTeam() {
   state.weeks = 1;
   state.useCredit = false;
+  state.hire = {};
+  state.bundle = null;
   state.players = [{ name: me.name, username: me.username, userId: me.id, member: me.member, you: true }, null, null, null];
   state.editing = null;
 }
@@ -763,8 +825,23 @@ document.addEventListener('click', e => {
     case 'weeks':
       state.weeks = Number(el.dataset.w);
       $('stage').querySelectorAll('.repeat-pill').forEach(b => b.classList.toggle('on', b === el));
-      $('stage').querySelector('.review-total span').textContent = state.weeks > 1 ? 'Total per game' : 'Total';
+      if (state.weeks > 1) state.bundle = null;
+      $('extras').innerHTML = extrasHTML();
+      paintTotals();
       break;
+    case 'hire': {
+      const h = HIRE.find(x => x.key === el.dataset.k); if (!h) break;
+      state.hire[h.key] = Math.max(0, Math.min(h.max_qty, (state.hire[h.key] || 0) + Number(el.dataset.d)));
+      $('extras').innerHTML = extrasHTML(); paintTotals();
+      break;
+    }
+    case 'bundle': {
+      const id = Number(el.dataset.id);
+      state.bundle = state.bundle === id ? null : id;
+      $('extras').innerHTML = extrasHTML(); paintTotals();
+      break;
+    }
+    case 'alerts': enableAlerts(el); break;
     case 'invite': shareLink(`Join my ${state.last.sport} game at United Sports Club — ${longDate(state.last.date)}, ${state.last.startTime}`, `${SITE}?join=${state.last.id}`); break;
     case 'whatsapp': window.open('https://wa.me/?text=' + encodeURIComponent(bookingText(state.last)), '_blank', 'noopener'); break;
     case 'calendar': downloadICS(state.last); break;
@@ -772,7 +849,7 @@ document.addEventListener('click', e => {
     case 'credit': {
       state.useCredit = !state.useCredit;
       el.classList.toggle('on', state.useCredit);
-      $('credit-amt').textContent = state.useCredit ? '− ' + fmt(Math.min(state.credit, totalPrice())) : '';
+      paintTotals();
       break;
     }
   }
@@ -856,6 +933,13 @@ async function init() {
   paintUserBar();
   resetTeam();
   await minSplash;
+  if (sb) {
+    const [h, b] = await Promise.all([
+      sb.from('hire_items').select('*').eq('active', true).order('sort'),
+      sb.from('bundles').select('*').eq('active', true).order('sort'),
+    ]);
+    HIRE = h.data || []; BUNDLES = b.data || [];
+  }
   if (state.joinId) await loadJoin();
   history.replaceState({ s: state.join ? 'join' : 'sport' }, '');
   $('splash').classList.add('hidden');

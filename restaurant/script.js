@@ -123,6 +123,39 @@ function hydrateImages(root) {
   }));
 }
 
+/* ---------- Dietary tags (set by the kitchen in the admin panel) ---------- */
+const DIET = {};            // dish name -> [tags]
+const TAG_LABEL = { jain: 'Jain', vegan: 'Vegan', spicy: 'Spicy', dairy: 'Dairy', nuts: 'Nuts', gluten: 'Gluten' };
+const FILTERS = [
+  { k: 'jain',     label: 'Jain',      test: t => t.includes('jain'),    needs: 'jain' },
+  { k: 'vegan',    label: 'Vegan',     test: t => t.includes('vegan'),   needs: 'vegan' },
+  { k: 'mild',     label: 'Not spicy', test: t => !t.includes('spicy'),  needs: 'spicy' },
+  { k: 'nodairy',  label: 'No dairy',  test: t => !t.includes('dairy'),  needs: 'dairy' },
+  { k: 'nonuts',   label: 'No nuts',   test: t => !t.includes('nuts'),   needs: 'nuts' },
+  { k: 'nogluten', label: 'No gluten', test: t => !t.includes('gluten'), needs: 'gluten' },
+];
+let activeDiet = new Set();
+try { activeDiet = new Set(JSON.parse(sessionStorage.getItem('usc_diet') || '[]')); } catch (e) {}
+const tagsOf = id => DIET[ITEMS[id].item.n] || [];
+const dietOK = id => [...activeDiet].every(k => { const f = FILTERS.find(x => x.k === k); return !f || f.test(tagsOf(id)); });
+function dietBarHTML() {
+  const used = new Set(Object.values(DIET).flat());
+  const list = FILTERS.filter(f => used.has(f.needs));
+  if (!list.length) return '';
+  return `<div class="diet-bar">${list.map(f => `<button type="button" class="diet-chip${activeDiet.has(f.k) ? ' on' : ''}" data-act="diet" data-k="${f.k}">${f.label}</button>`).join('')}</div>
+    ${activeDiet.size ? '<p class="diet-note">Allergies? Please also tell the kitchen when you order.</p>' : ''}`;
+}
+function applyDiet(root = $('stage')) {
+  let shown = 0, total = 0;
+  root.querySelectorAll('.dish').forEach(d => { total++; const ok = dietOK(Number(d.dataset.id)); d.classList.toggle('diet-off', !ok); if (ok) shown++; });
+  const msg = root.querySelector('.diet-empty');
+  if (msg) msg.hidden = !(total && !shown);
+}
+function dishTagsHTML(id) {
+  const t = tagsOf(id);
+  return t.length ? `<div class="dish-tags">${t.map(k => `<span class="dtag ${k}">${TAG_LABEL[k] || k}</span>`).join('')}</div>` : '';
+}
+
 /* ---------- Dish rows ---------- */
 const ADD_BTN = '<button type="button" class="add-btn" data-act="inc" aria-label="Add">+</button>';
 const stepperHTML = qty => `<div class="stepper"><button type="button" data-act="dec" aria-label="Remove one">−</button><span>${qty}</span><button type="button" data-act="inc" aria-label="Add one">+</button></div>`;
@@ -138,6 +171,7 @@ function dishHTML(id) {
     <div class="dish" data-id="${id}" data-name="${escH(item.n.toLowerCase())}">
       <div class="dish-main">
         <div class="dish-title">${mark(diet)}<span class="dish-name">${escH(item.n)}</span></div>
+        ${dishTagsHTML(id)}
         ${opts('size', sizes, sel.size)}${opts('style', styles, sel.style)}
       </div>
       <div class="dish-side">
@@ -254,6 +288,7 @@ function catsHTML(route) {
   return headHTML(route, `Step ${n} of 3`, groupName(n, group)) + `
     <div class="stage-body">
       ${searchHTML('Search ' + STEPS[n - 1].title.toLowerCase())}
+      ${dietBarHTML()}
       <div class="browse">
         <div class="tile-grid${secs.length <= 4 ? ' few' : ''}">${tiles}</div>
         ${tags.length ? `
@@ -264,6 +299,7 @@ function catsHTML(route) {
       </div>
       <div class="dish-list results" hidden></div>
       <p class="empty" hidden>No dishes match your search.</p>
+      <p class="empty diet-empty" hidden>No dishes match your filters.</p>
       ${footHTML(n, group !== 'all' ? `<button type="button" class="ghost-btn" data-act="go" data-to="cats-${n}-${other}">${mark(other, 14)}Switch to ${groupName(n, other)}</button>` : '')}
     </div>`;
 }
@@ -284,7 +320,9 @@ function listHTML(route) {
     <div class="stage-body">
       ${note ? `<p class="stage-note">${escH(note)}</p>` : ''}
       ${ids.length > 8 ? searchHTML('Search ' + title.toLowerCase()) : ''}
+      ${dietBarHTML()}
       <div class="dish-list">${ids.map(dishHTML).join('')}</div>
+      <p class="empty diet-empty" hidden>No dishes match your filters.</p>
       <p class="empty" hidden>No dishes match your search.</p>
       ${footHTML(n, `<button type="button" class="ghost-btn" data-act="back">${BACK_ARROW}More ${groupName(n, group)}</button>`)}
     </div>`;
@@ -295,6 +333,7 @@ function renderStage(route) {
   const type = parse(route).type;
   stage.innerHTML = FLOW[type] ? FLOW[type]() : type === 'pick' ? pickHTML(route) : type === 'cats' ? catsHTML(route) : listHTML(route);
   stage.querySelectorAll('.dish').forEach(refreshCard);
+  applyDiet(stage);
   if (type === 'order') paintOrder(true);
   if ((type === 'otype' || type === 'odetails') && !cart.length) { stage.innerHTML = FLOW.order(); paintOrder(true); }
   hydrateImages(stage);
@@ -315,6 +354,7 @@ function applySearch(raw) {
     results.innerHTML = ids.map(dishHTML).join('');
     results.querySelectorAll('.dish').forEach(refreshCard);
     empty.hidden = !q || ids.length > 0;
+    applyDiet(results);
   } else {
     let hits = 0;
     stage.querySelectorAll('.dish').forEach(d => {
@@ -466,6 +506,7 @@ const FLOW = {
         ${o.credit ? `<div class="done-row"><span>Paid with credit</span><b>− ${fmt(o.credit)}</b></div><div class="done-row"><span>To pay at the club</span><b>${fmt(o.total - o.credit)}</b></div>` : ''}
       </div>
       <p class="done-note">The kitchen has your order.</p>
+      ${window.USCPush && USCPush.supported() && sb && o.id !== 'TEST' ? '<button type="button" class="ghost-btn notify-btn" data-act="notify-ready" id="notify-btn">Notify me when it\'s ready</button>' : ''}
       <button type="button" class="ghost-btn" data-act="restart">Back to menu</button>
     </div>`;
   },
@@ -608,6 +649,19 @@ document.addEventListener('click', e => {
     case 'to-type': if (cart.length) interlude('Getting things ready', 'otype'); break;
     case 'otype': ORDER.type = el.dataset.type; el.classList.add('chosen'); setTimeout(() => go('odetails'), 260); break;
     case 'send': sendOrder(); break;
+    case 'diet': {
+      const k = el.dataset.k;
+      activeDiet.has(k) ? activeDiet.delete(k) : activeDiet.add(k);
+      try { sessionStorage.setItem('usc_diet', JSON.stringify([...activeDiet])); } catch (e) {}
+      const bar = $('stage').querySelector('.diet-bar');
+      const wrap = document.createElement('div'); wrap.innerHTML = dietBarHTML();
+      bar.nextElementSibling?.classList.contains('diet-note') && bar.nextElementSibling.remove();
+      bar.replaceWith(...wrap.childNodes);
+      applyDiet();
+      const res = $('stage').querySelector('.results'); if (res && !res.hidden) applyDiet(res);
+      break;
+    }
+    case 'notify-ready': notifyReady(el); break;
     case 'use-credit':
       ORDER.useCredit = !ORDER.useCredit;
       el.classList.toggle('on', ORDER.useCredit);
@@ -684,6 +738,19 @@ document.addEventListener('click', async e => {
 });
 
 /* ---------- Init ---------- */
+async function notifyReady(btn) {
+  btn.disabled = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { btn.disabled = false; alert('Sign in to the USC app to get notifications.'); return; }
+    await USCPush.enable(sb);
+    btn.textContent = "We'll let you know";
+  } catch (e) {
+    btn.disabled = false;
+    if (e.message === 'blocked') alert('Notifications are blocked for this site in your browser settings.');
+  }
+}
+
 /* Reorder: ?reorder=<order id> puts a past order (your own) back in the cart */
 async function loadReorder(id) {
   try {
@@ -719,6 +786,14 @@ function init() {
     console.error('Menu failed to build', err);
   }
   initAuth();
+  (async () => {
+    try {
+      sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const { data } = await sb.from('dish_tags').select('name, tags');
+      (data || []).forEach(r => { if (r.tags && r.tags.length) DIET[r.name] = r.tags; });
+      if (current && !current.startsWith('ch-') && !FLOW_ROUTES.includes(parse(current).type)) { renderStage(current); }
+    } catch (e) { /* tags are optional */ }
+  })();
   const rid = new URLSearchParams(location.search).get('reorder');
   const reorder = /^\d+$/.test(rid || '') ? loadReorder(Number(rid)) : Promise.resolve(false);
   history.replaceState({ s: 'ch-1' }, '');

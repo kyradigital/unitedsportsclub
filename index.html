@@ -469,6 +469,8 @@
     .install-btn{height:28px;padding:0 .8rem;border-radius:100px;border:1px solid rgba(255,255,255,.18);background:none;color:#fff;font:inherit;font-size:.7rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:.35rem}
     .install-btn[hidden]{display:none}
     .install-btn:hover{background:rgba(255,255,255,.08)}
+    .alerts-btn.on{background:#fff;color:#08111f;border-color:#fff}
+    @media(max-width:600px){.alerts-btn span{display:none}.alerts-btn{width:28px;padding:0;justify-content:center}}
 margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:1rem;line-height:1}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -647,6 +649,10 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
       </div>
     </div>
     <div class="dash-right">
+      <button class="install-btn alerts-btn" id="alertsBtn" onclick="toggleAlerts()" hidden>
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+        <span>Alerts</span>
+      </button>
       <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></svg>
         Install app
@@ -863,6 +869,7 @@ async function loadDashboard(user) {
   loadMine().catch(e => console.warn('my items', e));
   loadWallet().catch(() => {});
   loadBanners().catch(() => {});
+  paintAlerts().catch(() => {});
 
   // Show dashboard immediately using data already in the JWT
   const name = user.user_metadata?.first_name || user.email.split('@')[0];
@@ -1055,6 +1062,29 @@ async function redeemGift() {
   document.getElementById('walletBal').textContent = kes(data);
 }
 
+
+/* ── Push alerts toggle ── */
+async function paintAlerts() {
+  const btn = document.getElementById('alertsBtn');
+  if (!window.USCPush || !USCPush.supported()) { btn.hidden = true; return; }
+  const st = await USCPush.state();
+  btn.hidden = false;
+  btn.classList.toggle('on', st === 'on');
+  btn.querySelector('span').textContent = st === 'on' ? 'Alerts on' : 'Alerts';
+  btn.title = st === 'blocked' ? 'Notifications are blocked in your browser settings' : st === 'on' ? 'Tap to turn off notifications' : 'Get notified when your food is ready and before your games';
+}
+async function toggleAlerts() {
+  const st = await USCPush.state();
+  try {
+    if (st === 'on') await USCPush.disable(sb);
+    else if (st === 'blocked') { alert('Notifications are blocked for this site. Allow them in your browser settings, then try again.'); return; }
+    else await USCPush.enable(sb);
+  } catch (e) {
+    if (e.message !== 'dismissed') alert("Couldn't turn on notifications on this device.");
+  }
+  paintAlerts();
+}
+
 /* ── Install as an app ── */
 let installEvt = null;
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; document.getElementById('installBtn').hidden = false; });
@@ -1072,5 +1102,6 @@ async function doSignOut() {
 }
 </script>
 <script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}));</script>
+<script src="./push.js"></script>
 </body>
 </html>

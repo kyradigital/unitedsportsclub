@@ -421,3 +421,28 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .ct-text { flex: 1; font-size: .88rem; font-weight: 600; color: #fff; display: flex; flex-direction: column; }
 .ct-text small { font-size: .74rem; font-weight: 500; color: var(--muted); }
 .credit-toggle b { font-size: .9rem; color: #86efac; font-variant-numeric: tabular-nums; }
+
+/* ---------- Hire and food bundles ---------- */
+.extras:empty { display: none; }
+.extras { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+#stage[data-route="review"] .extras { animation: fadeOnly .6s ease 1s both; }
+.ex-block { padding: 6px 16px 10px; border-radius: 18px; background: var(--panel); border: 1px solid var(--border); }
+.ex-head { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0 6px; font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ex-head small { font-size: .72rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: #c9f7d8; }
+.ex-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.ex-row:first-of-type { border-top: none; }
+.ex-info { flex: 1; min-width: 0; display: flex; flex-direction: column; text-align: left; }
+.ex-name { font-size: .88rem; font-weight: 600; color: #fff; }
+.ex-price { font-size: .74rem; color: var(--muted); }
+.ex-step { display: flex; align-items: center; gap: 4px; border: 1px solid var(--border2); border-radius: 100px; padding: 3px; }
+.ex-step button { width: 30px; height: 30px; border-radius: 50%; color: #fff; font-size: 1.05rem; font-weight: 600; }
+.ex-step button:disabled { opacity: .3; }
+@media (hover: hover) { .ex-step button:not(:disabled):hover { background: rgba(255,255,255,.1); } }
+.ex-step span { min-width: 18px; text-align: center; font-size: .88rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.ex-bundle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 12px; margin: 4px 0; border-radius: 14px; border: 1px solid var(--border); transition: border-color .2s, background .2s; }
+.ex-bundle.on { border-color: rgba(255,255,255,.6); background: rgba(255,255,255,.05); }
+.ex-bundle b { font-size: .88rem; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ex-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); flex-shrink: 0; display: grid; place-items: center; }
+.ex-bundle.on .ex-radio { border-color: #fff; }
+.ex-bundle.on .ex-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #fff; }
+.ex-note { padding: 4px 0 8px; font-size: .8rem; color: var(--muted); }
