@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function doLogin() {
   clearErr('loginErr');
-  const email    = document.getElementById('loginEmail').value.trim();
+  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
   if (!email || !password) { showErr('loginErr','Enter your email and password.'); return; }
   setBusy('loginBtn', true, 'Sign In');
@@ -868,12 +868,24 @@ async function doSignup() {
   if (password.length < 8) { showErr('signupErr','Password must be at least 8 characters.'); return; }
   if (!/^[a-zA-Z0-9_]+$/.test(username)) { showErr('signupErr','Username: letters, numbers and underscores only.'); return; }
   setBusy('signupBtn', true, 'Create Account');
+  const { data: free } = await sb.rpc('username_available', { p: username });
+  if (free === false) { setBusy('signupBtn', false, 'Create Account'); showErr('signupErr', 'That username is taken. Please choose another.'); return; }
   const { data: signupData, error } = await sb.auth.signUp({
     email, password,
     options: { data: { first_name:first, last_name:last, username, phone } },
   });
   setBusy('signupBtn', false, 'Create Account');
-  if (error) { showErr('signupErr', error.message); return; }
+  if (error) {
+    const m = error.message || '';
+    showErr('signupErr', /already registered|already exists/i.test(m) ? 'An account with this email already exists. Sign in instead.'
+      : /database error/i.test(m) ? 'Something went wrong creating your account. Please try again.'
+      : /rate limit|too many/i.test(m) ? 'Too many attempts. Please wait a minute and try again.'
+      : /password/i.test(m) ? m : m || 'Could not create your account. Please try again.');
+    return;
+  }
+  if (signupData?.user && Array.isArray(signupData.user.identities) && signupData.user.identities.length === 0) {
+    showErr('signupErr', 'An account with this email already exists. Sign in instead.'); return;
+  }
   if (signupData?.session) { await loadDashboard(signupData.session.user); return; }
   pendingEmail = email;
   document.getElementById('verifyEmailLabel').textContent = email;
