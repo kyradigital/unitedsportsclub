@@ -65,13 +65,17 @@ const state = {
   players: [null, null, null, null],
   editing: null,                 // index of the player slot with an open search
   last: null,                    // last confirmed booking, shown on the done screen
+  weeks: 1,                      // weekly repeat count
+  join: null,                    // booking loaded from an invite link
 };
 
 const sport = () => SPORTS[state.sport];
 const court = () => sport().courts.find(c => c.id === state.court);
 const validSel = () => state.sel.length >= MIN_SLOTS;
 const rate = p => (p.member ? MEMBER_PRICE : NON_MEMBER_PRICE);
-const playerPrice = p => state.sel.length * rate(p);
+const playerPrice = p => (p.open ? 0 : state.sel.length * rate(p));
+const openCount = () => state.players.filter(p => p && p.open).length;
+const SITE = location.href.split('?')[0].split('#')[0];
 const totalPrice = () => state.players.reduce((t, p) => t + (p ? playerPrice(p) : 0), 0);
 const teamFull = () => state.players.every(Boolean);
 const timeRange = () => `${slotTime(state.sel[0])} – ${slotTime(state.sel[state.sel.length - 1] + 1)}`;
@@ -128,8 +132,8 @@ function headHTML(route, title) {
   return `
     <div class="stage-head">
       <button type="button" class="back-btn" data-act="back">${BACK_ARROW}<span>Back</span></button>
-      <div class="menu-title"><span class="menu-step">Step ${n} of 4</span><h2>${escH(title)}</h2></div>
-      <div class="mini-dots">${[1, 2, 3, 4].map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
+      <div class="menu-title">${n ? `<span class="menu-step">Step ${n} of 4</span>` : ""}<h2>${escH(title)}</h2></div>
+      <div class="mini-dots"${n ? "" : " style=\"visibility:hidden\""}>${[1, 2, 3, 4].map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
     </div>`;
 }
 
@@ -241,10 +245,21 @@ const badge = p => `<span class="badge${p.member ? ' member' : ''}">${p.member ?
 const avatar = p => `<span class="avatar${p.member ? ' member' : ''}">${escH((p.name[0] || '?').toUpperCase())}</span>`;
 
 let justAdded = -1;
+const LINK_ICON = '<svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>';
 const X_ICON = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
 
 /* One position on the court: a filled player or an empty spot to tap */
 function spotHTML(p, i) {
+  if (p && p.open) {
+    return `
+      <div class="spot filled open${justAdded === i ? ' pop' : ''}" data-i="${i}">
+        <button type="button" class="spot-x" data-act="remove" aria-label="Remove open spot">${X_ICON}</button>
+        <span class="spot-av open-av">${LINK_ICON}</span>
+        <span class="spot-name">Open spot</span>
+        <span class="badge">Invite</span>
+        <span class="spot-price">Pays on joining</span>
+      </div>`;
+  }
   if (p) {
     return `
       <div class="spot filled${justAdded === i ? ' pop' : ''}" data-i="${i}">
@@ -266,7 +281,7 @@ function spotHTML(p, i) {
 function teamFootHTML() {
   const left = state.players.filter(p => !p).length;
   return `
-    <span class="foot-hint">${left ? `${left} more to add` : `Total ${fmt(totalPrice())}`}</span>
+    <span class="foot-hint">${left ? `${left} more to add` : `Total ${fmt(totalPrice())}${openCount() ? ' + open spots' : ''}`}</span>
     <button type="button" class="primary-btn" data-act="to-review"${left ? ' disabled' : ''}>Review booking${ARROW}</button>`;
 }
 
@@ -292,7 +307,7 @@ function paintTeam() {
     $('sheet-title').textContent = `Player ${state.editing + 1}`;
     const input = sheet.querySelector('.player-input');
     input.value = '';
-    sheet.querySelector('.results').innerHTML = '';
+    sheet.querySelector('.results').innerHTML = OPEN_BTN;
     sheet.classList.add('open');
     input.focus();
   } else if (!open) {
@@ -336,12 +351,18 @@ function reviewHTML() {
           <div class="row"><span>Date</span><span>${longDate(state.date)}</span></div>
           <div class="row"><span>Time</span><span>${timeRange()}</span></div>
           <div class="row"><span>Duration</span><span>${duration()}</span></div>
-          <div class="row"><span>Players</span><span>${members} member${members === 1 ? '' : 's'}, ${TEAM_SIZE - members} non-member${TEAM_SIZE - members === 1 ? '' : 's'}</span></div>
+          <div class="row"><span>Players</span><span>${members} member${members === 1 ? '' : 's'}, ${TEAM_SIZE - members - openCount()} non-member${TEAM_SIZE - members - openCount() === 1 ? '' : 's'}${openCount() ? `, ${openCount()} open` : ''}</span></div>
         </div>
         <div class="review-players">
-          ${state.players.map(p => `<div class="rp">${avatar(p)}<span class="rp-name">${escH(p.name)}${p.you ? ' (you)' : ''}</span>${badge(p)}<span class="rp-price">${fmt(playerPrice(p))}</span></div>`).join('')}
+          ${state.players.map(p => p.open
+            ? `<div class="rp"><span class="avatar open-av">${LINK_ICON}</span><span class="rp-name">Open spot</span><span class="badge">Invite</span><span class="rp-price">On joining</span></div>`
+            : `<div class="rp">${avatar(p)}<span class="rp-name">${escH(p.name)}${p.you ? ' (you)' : ''}</span>${badge(p)}<span class="rp-price">${fmt(playerPrice(p))}</span></div>`).join('')}
         </div>
-        <div class="review-total"><span>Total</span><b>${fmt(totalPrice())}</b></div>
+        <div class="review-total"><span>Total${state.weeks > 1 ? ' per game' : ''}</span><b>${fmt(totalPrice())}</b></div>
+      </div>
+      <div class="repeat">
+        <span class="repeat-label">Repeat weekly</span>
+        <div class="repeat-pills">${[1, 2, 4, 8].map(w => `<button type="button" class="repeat-pill${state.weeks === w ? ' on' : ''}" data-act="weeks" data-w="${w}">${w === 1 ? 'Once' : w + ' weeks'}</button>`).join('')}</div>
       </div>
       <p class="fine">Members ${fmt(MEMBER_PRICE)} · Non-members ${fmt(NON_MEMBER_PRICE)} per person, per 30 min</p>
       <div class="stage-foot">
@@ -350,27 +371,135 @@ function reviewHTML() {
     </div>`;
 }
 
+/* Calendar time for a slot label on a given club day (after-midnight slots fall on the next date) */
+function icsStamp(date, label) {
+  const d = dateFrom(date);
+  const [h, m] = label.split(':').map(Number);
+  if (h < 10) d.setDate(d.getDate() + 1);
+  return `${dateStr(d).replace(/-/g, '')}T${pad2(h)}${pad2(m)}00`;
+}
+
+function bookingText(b) {
+  const dates = b.dates.map(longDate).join('\n');
+  return `United Sports Club — ${b.sport}, ${b.court}\n${dates}\n${b.startTime} – ${b.endTime}\nPlayers: ${b.players.map(p => p.name).join(', ')}${b.open ? ` + ${b.open} open` : ''}`
+    + (b.open && !PREVIEW ? `\n\nJoin here: ${SITE}?join=${b.id}` : '');
+}
+
+function downloadICS(b) {
+  const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const events = b.dates.map((d, k) => [
+    'BEGIN:VEVENT',
+    `UID:${b.id}-${k}@unitedsportsclub`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${icsStamp(d, b.startTime)}`,
+    `DTEND:${icsStamp(d, b.endTime)}`,
+    `SUMMARY:${b.sport} at United Sports Club (${b.court})`,
+    `DESCRIPTION:Players: ${b.players.map(p => p.name).join(', ')}`,
+    'LOCATION:United Sports Club\\, Mombasa',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Your game starts in 1 hour', 'TRIGGER:-PT1H', 'END:VALARM',
+    'END:VEVENT',
+  ].join('\r\n'));
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//United Sports Club//Booking//EN', ...events, 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+  a.download = 'usc-booking.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+async function shareLink(text, url) {
+  if (navigator.share) { try { await navigator.share({ title: 'United Sports Club', text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(url); toast('Invite link copied'); }
+  catch (e) { window.open('https://wa.me/?text=' + encodeURIComponent(`${text}\n${url}`), '_blank', 'noopener'); }
+}
+
+const ICO = {
+  link: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>',
+  cal: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3M4 10h16M5 21h14a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>',
+  chat: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.8 7L4 20l1.1-4.6A8 8 0 1121 12z"/></svg>',
+};
+
 function doneHTML() {
   const b = state.last;
+  const many = b.dates.length > 1;
   return `
     <div class="stage-body narrow">
       <div class="done-ico"><svg width="38" height="38" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
-      <h3 class="stage-lead">You're booked!</h3>
+      <h3 class="stage-lead">${many ? `Booked for ${b.dates.length} weeks` : "You're booked!"}</h3>
       <div class="review-card">
         <div class="review-rows">
           <div class="row"><span>Court</span><span>${escH(b.sport)} · ${escH(b.court)}</span></div>
-          <div class="row"><span>Date</span><span>${longDate(b.date)}</span></div>
+          <div class="row"><span>${many ? 'Dates' : 'Date'}</span><span>${b.dates.map(longDate).join('<br>')}</span></div>
           <div class="row"><span>Time</span><span>${escH(b.startTime)} – ${escH(b.endTime)}</span></div>
-          <div class="row"><span>Players</span><span>${b.players.map(p => escH(p.name)).join(', ')}</span></div>
+          <div class="row"><span>Players</span><span>${b.players.map(p => escH(p.name)).join(', ')}${b.open ? ` + ${b.open} open` : ''}</span></div>
         </div>
-        <div class="review-total"><span>Total</span><b>${fmt(b.totalPrice)}</b></div>
+        <div class="review-total"><span>Total${many ? ' per game' : ''}</span><b>${fmt(b.totalPrice)}</b></div>
       </div>
-      <div class="done-ref">Booking ref: ${escH(b.id)}</div>
+      ${b.skipped.length ? `<p class="fine warn">Already taken, not booked: ${b.skipped.map(longDate).join(', ')}</p>` : ''}
+      <div class="share-row">
+        ${b.open ? `<button type="button" class="share-btn primary" data-act="invite">${ICO.link}Invite players</button>` : ''}
+        <button type="button" class="share-btn" data-act="calendar">${ICO.cal}Add to calendar</button>
+        <button type="button" class="share-btn" data-act="whatsapp">${ICO.chat}WhatsApp</button>
+      </div>
+      <p class="fine">Add it to your calendar for a reminder 1 hour before.</p>
       <div class="stage-foot">
         <button type="button" class="primary-btn" data-act="again">Book another court</button>
         <a class="ghost-btn" href="../index.html">Back to dashboard</a>
       </div>
     </div>`;
+}
+
+/* ---------- Join an open spot from an invite link ---------- */
+async function loadJoin() {
+  const { data, error } = await sb.from('padel_bookings')
+    .select('id, court_id, court_name, date, start_time, end_time, slots, status, booked_by_name, booking_players(player_name, user_id, is_member)')
+    .eq('id', state.joinId).maybeSingle();
+  if (error || !data) { toast('That invite link is not valid.'); return; }
+  state.join = data;
+}
+
+function joinHTML() {
+  const b = state.join;
+  const players = b.booking_players || [];
+  const already = players.some(p => p.user_id === me.id);
+  const open = TEAM_SIZE - players.length;
+  const past = b.date < dateStr(new Date());
+  const price = (b.slots || []).length * (me.member ? MEMBER_PRICE : NON_MEMBER_PRICE);
+  const reason = b.status === 'cancelled' ? 'This game was cancelled.' : past ? 'This game has already been played.'
+    : already ? "You're already in this game." : open <= 0 ? 'This game is full.' : '';
+  return headHTML('join', 'Join Game') + `
+    <div class="stage-body narrow">
+      <h3 class="stage-lead">${escH(b.booked_by_name || 'A friend')} invited you</h3>
+      <div class="review-card">
+        <div class="review-rows">
+          <div class="row"><span>Court</span><span>${escH(b.court_name)}</span></div>
+          <div class="row"><span>Date</span><span>${longDate(b.date)}</span></div>
+          <div class="row"><span>Time</span><span>${escH(b.start_time)} – ${escH(b.end_time)}</span></div>
+          <div class="row"><span>Players</span><span>${players.map(p => escH(p.player_name)).join(', ')}${open > 0 ? ` + ${open} open` : ''}</span></div>
+        </div>
+        ${reason ? '' : `<div class="review-total"><span>Your share</span><b>${fmt(price)}</b></div>`}
+      </div>
+      ${reason ? `<p class="fine">${reason}</p>` : '<p class="fine">Weekly games: you join every upcoming week with a free spot.</p>'}
+      <div class="stage-foot">
+        ${reason ? '' : '<button type="button" class="primary-btn" id="join-btn" data-act="join-game">Join this game</button>'}
+        <button type="button" class="ghost-btn" data-act="again">Book your own court</button>
+      </div>
+    </div>`;
+}
+
+async function joinGame() {
+  const btn = $('join-btn');
+  btn.disabled = true; btn.textContent = 'Joining…';
+  const { data, error } = PREVIEW ? { data: { joined: 1 } } : await sb.rpc('join_booking', { p_booking: state.join.id });
+  if (error || !data?.joined) {
+    btn.disabled = false; btn.textContent = 'Join this game';
+    toast(error ? "Couldn't join. Please try again." : 'Sorry, the spot was just taken.');
+    return;
+  }
+  toast(data.joined > 1 ? `You're in for ${data.joined} games` : "You're in!");
+  await loadJoin();
+  current = null;
+  go('join', false);
 }
 
 /* Background photos: applied only if the file exists, otherwise the gradient shows. */
@@ -391,6 +520,7 @@ function allowed(route) {
   if (route === 'team') return !!state.sport && validSel();
   if (route === 'review') return !!state.sport && validSel() && teamFull();
   if (route === 'done') return !!state.last;
+  if (route === 'join') return !!state.join;
   return route === 'sport';
 }
 
@@ -400,7 +530,7 @@ function show(route) {
   stage.dataset.route = route;
   state.editing = null;
   $('sheet').classList.remove('open');
-  stage.innerHTML = { sport: sportHTML, times: timesHTML, team: teamHTML, review: reviewHTML, done: doneHTML }[route]();
+  stage.innerHTML = { sport: sportHTML, times: timesHTML, team: teamHTML, review: reviewHTML, done: doneHTML, join: joinHTML }[route]();
   hydrateImages(stage);
   stage.querySelectorAll('.ticket .row, .ticket .rp, .ticket .review-total').forEach((el, k) => el.style.setProperty('--i', k));
   void stage.offsetWidth;
@@ -450,6 +580,11 @@ function pickSlot(courtId, idx) {
 let searchTimer = null;
 let searchSeq = 0;
 
+const OPEN_BTN = `
+  <button type="button" class="result guest open-opt" data-act="open-spot">
+    <span class="avatar">${'<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 00-5.66 0l-3 3a4 4 0 005.66 5.66l1-1"/></svg>'}</span>
+    <span class="result-info"><span class="result-name">Leave open</span><span class="result-user" style="display:block">Invite a friend with a link</span></span>
+  </button>`;
 function resultsHTML(q, rows) {
   const taken = new Set(state.players.filter(Boolean).map(p => p.userId).filter(Boolean));
   const list = rows.filter(r => !taken.has(r.id));
@@ -464,7 +599,7 @@ function resultsHTML(q, rows) {
       <span class="avatar${r.is_member ? ' member' : ''}">${escH((r.first_name?.[0] || '?').toUpperCase())}</span>
       <span class="result-info"><span class="result-name">${escH(r.first_name)} ${escH(r.last_name)}</span><span class="result-user" style="display:block">@${escH(r.username)}</span></span>
       <span class="badge${r.is_member ? ' member' : ''}">${r.is_member ? 'Member' : 'Non-member'}</span>
-    </button>`).join('') : `<div class="result-note">No USC account found for "${escH(q)}".</div>`) + guest;
+    </button>`).join('') : `<div class="result-note">No USC account found for "${escH(q)}".</div>`) + guest + OPEN_BTN;
 }
 
 let lastRows = [];
@@ -473,7 +608,7 @@ function searchPlayers(input) {
   const q = input.value.trim().replace(/[,()%*\\]/g, '');
   clearTimeout(searchTimer);
   const seq = ++searchSeq;
-  if (q.length < 2) { box.innerHTML = ''; return; }
+  if (q.length < 2) { box.innerHTML = OPEN_BTN; return; }
   box.innerHTML = '<div class="result-note">Searching…</div>';
   searchTimer = setTimeout(async () => {
     let rows = [];
@@ -523,41 +658,30 @@ async function confirmBooking() {
     status: 'confirmed',
   };
 
+  booking.weeks = state.weeks;
+  booking.open = openCount();
+  booking.dates = [state.date];
+  booking.skipped = [];
+  booking.players = state.players.filter(p => !p.open).map(p => ({ name: p.name }));
   if (!PREVIEW) {
-    const { data: taken, error: checkErr } = await sb.from('padel_bookings').select('slots')
-      .eq('date', state.date).eq('court_id', state.court).neq('status', 'cancelled');
-    if (checkErr) return fail('Booking failed. Please try again.');
-    if ((taken || []).some(b => (b.slots || []).some(s => slotValues.includes(s)))) {
+    const { data: res, error } = await sb.rpc('book_court', {
+      p_court: state.court, p_date: state.date, p_slots: slotValues,
+      p_start: booking.startTime, p_end: booking.endTime, p_weeks: state.weeks,
+      p_players: state.players.filter(p => !p.open).map(p => ({ user_id: p.userId || null, name: p.name })),
+    });
+    if (error || !res) { console.error('[USC] booking failed', error); return fail('Booking failed. Please try again.'); }
+    if (!res.booked.length) {
       toast('Sorry, that time was just taken. Please pick another.');
       state.sel = [];
       go('times');
       return;
     }
-    const { data: saved, error } = await sb.from('padel_bookings').insert({
-      court_id:          state.court,
-      court_name:        booking.court,
-      date:              state.date,
-      slots:             slotValues,
-      start_time:        booking.startTime,
-      end_time:          booking.endTime,
-      duration_hours:    booking.duration,
-      total_price:       booking.totalPrice,
-      status:            'confirmed',
-      booked_by_user_id: me.id,
-      booked_by_name:    me.name,
-    }).select().single();
-    if (error || !saved) { console.error('[USC] booking save failed', error); return fail('Booking failed. Please try again.'); }
-    booking.id = saved.id;
-    const { error: playersErr } = await sb.from('booking_players').insert(state.players.map(p => ({
-      booking_id: saved.id, user_id: p.userId || null, player_name: p.name, is_member: p.member,
-    })));
-    if (playersErr) console.error('[USC] players save failed', playersErr);
-    try {
-      const stored = JSON.parse(localStorage.getItem('usc_bookings') || '[]');
-      stored.push(booking);
-      localStorage.setItem('usc_bookings', JSON.stringify(stored));
-      window.dispatchEvent(new CustomEvent('usc_new_booking', { detail: booking }));
-    } catch (ex) { /* storage unavailable */ }
+    booking.id = res.booked[0].id;
+    booking.dates = res.booked.map(b => b.date);
+    booking.skipped = res.skipped;
+    booking.totalPrice = res.total;
+  } else {
+    for (let w = 1; w < state.weeks; w++) { const d = dateFrom(state.date); d.setDate(d.getDate() + 7 * w); booking.dates.push(dateStr(d)); }
   }
 
   state.last = booking;
@@ -569,6 +693,7 @@ async function confirmBooking() {
 }
 
 function resetTeam() {
+  state.weeks = 1;
   state.players = [{ name: me.name, username: me.username, userId: me.id, member: me.member, you: true }, null, null, null];
   state.editing = null;
 }
@@ -608,6 +733,16 @@ document.addEventListener('click', e => {
     case 'to-review': if (teamFull()) interlude('Putting everything together', 'review'); break;
     case 'confirm': confirmBooking(); break;
     case 'again': state.last = null; go('sport'); break;
+    case 'open-spot': if (i !== null && i > 0) setPlayer(i, { open: true, name: 'Open spot', member: false }); break;
+    case 'weeks':
+      state.weeks = Number(el.dataset.w);
+      $('stage').querySelectorAll('.repeat-pill').forEach(b => b.classList.toggle('on', b === el));
+      $('stage').querySelector('.review-total span').textContent = state.weeks > 1 ? 'Total per game' : 'Total';
+      break;
+    case 'invite': shareLink(`Join my ${state.last.sport} game at United Sports Club — ${longDate(state.last.date)}, ${state.last.startTime}`, `${SITE}?join=${state.last.id}`); break;
+    case 'whatsapp': window.open('https://wa.me/?text=' + encodeURIComponent(bookingText(state.last)), '_blank', 'noopener'); break;
+    case 'calendar': downloadICS(state.last); break;
+    case 'join-game': joinGame(); break;
   }
 });
 
@@ -655,7 +790,11 @@ async function initAuth() {
   }
   if (!sb) { toast("Couldn't connect. Please check your connection and reload."); return false; }
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = '../index.html'; return false; }
+  if (!session) {
+    try { if (state.joinId) sessionStorage.setItem('usc_return', location.href); } catch (e) {}
+    window.location.href = '../index.html';
+    return false;
+  }
   const user = session.user;
   const { data: p } = await sb.from('profiles').select('first_name, last_name, username, phone, is_member').eq('id', user.id).single();
   const first = p?.first_name || user.user_metadata?.first_name || user.email.split('@')[0];
@@ -674,16 +813,19 @@ async function initAuth() {
 /* ---------- Init ---------- */
 async function init() {
   const minSplash = new Promise(r => setTimeout(r, 1500));
+  const jid = new URLSearchParams(location.search).get('join');
+  if (jid && /^[0-9a-f-]{36}$/i.test(jid)) state.joinId = jid;
   let ok = false;
   try { ok = await initAuth(); } catch (err) { console.error('[USC] auth', err); toast('Something went wrong. Please reload.'); }
   if (!ok) return;
   paintUserBar();
   resetTeam();
   await minSplash;
-  history.replaceState({ s: 'sport' }, '');
+  if (state.joinId) await loadJoin();
+  history.replaceState({ s: state.join ? 'join' : 'sport' }, '');
   $('splash').classList.add('hidden');
   setTimeout(() => $('splash').remove(), 700);
-  go('sport', false);
+  go(state.join ? 'join' : 'sport', false);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -667,6 +667,33 @@ document.addEventListener('click', async e => {
 });
 
 /* ---------- Init ---------- */
+/* Reorder: ?reorder=<order id> puts a past order (your own) back in the cart */
+async function loadReorder(id) {
+  try {
+    sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return false;
+    const { data: o } = await sb.from('restaurant_orders').select('items').eq('id', id).maybeSingle();
+    let missing = 0;
+    (o?.items || []).forEach(it => {
+      const idx = ITEMS.findIndex(x => x.item.n === it.name);
+      if (idx < 0) { missing++; return; }
+      const item = ITEMS[idx].item;
+      const size = it.size && item.sizes && it.size in item.sizes ? it.size : (item.sizes ? Object.keys(item.sizes)[0] : '');
+      const style = it.style && (item.styles || []).includes(it.style) ? it.style : (item.styles ? item.styles[0] : '');
+      const price = size ? Number(item.sizes[size]) : Number(item.p);
+      const key = `${idx}|${size}|${style}`;
+      const qty = Math.max(1, Math.min(20, it.qty | 0));
+      const line = cart.find(c => c.key === key);
+      if (line) line.qty += qty;
+      else cart.push({ key, id: idx, name: item.n, size, style, price, qty, comment: it.note || '' });
+    });
+    renderCart();
+    if (missing) setTimeout(() => alert(`${missing} item${missing > 1 ? 's are' : ' is'} no longer on the menu.`), 2000);
+    return cart.length > 0;
+  } catch (err) { console.warn('Reorder failed', err); return false; }
+}
+
 function init() {
   try {
     buildData();
@@ -675,12 +702,14 @@ function init() {
     console.error('Menu failed to build', err);
   }
   initAuth();
+  const rid = new URLSearchParams(location.search).get('reorder');
+  const reorder = /^\d+$/.test(rid || '') ? loadReorder(Number(rid)) : Promise.resolve(false);
   history.replaceState({ s: 'ch-1' }, '');
-  setTimeout(() => {
+  Promise.all([reorder, new Promise(r => setTimeout(r, 1500))]).then(([ok]) => {
     $('splash').classList.add('hidden');
     setTimeout(() => $('splash').remove(), 700);
-    go('ch-1', false);
-  }, 1500);
+    if (ok) { history.pushState({ s: 'order' }, ''); go('order', false); } else go('ch-1', false);
+  });
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

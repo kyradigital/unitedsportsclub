@@ -383,3 +383,23 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Open spots, weekly repeat, sharing ---------- */
+.spot.open .spot-av, .open-av { background: transparent; border: 2px dashed rgba(255,255,255,.55); color: #fff; }
+.spot.open .spot-price { color: rgba(255,255,255,.6); font-weight: 500; }
+.rp .open-av { display: inline-flex; align-items: center; justify-content: center; }
+.result.open-opt { margin-top: 6px; }
+
+.repeat { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 14px 16px; border-radius: 18px; background: var(--panel); border: 1px solid var(--border); }
+#stage[data-route="review"] .repeat { animation: fadeOnly .6s ease 1s both; }
+.repeat-label { font-size: .86rem; font-weight: 600; color: #fff; }
+.repeat-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.repeat-pill { height: 34px; padding: 0 12px; border-radius: 100px; border: 1px solid var(--border2); font-size: .78rem; font-weight: 600; color: rgba(255,255,255,.75); transition: background .2s, color .2s; }
+.repeat-pill.on { background: #fff; border-color: #fff; color: var(--bg); }
+
+.share-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.share-btn { display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 15px; border-radius: 100px; border: 1px solid var(--border2); font-size: .8rem; font-weight: 600; color: #fff; transition: background .2s, transform .12s; }
+.share-btn.primary { background: #fff; border-color: #fff; color: var(--bg); }
+.share-btn:active { transform: scale(.97); }
+@media (hover: hover) { .share-btn:not(.primary):hover { background: rgba(255,255,255,.08); } }
+.fine.warn { color: #ffb4a0; }
