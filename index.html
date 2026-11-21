@@ -830,9 +830,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loginPassword').addEventListener('keydown', e => {
     if (e.key==='Enter') doLogin();
   });
-  sb.auth.onAuthStateChange(async (event, session) => {
+  // Never call Supabase inside this callback directly: it deadlocks sign-in. Run it on the next tick.
+  sb.auth.onAuthStateChange((event, session) => {
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !currentUser) {
-      await loadDashboard(session.user);
+      setTimeout(() => loadDashboard(session.user), 0);
     }
   });
   const { data:{ session } } = await sb.auth.getSession();
