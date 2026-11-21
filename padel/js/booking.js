@@ -6,8 +6,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 /* Local design preview (http://localhost/...?preview): skips sign-in and never writes a booking. */
 const PREVIEW = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).has('preview');
 
-const MEMBER_PRICE     = 500; // KES per person per 30-min slot
+const MEMBER_PRICE     = 500; // KES per person per 30-min slot (peak)
 const NON_MEMBER_PRICE = 700;
+const OFF_MEMBER       = 400; // off-peak: Mon–Fri, slots starting 10:00–15:30
+const OFF_NON_MEMBER   = 550;
+/* Must match slot_rate() in the database */
+const isOffPeak = (date, slot) => { const dow = dateFrom(date).getDay(); return dow >= 1 && dow <= 5 && slot >= '10:00' && slot < '16:00'; };
+const slotRate = (date, slot, member) => isOffPeak(date, slot) ? (member ? OFF_MEMBER : OFF_NON_MEMBER) : (member ? MEMBER_PRICE : NON_MEMBER_PRICE);
 const TEAM_SIZE = 4;
 const MIN_SLOTS = 2;          // minimum booking is one hour
 
@@ -66,14 +71,15 @@ const state = {
   editing: null,                 // index of the player slot with an open search
   last: null,                    // last confirmed booking, shown on the done screen
   weeks: 1,                      // weekly repeat count
+  credit: 0,                     // wallet balance
+  useCredit: false,
   join: null,                    // booking loaded from an invite link
 };
 
 const sport = () => SPORTS[state.sport];
 const court = () => sport().courts.find(c => c.id === state.court);
 const validSel = () => state.sel.length >= MIN_SLOTS;
-const rate = p => (p.member ? MEMBER_PRICE : NON_MEMBER_PRICE);
-const playerPrice = p => (p.open ? 0 : state.sel.length * rate(p));
+const playerPrice = p => (p.open ? 0 : state.sel.reduce((t, i) => t + slotRate(state.date, ALL_SLOTS[i].value, p.member), 0));
 const openCount = () => state.players.filter(p => p && p.open).length;
 const SITE = location.href.split('?')[0].split('#')[0];
 const totalPrice = () => state.players.reduce((t, p) => t + (p ? playerPrice(p) : 0), 0);
@@ -197,6 +203,7 @@ function timesHTML() {
     <div class="stage-body">
       <p class="stage-note">Tap a start time for one hour. Tap a later slot to extend.</p>
       <div class="date-row">${datePillsHTML()}</div>
+      <div class="offpeak-note" id="offpeak-note"></div>
       <div class="courts ${state.sport}${s.courts.length > 1 ? ' two' : ''}">${s.courts.map(courtHTML).join('')}</div>
     </div>`;
 }
@@ -214,9 +221,16 @@ function paintSlots() {
       btn.disabled = !ok;
       btn.classList.toggle('on', state.court === id && state.sel.includes(idx));
       btn.title = ok ? '' : state.booked[id].has(ALL_SLOTS[idx].value) ? 'Booked' : 'Passed';
+      btn.classList.toggle('off', isOffPeak(state.date, ALL_SLOTS[idx].value));
     });
     el.querySelector('.court-free').textContent = state.loading ? 'Checking…' : free ? `${free / 2} hrs free` : 'Fully booked';
   });
+  const note = $('offpeak-note');
+  if (note) {
+    const off = isOffPeak(state.date, '10:00');
+    note.hidden = !off;
+    note.innerHTML = off ? `<i></i>Off-peak until 16:00 · from ${fmt(OFF_MEMBER)} per person` : '';
+  }
   paintBar();
 }
 
@@ -364,7 +378,13 @@ function reviewHTML() {
         <span class="repeat-label">Repeat weekly</span>
         <div class="repeat-pills">${[1, 2, 4, 8].map(w => `<button type="button" class="repeat-pill${state.weeks === w ? ' on' : ''}" data-act="weeks" data-w="${w}">${w === 1 ? 'Once' : w + ' weeks'}</button>`).join('')}</div>
       </div>
-      <p class="fine">Members ${fmt(MEMBER_PRICE)} · Non-members ${fmt(NON_MEMBER_PRICE)} per person, per 30 min</p>
+      ${state.credit > 0 ? `
+      <button type="button" class="credit-toggle${state.useCredit ? ' on' : ''}" data-act="credit">
+        <span class="ct-box"></span>
+        <span class="ct-text">Use my credit<small>${fmt(state.credit)} available</small></span>
+        <b id="credit-amt">${state.useCredit ? '− ' + fmt(Math.min(state.credit, totalPrice())) : ''}</b>
+      </button>` : ''}
+      <p class="fine">Per person, per 30 min: members ${fmt(MEMBER_PRICE)}, non-members ${fmt(NON_MEMBER_PRICE)}. Off-peak (Mon–Fri before 16:00): ${fmt(OFF_MEMBER)} / ${fmt(OFF_NON_MEMBER)}.</p>
       <div class="stage-foot">
         <button type="button" class="primary-btn" id="confirm-btn" data-act="confirm">Confirm booking</button>
       </div>
@@ -435,6 +455,7 @@ function doneHTML() {
         </div>
         <div class="review-total"><span>Total${many ? ' per game' : ''}</span><b>${fmt(b.totalPrice)}</b></div>
       </div>
+      ${b.credit ? `<p class="fine">${fmt(b.credit)} paid with credit${b.dates.length > 1 ? ' (used across your games)' : ''}.</p>` : ''}
       ${b.skipped.length ? `<p class="fine warn">Already taken, not booked: ${b.skipped.map(longDate).join(', ')}</p>` : ''}
       <div class="share-row">
         ${b.open ? `<button type="button" class="share-btn primary" data-act="invite">${ICO.link}Invite players</button>` : ''}
@@ -464,7 +485,7 @@ function joinHTML() {
   const already = players.some(p => p.user_id === me.id);
   const open = TEAM_SIZE - players.length;
   const past = b.date < dateStr(new Date());
-  const price = (b.slots || []).length * (me.member ? MEMBER_PRICE : NON_MEMBER_PRICE);
+  const price = (b.slots || []).reduce((t, s) => t + slotRate(b.date, s, me.member), 0);
   const reason = b.status === 'cancelled' ? 'This game was cancelled.' : past ? 'This game has already been played.'
     : already ? "You're already in this game." : open <= 0 ? 'This game is full.' : '';
   return headHTML('join', 'Join Game') + `
@@ -659,6 +680,7 @@ async function confirmBooking() {
   };
 
   booking.weeks = state.weeks;
+  booking.credit = PREVIEW && state.useCredit ? Math.min(state.credit, totalPrice()) : 0;
   booking.open = openCount();
   booking.dates = [state.date];
   booking.skipped = [];
@@ -668,6 +690,7 @@ async function confirmBooking() {
       p_court: state.court, p_date: state.date, p_slots: slotValues,
       p_start: booking.startTime, p_end: booking.endTime, p_weeks: state.weeks,
       p_players: state.players.filter(p => !p.open).map(p => ({ user_id: p.userId || null, name: p.name })),
+      p_use_credit: state.useCredit && state.credit > 0,
     });
     if (error || !res) { console.error('[USC] booking failed', error); return fail('Booking failed. Please try again.'); }
     if (!res.booked.length) {
@@ -680,6 +703,8 @@ async function confirmBooking() {
     booking.dates = res.booked.map(b => b.date);
     booking.skipped = res.skipped;
     booking.totalPrice = res.total;
+    booking.credit = res.credit || 0;
+    state.credit = Math.max(0, state.credit - booking.credit);
   } else {
     for (let w = 1; w < state.weeks; w++) { const d = dateFrom(state.date); d.setDate(d.getDate() + 7 * w); booking.dates.push(dateStr(d)); }
   }
@@ -694,6 +719,7 @@ async function confirmBooking() {
 
 function resetTeam() {
   state.weeks = 1;
+  state.useCredit = false;
   state.players = [{ name: me.name, username: me.username, userId: me.id, member: me.member, you: true }, null, null, null];
   state.editing = null;
 }
@@ -743,6 +769,12 @@ document.addEventListener('click', e => {
     case 'whatsapp': window.open('https://wa.me/?text=' + encodeURIComponent(bookingText(state.last)), '_blank', 'noopener'); break;
     case 'calendar': downloadICS(state.last); break;
     case 'join-game': joinGame(); break;
+    case 'credit': {
+      state.useCredit = !state.useCredit;
+      el.classList.toggle('on', state.useCredit);
+      $('credit-amt').textContent = state.useCredit ? '− ' + fmt(Math.min(state.credit, totalPrice())) : '';
+      break;
+    }
   }
 });
 
@@ -786,6 +818,7 @@ async function initAuth() {
   if (window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   if (PREVIEW) {
     me = { id: null, name: 'Preview Player', first: 'Preview', username: 'preview', phone: '', email: '', member: true };
+    state.credit = 1500;
     return true;
   }
   if (!sb) { toast("Couldn't connect. Please check your connection and reload."); return false; }
@@ -807,6 +840,8 @@ async function initAuth() {
     email: user.email,
     member: !!p?.is_member,
   };
+  const { data: w } = await sb.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
+  state.credit = w?.balance || 0;
   return true;
 }
 

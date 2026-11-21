@@ -338,8 +338,92 @@
       background-color:#0a1f3d;
     }
 
+    /* ═══ BANNERS ═══ */
+    .promo{position:relative;flex-shrink:0;margin-bottom:1.75rem;border-radius:22px;overflow:hidden;background:#0b1a30;border:1px solid rgba(255,255,255,.08);animation:fadeUp .45s .05s ease both;touch-action:pan-y}
+    .promo[hidden]{display:none}
+    @media(max-width:700px){.promo{border-radius:18px;margin-bottom:1.25rem}}
+    .promo-track{display:flex;min-height:clamp(250px,30vw,340px);transition:transform .7s cubic-bezier(.22,.8,.26,1)}
+    .slide{position:relative;flex:0 0 100%;overflow:hidden;display:flex;align-items:center;padding:clamp(1.3rem,3.4vw,2.6rem) clamp(1.2rem,3.4vw,2.6rem) 2.2rem}
+    .slide-bg{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1.06);transition:transform 2.4s ease}
+    .slide.is-on .slide-bg{transform:scale(1)}
+    .slide-shade{position:absolute;inset:0}
+    .slide-body{position:relative;z-index:1;max-width:62%;opacity:0;transform:translateY(14px);transition:opacity .55s .15s ease,transform .55s .15s cubic-bezier(.22,.8,.26,1)}
+    .slide.is-on .slide-body{opacity:1;transform:none}
+    @media(max-width:700px){.promo-track{min-height:300px}.slide.promo-k .s-chips{display:none}.slide{align-items:flex-end}.slide-body{max-width:100%}}
+    .s-eyebrow{font-size:.62rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:.55rem}
+    .s-title{font-size:clamp(1.55rem,4.4vw,2.9rem);font-weight:900;letter-spacing:-.035em;line-height:1.02;color:#fff}
+    .s-sub{margin-top:.55rem;font-size:clamp(.85rem,1.6vw,1.05rem);color:rgba(255,255,255,.78);font-weight:500}
+    .s-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.95rem}
+    .s-chip{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.35rem .65rem;border-radius:100px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:#fff;white-space:nowrap}
+    .s-cta{display:inline-flex;align-items:center;gap:.4rem;margin-top:1.05rem;height:38px;padding:0 1.05rem;border-radius:100px;background:#fff;color:#08111f;font-size:.78rem;font-weight:800;text-decoration:none}
+
+    /* membership */
+    .slide.promo-k .slide-shade{background:linear-gradient(90deg,rgba(8,17,31,.96) 0%,rgba(8,17,31,.82) 42%,rgba(8,17,31,.15) 100%)}
+    @media(max-width:700px){.slide.promo-k .slide-shade{background:linear-gradient(0deg,rgba(8,17,31,.97) 8%,rgba(8,17,31,.7) 55%,rgba(8,17,31,.2) 100%)}}
+    .s-offer{display:inline-flex;align-items:baseline;gap:.35rem;margin-top:.7rem;padding:.4rem .8rem;border-radius:12px;background:#fff;color:#08111f}
+    .s-offer b{font-size:1.5rem;font-weight:900;letter-spacing:-.03em}
+    .s-offer span{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+
+    /* match poster */
+    .slide.match-k{justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 0%,#173a6b 0%,#0b1a30 55%,#060d18 100%)}
+    .pitch{position:absolute;inset:0;opacity:.13;pointer-events:none}
+    .slide.match-k .slide-body{max-width:100%;width:100%}
+    .m-teams{display:flex;align-items:center;justify-content:center;gap:clamp(.6rem,2.4vw,1.6rem)}
+    .m-team{flex:1;font-size:clamp(1.2rem,3.6vw,2.5rem);font-weight:900;letter-spacing:-.03em;line-height:1.02;color:#fff;text-transform:uppercase}
+    .m-team:first-child{text-align:right}.m-team:last-child{text-align:left}
+    .m-vs{flex-shrink:0;width:clamp(36px,5vw,54px);height:clamp(36px,5vw,54px);border-radius:50%;display:grid;place-items:center;background:#fff;color:#08111f;font-size:clamp(.72rem,1.3vw,.95rem);font-weight:900}
+    .m-when{margin-top:.7rem;font-size:.8rem;font-weight:600;color:rgba(255,255,255,.7)}
+    .m-count{display:flex;justify-content:center;gap:.45rem;margin-top:.8rem}
+    .m-count div{min-width:clamp(48px,6.4vw,66px);padding:.45rem .3rem;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+    .m-count b{display:block;font-size:clamp(1.15rem,2.6vw,1.7rem);font-weight:900;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05}
+    .m-count span{font-size:.55rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+    .m-live{display:inline-flex;align-items:center;gap:.45rem;margin-top:.9rem;padding:.45rem .9rem;border-radius:100px;background:#e11d48;color:#fff;font-size:.78rem;font-weight:900;letter-spacing:.12em}
+    .m-live i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+    @keyframes blink{50%{opacity:.25}}
+    .slide.match-k .s-chips{justify-content:center}
+
+    /* chef specials */
+    .slide.dishes-k{background:linear-gradient(120deg,#0d2240 0%,#0a1628 60%,#08111f 100%);gap:1.5rem}
+    .slide.dishes-k .slide-body{max-width:36%;flex-shrink:0}
+    .d-row{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;align-self:stretch;align-items:center}
+    .d-card{display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateY(18px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.8,.26,1)}
+    .slide.is-on .d-card{opacity:1;transform:none}
+    .slide.is-on .d-card:nth-child(2){transition-delay:.1s}.slide.is-on .d-card:nth-child(3){transition-delay:.2s}.slide.is-on .d-card:nth-child(4){transition-delay:.3s}
+    .d-img{width:100%;aspect-ratio:16/10;background:center/contain no-repeat;filter:drop-shadow(0 12px 14px rgba(0,0,0,.5))}
+    .d-name{margin-top:.35rem;font-size:.78rem;font-weight:700;color:#fff;line-height:1.2}
+    .d-price{font-size:.7rem;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums}
+    @media(max-width:700px){
+      .slide.dishes-k{flex-direction:column;align-items:stretch;justify-content:space-between;gap:.4rem}
+      .slide.dishes-k .slide-body{max-width:100%;order:-1}
+      .slide.dishes-k .s-cta{display:none}
+      .d-row{grid-template-columns:1fr 1fr;gap:.2rem .6rem;align-self:auto}
+      .d-img{aspect-ratio:16/8}
+      .d-name{font-size:.72rem;margin-top:.1rem}
+    }
+
+    .promo-dots{position:absolute;z-index:2;left:50%;bottom:.7rem;transform:translateX(-50%);display:flex;gap:.35rem}
+    .promo-dot{width:22px;height:3px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden;border:none;padding:0;cursor:pointer}
+    .promo-dot i{display:block;height:100%;width:0;background:#fff}
+    .promo-dot.on i{animation:dotFill var(--dur,2s) linear forwards}
+    .promo.paused .promo-dot.on i{animation-play-state:paused}
+    .promo-dot.done i{width:100%}
+    @keyframes dotFill{to{width:100%}}
+
+    /* ═══ WALLET ═══ */
+    .wallet{grid-column:1/-1;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.1rem;border-radius:16px;background:var(--panel);border:1px solid rgba(255,255,255,.08)}
+    .wallet-bal{display:flex;flex-direction:column}
+    .wallet-bal span{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--white-30)}
+    .wallet-bal b{font-size:1.35rem;font-weight:900;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+    .wallet-redeem{margin-left:auto;display:flex;gap:.45rem;flex:1;max-width:360px;min-width:220px}
+    .wallet-redeem input{flex:1;min-width:0;height:38px;padding:0 .8rem;border-radius:100px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:16px;text-transform:uppercase;outline:none}
+    .wallet-redeem input::placeholder{text-transform:none;color:rgba(255,255,255,.35);font-size:.8rem}
+    .wallet-redeem button{height:38px;padding:0 1rem;border-radius:100px;border:none;background:#fff;color:#08111f;font:inherit;font-size:.76rem;font-weight:800;cursor:pointer}
+    .wallet-msg{width:100%;font-size:.75rem;color:rgba(255,255,255,.55)}
+    .wallet-msg:empty{display:none}
+    @media(max-width:700px){.wallet-redeem{margin-left:0;max-width:none}}
+
     /* ═══ MY BOOKINGS / ORDERS ═══ */
-    .mine{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem;animation:fadeUp .4s .35s ease both}
+    .mine{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem;animation:fadeUp .4s .35s ease both}
     .mine[hidden]{display:none}
     @media(max-width:700px){.mine{grid-template-columns:1fr;margin-top:1.5rem}}
     .mine-col{min-width:0}
@@ -559,6 +643,8 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
     </div>
   </nav>
 
+  <section class="promo" id="promo" aria-label="Club news" hidden></section>
+
   <div class="venues-wrap">
     <div class="venues-heading">Where to?</div>
     <div class="venues-grid">
@@ -601,6 +687,11 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
   </div>
 
   <div class="mine" id="mine" hidden>
+    <div class="wallet">
+      <div class="wallet-bal"><span>Club credit</span><b id="walletBal">KES 0</b></div>
+      <div class="wallet-redeem"><input id="giftCode" placeholder="Gift card code" maxlength="20" autocomplete="off" autocapitalize="characters"/><button id="giftBtn" onclick="redeemGift()">Redeem</button></div>
+      <div class="wallet-msg" id="walletMsg"></div>
+    </div>
     <div class="mine-col"><div class="mine-head">Upcoming games</div><div class="mine-list" id="mineGames"></div></div>
     <div class="mine-col"><div class="mine-head">Recent orders</div><div class="mine-list" id="mineOrders"></div></div>
   </div>
@@ -748,6 +839,8 @@ async function loadDashboard(user) {
     if (ret && new URL(ret, location.href).origin === location.origin) { location.href = ret; return; }
   } catch (e) {}
   loadMine().catch(e => console.warn('my items', e));
+  loadWallet().catch(() => {});
+  loadBanners().catch(() => {});
 
   // Show dashboard immediately using data already in the JWT
   const name = user.user_metadata?.first_name || user.email.split('@')[0];
@@ -833,6 +926,111 @@ async function cancelGame(id, btn) {
   loadMine();
 }
 
+
+
+/* ── Dashboard banners (managed in the admin panel) ── */
+const SLIDE_MS = 2000;
+let slides = [], slideIdx = 0, slideTimer = null, countTimer = null;
+const PITCH = '<svg class="pitch" viewBox="0 0 1050 400" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#fff" stroke-width="3"><rect x="20" y="20" width="1010" height="360"/><line x1="525" y1="20" x2="525" y2="380"/><circle cx="525" cy="200" r="70"/><rect x="20" y="110" width="120" height="180"/><rect x="910" y="110" width="120" height="180"/></svg>';
+function slideHTML(b) {
+  const chips = (b.items || []).filter(x => typeof x === 'string').map(x => `<span class="s-chip">${escP(x)}</span>`).join('');
+  const cta = b.cta_label ? (b.cta_url ? `<a class="s-cta" href="./${escP(b.cta_url.replace(/^\.?\//, ''))}">${escP(b.cta_label)} &rarr;</a>` : `<span class="s-cta">${escP(b.cta_label)}</span>`) : '';
+  if (b.kind === 'match') {
+    const [h, a] = String(b.title).split(/\s+vs\.?\s+/i);
+    return `<div class="slide match-k">${PITCH}<div class="slide-body">
+      <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
+      <div class="m-teams"><div class="m-team">${escP(h || b.title)}</div>${a ? `<div class="m-vs">VS</div><div class="m-team">${escP(a)}</div>` : ''}</div>
+      <div class="m-when">${escP(b.subtitle || '')}</div>
+      <div class="m-clock" data-at="${escP(b.event_at || '')}"></div>
+      ${chips ? `<div class="s-chips">${chips}</div>` : ''}
+    </div></div>`;
+  }
+  if (b.kind === 'dishes') {
+    const dishes = (b.items || []).filter(x => x && typeof x === 'object').slice(0, 4);
+    return `<div class="slide dishes-k"><div class="slide-body">
+      <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
+      <div class="s-title">${escP(b.title)}</div>
+      ${b.subtitle ? `<div class="s-sub">${escP(b.subtitle)}</div>` : ''}${cta}
+    </div><div class="d-row">${dishes.map(d => `<div class="d-card"><div class="d-img" style="background-image:url('./${escP(d.img || '')}')"></div><div class="d-name">${escP(d.name)}</div>${d.price ? `<div class="d-price">${kes(d.price)}</div>` : ''}</div>`).join('')}</div></div>`;
+  }
+  const offer = /(\d+%)\s*off/i.exec(b.subtitle || '');
+  return `<div class="slide promo-k">${b.image ? `<div class="slide-bg" style="background-image:url('./${escP(b.image)}')"></div>` : ''}<div class="slide-shade"></div><div class="slide-body">
+    <div class="s-eyebrow">${escP(b.eyebrow || '')}</div>
+    <div class="s-title">${escP(b.title)}</div>
+    ${offer ? `<div class="s-offer"><b>${offer[1]}</b><span>off padel</span></div>` : ''}
+    ${b.subtitle ? `<div class="s-sub">${escP(b.subtitle)}</div>` : ''}
+    ${chips ? `<div class="s-chips">${chips}</div>` : ''}${cta}
+  </div></div>`;
+}
+function tickClocks() {
+  document.querySelectorAll('.m-clock').forEach(el => {
+    const at = Date.parse(el.dataset.at);
+    if (!at) { el.innerHTML = ''; return; }
+    const ms = at - Date.now();
+    if (ms <= 0) { el.innerHTML = '<span class="m-live"><i></i>LIVE NOW</span>'; return; }
+    const s = Math.floor(ms / 1000), parts = [[Math.floor(s / 86400), 'Days'], [Math.floor(s / 3600) % 24, 'Hrs'], [Math.floor(s / 60) % 60, 'Min'], [s % 60, 'Sec']];
+    el.innerHTML = `<div class="m-count">${parts.map(([v, l]) => `<div><b>${String(v).padStart(2, '0')}</b><span>${l}</span></div>`).join('')}</div>`;
+  });
+}
+function showSlide(i) {
+  const box = document.getElementById('promo');
+  slideIdx = (i + slides.length) % slides.length;
+  box.querySelector('.promo-track').style.transform = `translateX(-${slideIdx * 100}%)`;
+  box.querySelectorAll('.slide').forEach((s, k) => s.classList.toggle('is-on', k === slideIdx));
+  box.querySelectorAll('.promo-dot').forEach((d, k) => {
+    d.classList.remove('on'); d.classList.toggle('done', k < slideIdx);
+    if (k === slideIdx) { void d.offsetWidth; d.classList.add('on'); }
+  });
+  clearTimeout(slideTimer);
+  if (slides.length > 1 && !box.classList.contains('paused')) slideTimer = setTimeout(() => showSlide(slideIdx + 1), SLIDE_MS);
+}
+async function loadBanners() {
+  const { data, error } = await sb.from('banners').select('*').eq('active', true).order('sort').order('id');
+  if (error) return;
+  slides = (data || []).filter(b => !b.ends_at || Date.parse(b.ends_at) > Date.now());
+  const box = document.getElementById('promo');
+  if (!slides.length) { box.hidden = true; return; }
+  box.style.setProperty('--dur', SLIDE_MS + 'ms');
+  box.innerHTML = `<div class="promo-track">${slides.map(slideHTML).join('')}</div>` +
+    (slides.length > 1 ? `<div class="promo-dots">${slides.map((_, k) => `<button class="promo-dot" aria-label="Banner ${k + 1}" data-k="${k}"><i></i></button>`).join('')}</div>` : '');
+  box.hidden = false;
+  tickClocks(); clearInterval(countTimer); countTimer = setInterval(tickClocks, 1000);
+  showSlide(0);
+}
+(function bannerControls() {
+  const box = document.getElementById('promo');
+  let x0 = null;
+  const pause = on => { box.classList.toggle('paused', on); if (on) clearTimeout(slideTimer); else showSlide(slideIdx); };
+  box.addEventListener('pointerdown', e => { x0 = e.clientX; pause(true); });
+  box.addEventListener('pointerup', e => {
+    const dx = x0 === null ? 0 : e.clientX - x0; x0 = null;
+    box.classList.remove('paused');
+    if (Math.abs(dx) > 40) showSlide(slideIdx + (dx < 0 ? 1 : -1)); else showSlide(slideIdx);
+  });
+  box.addEventListener('pointercancel', () => { x0 = null; pause(false); });
+  box.addEventListener('mouseenter', () => pause(true));
+  box.addEventListener('mouseleave', () => pause(false));
+  box.addEventListener('click', e => { const d = e.target.closest('.promo-dot'); if (d) showSlide(Number(d.dataset.k)); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(slideTimer); else if (slides.length) showSlide(slideIdx); });
+})();
+
+/* ── Wallet ── */
+async function loadWallet() {
+  const { data } = await sb.from('wallets').select('balance').eq('user_id', currentUser.id).maybeSingle();
+  document.getElementById('walletBal').textContent = kes(data?.balance || 0);
+}
+async function redeemGift() {
+  const input = document.getElementById('giftCode'), msg = document.getElementById('walletMsg');
+  const code = input.value.trim();
+  if (code.length < 6) { msg.textContent = 'Enter the code from your gift card.'; return; }
+  const btn = document.getElementById('giftBtn'); btn.disabled = true;
+  const { data, error } = await sb.rpc('redeem_gift', { p_code: code });
+  btn.disabled = false;
+  if (error) { msg.textContent = /not valid/i.test(error.message) ? 'That code is not valid or was already used.' : "Couldn't redeem. Please try again."; return; }
+  input.value = '';
+  msg.textContent = 'Gift card added to your credit.';
+  document.getElementById('walletBal').textContent = kes(data);
+}
 
 /* ── Install as an app ── */
 let installEvt = null;

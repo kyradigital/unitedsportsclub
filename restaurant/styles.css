@@ -554,3 +554,13 @@ textarea.note {
 .tile:hover .tile-bg.cutout { transform: scale(1.04); }
 .chip-img { display: none; width: 34px; height: 24px; margin-left: -6px; background: center / contain no-repeat; }
 .chip-img.has-img { display: block; }
+
+/* Credit toggle (order details) */
+.credit-toggle { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px; border-radius: 18px; background: var(--panel); border: 1px solid var(--border); text-align: left; transition: border-color .2s; animation: rise .5s .4s var(--ease) both; }
+.credit-toggle.on { border-color: rgba(255,255,255,.55); }
+.ct-box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(255,255,255,.4); flex-shrink: 0; display: grid; place-items: center; transition: background .2s, border-color .2s; }
+.credit-toggle.on .ct-box { background: #fff; border-color: #fff; }
+.credit-toggle.on .ct-box::after { content: ''; width: 9px; height: 5px; border: solid var(--bg); border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg) translate(1px, -1px); }
+.ct-text { flex: 1; font-size: .88rem; font-weight: 600; color: #fff; display: flex; flex-direction: column; }
+.ct-text small { font-size: .74rem; font-weight: 500; color: var(--muted); }
+.credit-toggle b { font-size: .9rem; color: #86efac; font-variant-numeric: tabular-nums; }

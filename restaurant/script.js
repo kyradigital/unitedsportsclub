@@ -384,7 +384,8 @@ function orderLinesHTML() {
 
 /* ---------- Order flow: notes → dine in / takeaway → details → sent ---------- */
 const FLOW_ROUTES = ['order', 'otype', 'odetails', 'odone', 'loading'];
-const ORDER = { type: null, name: '', phone: '', people: '2', time: '' };
+const ORDER = { type: null, name: '', phone: '', people: '2', time: '', useCredit: false };
+let walletBalance = 0;
 let lastMenu = 'ch-1', busy = false, interTimer = null, lastOrder = null;
 const cartTotal = () => cart.reduce((s, c) => s + c.qty * c.price, 0);
 const cartCount = () => cart.reduce((s, c) => s + c.qty, 0);
@@ -440,6 +441,12 @@ const FLOW = {
           ${dine ? f('people', 'People', 'number', 'min="1" max="50" inputmode="numeric"') : ''}
           ${f('time', dine ? 'Serving time' : 'Collection time', 'time')}
         </div>
+        ${walletBalance > 0 ? `
+        <button type="button" class="credit-toggle${ORDER.useCredit ? ' on' : ''}" data-act="use-credit">
+          <span class="ct-box"></span>
+          <span class="ct-text">Use my credit<small>${fmt(walletBalance)} available</small></span>
+          <b id="credit-amt">${ORDER.useCredit ? '− ' + fmt(Math.min(walletBalance, cartTotal())) : ''}</b>
+        </button>` : ''}
         <div class="flow-foot">
           <div class="flow-total"><span>${plural(cartCount(), 'item', 'items')}</span><b>${fmt(cartTotal())}</b></div>
           <button type="button" class="menu-next" data-act="send">Send order${ARROW}</button>
@@ -456,6 +463,7 @@ const FLOW = {
       <div class="done-card">
         <div class="done-row"><span>${o.type === 'dine_in' ? 'Dine in' : 'Takeaway'}</span><b>${escH(o.time || '')}</b></div>
         <div class="done-row"><span>${escH(o.name || '')}</span><b>${fmt(o.total || 0)}</b></div>
+        ${o.credit ? `<div class="done-row"><span>Paid with credit</span><b>− ${fmt(o.credit)}</b></div><div class="done-row"><span>To pay at the club</span><b>${fmt(o.total - o.credit)}</b></div>` : ''}
       </div>
       <p class="done-note">The kitchen has your order.</p>
       <button type="button" class="ghost-btn" data-act="restart">Back to menu</button>
@@ -507,7 +515,9 @@ async function sendOrder() {
     p_time: ORDER.time,
     p_items: cart.map(c => ({ name: c.name, size: c.size || null, style: c.style || null, qty: c.qty, price: c.price, note: c.comment.trim() || null })),
     p_total: cartTotal(),
+    p_use_credit: ORDER.useCredit && walletBalance > 0,
   };
+  const creditUsed = payload.p_use_credit ? Math.min(walletBalance, payload.p_total) : 0;
   const preview = new URLSearchParams(location.search).has('preview') && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   interlude('Sending your order', null);
   const started = Date.now();
@@ -523,7 +533,8 @@ async function sendOrder() {
   setTimeout(() => {
     busy = false;
     if (err) { console.error(err); alert('Your order could not be sent. Please check your connection and try again.'); current = null; go('odetails', false); return; }
-    lastOrder = { id, type: ORDER.type, name: payload.p_name, time: payload.p_time, total: payload.p_total };
+    lastOrder = { id, type: ORDER.type, name: payload.p_name, time: payload.p_time, total: payload.p_total, credit: creditUsed };
+    walletBalance -= creditUsed; ORDER.useCredit = false;
     cart = []; ORDER.time = ''; renderCart();
     history.replaceState({ s: 'ch-1' }, '');
     go('odone');
@@ -597,6 +608,11 @@ document.addEventListener('click', e => {
     case 'to-type': if (cart.length) interlude('Getting things ready', 'otype'); break;
     case 'otype': ORDER.type = el.dataset.type; el.classList.add('chosen'); setTimeout(() => go('odetails'), 260); break;
     case 'send': sendOrder(); break;
+    case 'use-credit':
+      ORDER.useCredit = !ORDER.useCredit;
+      el.classList.toggle('on', ORDER.useCredit);
+      $('credit-amt').textContent = ORDER.useCredit ? '− ' + fmt(Math.min(walletBalance, cartTotal())) : '';
+      break;
     case 'restart': go('ch-1'); break;
     case 'search-clear': {
       const input = $('stage').querySelector('.search-input');
@@ -655,6 +671,8 @@ async function initAuth() {
     if (!ORDER.name) ORDER.name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || name;
     const { data: ph } = await sb.from('profiles').select('phone').eq('id', user.id).single();
     if (!ORDER.phone && ph?.phone) ORDER.phone = ph.phone;
+    const { data: w } = await sb.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
+    walletBalance = w?.balance || 0;
   } catch (err) {
     console.warn('Auth unavailable', err);
   }

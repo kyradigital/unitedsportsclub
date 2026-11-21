@@ -403,3 +403,21 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .share-btn:active { transform: scale(.97); }
 @media (hover: hover) { .share-btn:not(.primary):hover { background: rgba(255,255,255,.08); } }
 .fine.warn { color: #ffb4a0; }
+
+/* ---------- Off-peak and credit ---------- */
+.slot.off:not(:disabled):not(.on) { border-color: rgba(134,239,172,.45); color: #c9f7d8; }
+.slot.off:not(:disabled):not(.on)::after { content: ''; position: absolute; top: 5px; right: 5px; width: 5px; height: 5px; border-radius: 50%; background: #86efac; }
+.slot { position: relative; }
+.offpeak-note { display: flex; align-items: center; gap: 8px; margin: -4px 0 14px; font-size: .78rem; color: #c9f7d8; }
+.offpeak-note[hidden] { display: none; }
+.offpeak-note i { width: 7px; height: 7px; border-radius: 50%; background: #86efac; }
+
+.credit-toggle { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 14px 16px; border-radius: 18px; background: var(--panel); border: 1px solid var(--border); text-align: left; transition: border-color .2s; }
+#stage[data-route="review"] .credit-toggle { animation: fadeOnly .6s ease 1s both; }
+.credit-toggle.on { border-color: rgba(255,255,255,.55); }
+.ct-box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(255,255,255,.4); flex-shrink: 0; display: grid; place-items: center; transition: background .2s, border-color .2s; }
+.credit-toggle.on .ct-box { background: #fff; border-color: #fff; }
+.credit-toggle.on .ct-box::after { content: ''; width: 9px; height: 5px; border: solid var(--bg); border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg) translate(1px, -1px); }
+.ct-text { flex: 1; font-size: .88rem; font-weight: 600; color: #fff; display: flex; flex-direction: column; }
+.ct-text small { font-size: .74rem; font-weight: 500; color: var(--muted); }
+.credit-toggle b { font-size: .9rem; color: #86efac; font-variant-numeric: tabular-nums; }
