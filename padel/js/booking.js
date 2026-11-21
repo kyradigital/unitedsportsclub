@@ -906,7 +906,11 @@ async function initAuth() {
     return false;
   }
   const user = session.user;
-  const { data: p } = await sb.from('profiles').select('first_name, last_name, username, phone, is_member').eq('id', user.id).single();
+  const [{ data: p }, { data: needPhone }] = await Promise.all([
+    sb.from('profiles').select('first_name, last_name, username, phone, is_member, phone_verified').eq('id', user.id).single(),
+    sb.rpc('phone_check_required'),
+  ]);
+  if (needPhone && p && !p.phone_verified) { window.location.href = '../index.html'; return false; }
   const first = p?.first_name || user.user_metadata?.first_name || user.email.split('@')[0];
   me = {
     id: user.id,

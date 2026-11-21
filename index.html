@@ -478,7 +478,8 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
     @media(max-width:800px){
       #screen-login .auth-brand,
       #screen-signup .auth-brand,
-      #screen-verify .auth-brand{display:none}
+      #screen-verify .auth-brand,
+      #screen-phone .auth-brand{display:none}
       .auth-form-panel{width:100%;min-width:0;padding:2rem 1.25rem 1.75rem;border-left:none}
       #screen-dashboard{padding:1.25rem 1rem}
       .fl input,.fl select{font-size:16px}/* prevent iOS zoom */
@@ -637,6 +638,43 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
   </div>
 </div>
 
+<!-- ══════════════════ PHONE CHECK ══════════════════ -->
+<div class="screen" id="screen-phone">
+  <div class="auth-brand">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="./restaurant/images/usclogo.png" alt="USC" onerror="this.style.display='none'"/>
+        <div class="brand-logo-name">United Sports Club</div>
+      </div>
+    </div>
+    <div class="brand-tagline">
+      <div class="brand-big">One last<br>step.</div>
+      <div class="brand-sub">Confirm your phone number so we can text your bookings and orders.</div>
+      <div class="brand-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+  <div class="auth-form-panel">
+    <div class="verify-wrap">
+      <div class="verify-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,.8)" stroke-width="1.8"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path stroke-linecap="round" d="M10.5 18.5h3"/></svg>
+      </div>
+      <div class="form-title">Verify your phone</div>
+      <div class="form-sub" style="text-align:center" id="phSub">We'll text you a 6-digit code.</div>
+      <div class="err-msg" id="phErr" style="width:100%"></div>
+      <div id="phStep1" style="width:100%;margin-top:1rem">
+        <div class="fl"><input type="tel" id="phNumber" placeholder="phone" autocomplete="tel"/><label>Phone number</label></div>
+        <button class="btn-primary" id="phSendBtn" onclick="sendPhoneCode()">Send code</button>
+      </div>
+      <div id="phStep2" style="width:100%;margin-top:1rem;display:none">
+        <div class="fl"><input type="text" id="phCode" placeholder="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="letter-spacing:.5em;font-size:1.3rem;text-align:center"/><label>6-digit code</label></div>
+        <button class="btn-primary" id="phVerifyBtn" onclick="checkPhoneCode()">Verify</button>
+        <div class="form-switch" style="margin-top:1rem"><a id="phResend" onclick="sendPhoneCode(true)">Resend code</a> · <a onclick="phoneStep(1)">Change number</a></div>
+      </div>
+      <div class="form-switch" style="margin-top:1.2rem"><a onclick="doSignOut()">Sign out</a></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════ DASHBOARD ══════════════════ -->
 <div class="screen" id="screen-dashboard">
 
@@ -787,6 +825,8 @@ function clearOtp() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   initOtp();
+  document.getElementById('phCode').addEventListener('keydown', e => { if (e.key === 'Enter') checkPhoneCode(); });
+  document.getElementById('phNumber').addEventListener('keydown', e => { if (e.key === 'Enter') sendPhoneCode(); });
   document.getElementById('loginPassword').addEventListener('keydown', e => {
     if (e.key==='Enter') doLogin();
   });
@@ -860,6 +900,14 @@ async function resendCode() {
 async function loadDashboard(user) {
   if (currentUser) return; // prevent double-call from onAuthStateChange
   currentUser = user;
+  // New accounts confirm their phone by SMS (only when SMS is switched on)
+  try {
+    const [{ data: need }, { data: pv }] = await Promise.all([
+      sb.rpc('phone_check_required'),
+      sb.from('profiles').select('phone, phone_verified').eq('id', user.id).single(),
+    ]);
+    if (need && pv && !pv.phone_verified) { showPhoneScreen(user, pv.phone || user.user_metadata?.phone); return; }
+  } catch (e) {}
   // Came from an invite link before signing in: go back to it
   try {
     const ret = sessionStorage.getItem('usc_return');
@@ -1091,6 +1139,49 @@ addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = 
 addEventListener('appinstalled', () => { document.getElementById('installBtn').hidden = true; });
 async function installApp() {
   if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; document.getElementById('installBtn').hidden = true; return; }
+}
+
+
+/* ── Phone check for new accounts ── */
+let phoneUser = null, resendAt = 0;
+function phoneStep(n) {
+  document.getElementById('phStep1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('phStep2').style.display = n === 2 ? '' : 'none';
+  clearErr('phErr');
+  if (n === 2) setTimeout(() => document.getElementById('phCode').focus(), 50);
+}
+function showPhoneScreen(user, phone) {
+  phoneUser = user;
+  document.getElementById('phNumber').value = phone || '';
+  document.getElementById('phSub').textContent = "We'll text you a 6-digit code.";
+  phoneStep(1);
+  showScreen('screen-phone');
+}
+async function sendPhoneCode(resend) {
+  clearErr('phErr');
+  if (resend && Date.now() < resendAt) { showErr('phErr', `Wait ${Math.ceil((resendAt - Date.now()) / 1000)}s before asking again.`); return; }
+  const num = document.getElementById('phNumber').value.trim();
+  if (!num) { showErr('phErr', 'Enter your phone number.'); return; }
+  setBusy('phSendBtn', true, 'Send code');
+  const { data, error } = await sb.rpc('request_phone_code', { p_phone: num });
+  setBusy('phSendBtn', false, 'Send code');
+  if (error) { showErr('phErr', error.message.replace(/^.*?:\s*/, '')); return; }
+  resendAt = Date.now() + 60000;
+  document.getElementById('phSub').textContent = `Code sent to ${data}`;
+  document.getElementById('phCode').value = '';
+  phoneStep(2);
+}
+async function checkPhoneCode() {
+  clearErr('phErr');
+  const code = document.getElementById('phCode').value.replace(/\D/g, '');
+  if (code.length !== 6) { showErr('phErr', 'Enter the 6-digit code.'); return; }
+  setBusy('phVerifyBtn', true, 'Verify');
+  const { data, error } = await sb.rpc('verify_phone_code', { p_code: code });
+  setBusy('phVerifyBtn', false, 'Verify');
+  if (error) { showErr('phErr', error.message.replace(/^.*?:\s*/, '')); return; }
+  if (!data) { showErr('phErr', 'That code is not right. Try again.'); return; }
+  const u = phoneUser; phoneUser = null; currentUser = null;
+  await loadDashboard(u);
 }
 
 async function doSignOut() {

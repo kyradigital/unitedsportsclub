@@ -426,6 +426,7 @@ function orderLinesHTML() {
 const FLOW_ROUTES = ['order', 'otype', 'odetails', 'odone', 'loading'];
 const ORDER = { type: null, name: '', phone: '', people: '2', time: '', useCredit: false };
 let walletBalance = 0;
+let SMS = {};
 let lastMenu = 'ch-1', busy = false, interTimer = null, lastOrder = null;
 const cartTotal = () => cart.reduce((s, c) => s + c.qty * c.price, 0);
 const cartCount = () => cart.reduce((s, c) => s + c.qty, 0);
@@ -505,8 +506,7 @@ const FLOW = {
         <div class="done-row"><span>${escH(o.name || '')}</span><b>${fmt(o.total || 0)}</b></div>
         ${o.credit ? `<div class="done-row"><span>Paid with credit</span><b>− ${fmt(o.credit)}</b></div><div class="done-row"><span>To pay at the club</span><b>${fmt(o.total - o.credit)}</b></div>` : ''}
       </div>
-      <p class="done-note">The kitchen has your order.</p>
-      ${window.USCPush && USCPush.supported() && sb && o.id !== 'TEST' ? '<button type="button" class="ghost-btn notify-btn" data-act="notify-ready" id="notify-btn">Notify me when it\'s ready</button>' : ''}
+      <p class="done-note">${o.type === 'takeaway' && SMS.takeaway_ready ? "We'll text you when it's ready for collection." : 'The kitchen has your order.'}${SMS.order ? ' A confirmation text is on its way.' : ''}</p>
       <button type="button" class="ghost-btn" data-act="restart">Back to menu</button>
     </div>`;
   },
@@ -661,7 +661,6 @@ document.addEventListener('click', e => {
       const res = $('stage').querySelector('.results'); if (res && !res.hidden) applyDiet(res);
       break;
     }
-    case 'notify-ready': notifyReady(el); break;
     case 'use-credit':
       ORDER.useCredit = !ORDER.useCredit;
       el.classList.toggle('on', ORDER.useCredit);
@@ -738,19 +737,6 @@ document.addEventListener('click', async e => {
 });
 
 /* ---------- Init ---------- */
-async function notifyReady(btn) {
-  btn.disabled = true;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { btn.disabled = false; alert('Sign in to the USC app to get notifications.'); return; }
-    await USCPush.enable(sb);
-    btn.textContent = "We'll let you know";
-  } catch (e) {
-    btn.disabled = false;
-    if (e.message === 'blocked') alert('Notifications are blocked for this site in your browser settings.');
-  }
-}
-
 /* Reorder: ?reorder=<order id> puts a past order (your own) back in the cart */
 async function loadReorder(id) {
   try {
@@ -789,6 +775,7 @@ function init() {
   (async () => {
     try {
       sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      sb.rpc('sms_flags').then(({ data }) => { SMS = data || {}; });
       const { data } = await sb.from('dish_tags').select('name, tags');
       (data || []).forEach(r => { if (r.tags && r.tags.length) DIET[r.name] = r.tags; });
       if (current && !current.startsWith('ch-') && !FLOW_ROUTES.includes(parse(current).type)) { renderStage(current); }
