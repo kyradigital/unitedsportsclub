@@ -492,3 +492,6 @@ small.muted { color: var(--muted); font-weight: 500; }
 .review-players > *, .review-rows > * { min-width: 0; }
 .rp .badge, .rp .avatar, .rp-price { flex-shrink: 0; }
 .row span:last-child { overflow-wrap: anywhere; }
+.offer-chips .chips-photo { width: 110px; height: auto; filter: drop-shadow(0 12px 14px rgba(0,0,0,.55)); animation: popUp .7s var(--ease) both; animation-delay: .45s; }
+.offer-chips .chips-photo + .chips-photo { margin-left: -46px; margin-bottom: -10px; animation-delay: .55s; }
+@media (max-width: 380px) { .offer-chips .chips-photo { width: 88px; } .offer-chips .chips-photo + .chips-photo { margin-left: -38px; } }

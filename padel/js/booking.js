@@ -429,7 +429,7 @@ function drinksHTML() {
       <div class="offer">
         <div class="offer-art">
           <div class="offer-bottles">${ART.cola}${ART.cola}${ART.cola}${ART.cola}</div>
-          <div class="offer-chips">${ART.chips}${ART.chips}</div>
+          <div class="offer-chips"><img src="../restaurant/images/chips.webp" alt="Chips" class="chips-photo"/><img src="../restaurant/images/chips.webp" alt="" class="chips-photo"/></div>
         </div>
         <span class="offer-tag">OFFER</span>
         <h3 class="offer-title">4 Coca-Cola Diet + 2 Chips</h3>
