@@ -555,25 +555,4 @@ textarea.note {
 .chip-img { display: none; width: 34px; height: 24px; margin-left: -6px; background: center / contain no-repeat; }
 .chip-img.has-img { display: block; }
 
-/* Credit toggle (order details) */
-.credit-toggle { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px; border-radius: 18px; background: var(--panel); border: 1px solid var(--border); text-align: left; transition: border-color .2s; animation: rise .5s .4s var(--ease) both; }
-.credit-toggle.on { border-color: rgba(255,255,255,.55); }
-.ct-box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(255,255,255,.4); flex-shrink: 0; display: grid; place-items: center; transition: background .2s, border-color .2s; }
-.credit-toggle.on .ct-box { background: #fff; border-color: #fff; }
-.credit-toggle.on .ct-box::after { content: ''; width: 9px; height: 5px; border: solid var(--bg); border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg) translate(1px, -1px); }
-.ct-text { flex: 1; font-size: .88rem; font-weight: 600; color: #fff; display: flex; flex-direction: column; }
-.ct-text small { font-size: .74rem; font-weight: 500; color: var(--muted); }
-.credit-toggle b { font-size: .9rem; color: #86efac; font-variant-numeric: tabular-nums; }
-
-/* Dietary tags and filters */
-.dish.diet-off { display: none; }
-.dish-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 5px 0 0 24px; }
-.dtag { font-size: .58rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.65); }
-.dtag.jain, .dtag.vegan { background: rgba(134,239,172,.14); color: #a7f3c0; }
-.dtag.spicy { background: rgba(248,113,113,.15); color: #fca5a5; }
-.diet-bar { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -4px -16px 14px; padding: 2px 16px; }
-.diet-bar::-webkit-scrollbar { display: none; }
-.diet-chip { flex-shrink: 0; height: 32px; padding: 0 13px; border-radius: 100px; border: 1px solid var(--border2); font-size: .76rem; font-weight: 600; color: rgba(255,255,255,.8); transition: background .2s, color .2s; }
-.diet-chip.on { background: #fff; border-color: #fff; color: var(--bg); }
-.diet-note { margin: -8px 0 12px; font-size: .74rem; color: var(--muted); }
 .notify-btn { margin-bottom: 12px; }

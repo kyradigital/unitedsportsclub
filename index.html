@@ -431,19 +431,6 @@
       .d-price{display:none}
     }
 
-    /* ═══ WALLET ═══ */
-    .wallet{grid-column:1/-1;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem 1.1rem;border-radius:16px;background:var(--panel);border:1px solid rgba(255,255,255,.08)}
-    .wallet-bal{display:flex;flex-direction:column}
-    .wallet-bal span{font-size:.6rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--white-30)}
-    .wallet-bal b{font-size:1.35rem;font-weight:900;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-    .wallet-redeem{margin-left:auto;display:flex;gap:.45rem;flex:1;max-width:360px;min-width:220px}
-    .wallet-redeem input{flex:1;min-width:0;height:38px;padding:0 .8rem;border-radius:100px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:16px;text-transform:uppercase;outline:none}
-    .wallet-redeem input::placeholder{text-transform:none;color:rgba(255,255,255,.35);font-size:.8rem}
-    .wallet-redeem button{height:38px;padding:0 1rem;border-radius:100px;border:none;background:#fff;color:#08111f;font:inherit;font-size:.76rem;font-weight:800;cursor:pointer}
-    .wallet-msg{width:100%;font-size:.75rem;color:rgba(255,255,255,.55)}
-    .wallet-msg:empty{display:none}
-    @media(max-width:700px){.wallet-redeem{margin-left:0;max-width:none}}
-
     /* ═══ MY BOOKINGS / ORDERS ═══ */
     .mine{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem;animation:fadeUp .4s .35s ease both}
     .mine[hidden]{display:none}
@@ -501,6 +488,12 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
       .venues-heading{margin-bottom:.9rem}
     }
     @media(max-width:480px){
+      .dash-nav{flex-wrap:nowrap}
+      .dash-nav-left{min-width:0;gap:.6rem}
+      .dash-nav-left>div{min-width:0}
+      .dash-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .usc-chip-sep,.usc-chip-role{display:none}
+      .usc-chip-name{max-width:72px}
       .form-2col{grid-template-columns:1fr}
       .fl{margin-bottom:.5rem}
       .form-title{font-size:1.4rem}
@@ -753,11 +746,6 @@ margin-left:auto;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:n
   </div>
 
   <div class="mine" id="mine" hidden>
-    <div class="wallet">
-      <div class="wallet-bal"><span>Club credit</span><b id="walletBal">KES 0</b></div>
-      <div class="wallet-redeem"><input id="giftCode" placeholder="Gift card code" maxlength="20" autocomplete="off" autocapitalize="characters"/><button id="giftBtn" onclick="redeemGift()">Redeem</button></div>
-      <div class="wallet-msg" id="walletMsg"></div>
-    </div>
     <div class="mine-col"><div class="mine-head">Upcoming games</div><div class="mine-list" id="mineGames"></div></div>
     <div class="mine-col"><div class="mine-head">Recent orders</div><div class="mine-list" id="mineOrders"></div></div>
   </div>
@@ -928,7 +916,6 @@ async function loadDashboard(user) {
     if (ret && new URL(ret, location.href).origin === location.origin) { location.href = ret; return; }
   } catch (e) {}
   loadMine().catch(e => console.warn('my items', e));
-  loadWallet().catch(() => {});
   loadBanners().catch(() => {});
   paintAlerts().catch(() => {});
 
@@ -1104,24 +1091,6 @@ async function loadBanners() {
   box.addEventListener('click', e => { const d = e.target.closest('.promo-dot'); if (d) showSlide(Number(d.dataset.k)); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(slideTimer); else if (slides.length) showSlide(slideIdx); });
 })();
-
-/* ── Wallet ── */
-async function loadWallet() {
-  const { data } = await sb.from('wallets').select('balance').eq('user_id', currentUser.id).maybeSingle();
-  document.getElementById('walletBal').textContent = kes(data?.balance || 0);
-}
-async function redeemGift() {
-  const input = document.getElementById('giftCode'), msg = document.getElementById('walletMsg');
-  const code = input.value.trim();
-  if (code.length < 6) { msg.textContent = 'Enter the code from your gift card.'; return; }
-  const btn = document.getElementById('giftBtn'); btn.disabled = true;
-  const { data, error } = await sb.rpc('redeem_gift', { p_code: code });
-  btn.disabled = false;
-  if (error) { msg.textContent = /not valid/i.test(error.message) ? 'That code is not valid or was already used.' : "Couldn't redeem. Please try again."; return; }
-  input.value = '';
-  msg.textContent = 'Gift card added to your credit.';
-  document.getElementById('walletBal').textContent = kes(data);
-}
 
 
 /* ── Push alerts toggle ── */

@@ -123,39 +123,6 @@ function hydrateImages(root) {
   }));
 }
 
-/* ---------- Dietary tags (set by the kitchen in the admin panel) ---------- */
-const DIET = {};            // dish name -> [tags]
-const TAG_LABEL = { jain: 'Jain', vegan: 'Vegan', spicy: 'Spicy', dairy: 'Dairy', nuts: 'Nuts', gluten: 'Gluten' };
-const FILTERS = [
-  { k: 'jain',     label: 'Jain',      test: t => t.includes('jain'),    needs: 'jain' },
-  { k: 'vegan',    label: 'Vegan',     test: t => t.includes('vegan'),   needs: 'vegan' },
-  { k: 'mild',     label: 'Not spicy', test: t => !t.includes('spicy'),  needs: 'spicy' },
-  { k: 'nodairy',  label: 'No dairy',  test: t => !t.includes('dairy'),  needs: 'dairy' },
-  { k: 'nonuts',   label: 'No nuts',   test: t => !t.includes('nuts'),   needs: 'nuts' },
-  { k: 'nogluten', label: 'No gluten', test: t => !t.includes('gluten'), needs: 'gluten' },
-];
-let activeDiet = new Set();
-try { activeDiet = new Set(JSON.parse(sessionStorage.getItem('usc_diet') || '[]')); } catch (e) {}
-const tagsOf = id => DIET[ITEMS[id].item.n] || [];
-const dietOK = id => [...activeDiet].every(k => { const f = FILTERS.find(x => x.k === k); return !f || f.test(tagsOf(id)); });
-function dietBarHTML() {
-  const used = new Set(Object.values(DIET).flat());
-  const list = FILTERS.filter(f => used.has(f.needs));
-  if (!list.length) return '';
-  return `<div class="diet-bar">${list.map(f => `<button type="button" class="diet-chip${activeDiet.has(f.k) ? ' on' : ''}" data-act="diet" data-k="${f.k}">${f.label}</button>`).join('')}</div>
-    ${activeDiet.size ? '<p class="diet-note">Allergies? Please also tell the kitchen when you order.</p>' : ''}`;
-}
-function applyDiet(root = $('stage')) {
-  let shown = 0, total = 0;
-  root.querySelectorAll('.dish').forEach(d => { total++; const ok = dietOK(Number(d.dataset.id)); d.classList.toggle('diet-off', !ok); if (ok) shown++; });
-  const msg = root.querySelector('.diet-empty');
-  if (msg) msg.hidden = !(total && !shown);
-}
-function dishTagsHTML(id) {
-  const t = tagsOf(id);
-  return t.length ? `<div class="dish-tags">${t.map(k => `<span class="dtag ${k}">${TAG_LABEL[k] || k}</span>`).join('')}</div>` : '';
-}
-
 /* ---------- Dish rows ---------- */
 const ADD_BTN = '<button type="button" class="add-btn" data-act="inc" aria-label="Add">+</button>';
 const stepperHTML = qty => `<div class="stepper"><button type="button" data-act="dec" aria-label="Remove one">−</button><span>${qty}</span><button type="button" data-act="inc" aria-label="Add one">+</button></div>`;
@@ -171,7 +138,6 @@ function dishHTML(id) {
     <div class="dish" data-id="${id}" data-name="${escH(item.n.toLowerCase())}">
       <div class="dish-main">
         <div class="dish-title">${mark(diet)}<span class="dish-name">${escH(item.n)}</span></div>
-        ${dishTagsHTML(id)}
         ${opts('size', sizes, sel.size)}${opts('style', styles, sel.style)}
       </div>
       <div class="dish-side">
@@ -288,7 +254,6 @@ function catsHTML(route) {
   return headHTML(route, `Step ${n} of 3`, groupName(n, group)) + `
     <div class="stage-body">
       ${searchHTML('Search ' + STEPS[n - 1].title.toLowerCase())}
-      ${dietBarHTML()}
       <div class="browse">
         <div class="tile-grid${secs.length <= 4 ? ' few' : ''}">${tiles}</div>
         ${tags.length ? `
@@ -299,7 +264,6 @@ function catsHTML(route) {
       </div>
       <div class="dish-list results" hidden></div>
       <p class="empty" hidden>No dishes match your search.</p>
-      <p class="empty diet-empty" hidden>No dishes match your filters.</p>
       ${footHTML(n, group !== 'all' ? `<button type="button" class="ghost-btn" data-act="go" data-to="cats-${n}-${other}">${mark(other, 14)}Switch to ${groupName(n, other)}</button>` : '')}
     </div>`;
 }
@@ -320,9 +284,7 @@ function listHTML(route) {
     <div class="stage-body">
       ${note ? `<p class="stage-note">${escH(note)}</p>` : ''}
       ${ids.length > 8 ? searchHTML('Search ' + title.toLowerCase()) : ''}
-      ${dietBarHTML()}
       <div class="dish-list">${ids.map(dishHTML).join('')}</div>
-      <p class="empty diet-empty" hidden>No dishes match your filters.</p>
       <p class="empty" hidden>No dishes match your search.</p>
       ${footHTML(n, `<button type="button" class="ghost-btn" data-act="back">${BACK_ARROW}More ${groupName(n, group)}</button>`)}
     </div>`;
@@ -333,7 +295,6 @@ function renderStage(route) {
   const type = parse(route).type;
   stage.innerHTML = FLOW[type] ? FLOW[type]() : type === 'pick' ? pickHTML(route) : type === 'cats' ? catsHTML(route) : listHTML(route);
   stage.querySelectorAll('.dish').forEach(refreshCard);
-  applyDiet(stage);
   if (type === 'order') paintOrder(true);
   if ((type === 'otype' || type === 'odetails') && !cart.length) { stage.innerHTML = FLOW.order(); paintOrder(true); }
   hydrateImages(stage);
@@ -354,7 +315,6 @@ function applySearch(raw) {
     results.innerHTML = ids.map(dishHTML).join('');
     results.querySelectorAll('.dish').forEach(refreshCard);
     empty.hidden = !q || ids.length > 0;
-    applyDiet(results);
   } else {
     let hits = 0;
     stage.querySelectorAll('.dish').forEach(d => {
@@ -424,8 +384,7 @@ function orderLinesHTML() {
 
 /* ---------- Order flow: notes → dine in / takeaway → details → sent ---------- */
 const FLOW_ROUTES = ['order', 'otype', 'odetails', 'odone', 'loading'];
-const ORDER = { type: null, name: '', phone: '', people: '2', time: '', useCredit: false };
-let walletBalance = 0;
+const ORDER = { type: null, name: '', phone: '', people: '2', time: '' };
 let SMS = {};
 let lastMenu = 'ch-1', busy = false, interTimer = null, lastOrder = null;
 const cartTotal = () => cart.reduce((s, c) => s + c.qty * c.price, 0);
@@ -482,12 +441,6 @@ const FLOW = {
           ${dine ? f('people', 'People', 'number', 'min="1" max="50" inputmode="numeric"') : ''}
           ${f('time', dine ? 'Serving time' : 'Collection time', 'time')}
         </div>
-        ${walletBalance > 0 ? `
-        <button type="button" class="credit-toggle${ORDER.useCredit ? ' on' : ''}" data-act="use-credit">
-          <span class="ct-box"></span>
-          <span class="ct-text">Use my credit<small>${fmt(walletBalance)} available</small></span>
-          <b id="credit-amt">${ORDER.useCredit ? '− ' + fmt(Math.min(walletBalance, cartTotal())) : ''}</b>
-        </button>` : ''}
         <div class="flow-foot">
           <div class="flow-total"><span>${plural(cartCount(), 'item', 'items')}</span><b>${fmt(cartTotal())}</b></div>
           <button type="button" class="menu-next" data-act="send">Send order${ARROW}</button>
@@ -504,7 +457,6 @@ const FLOW = {
       <div class="done-card">
         <div class="done-row"><span>${o.type === 'dine_in' ? 'Dine in' : 'Takeaway'}</span><b>${escH(o.time || '')}</b></div>
         <div class="done-row"><span>${escH(o.name || '')}</span><b>${fmt(o.total || 0)}</b></div>
-        ${o.credit ? `<div class="done-row"><span>Paid with credit</span><b>− ${fmt(o.credit)}</b></div><div class="done-row"><span>To pay at the club</span><b>${fmt(o.total - o.credit)}</b></div>` : ''}
       </div>
       <p class="done-note">${o.type === 'takeaway' && SMS.takeaway_ready ? "We'll text you when it's ready for collection." : 'The kitchen has your order.'}${SMS.order ? ' A confirmation text is on its way.' : ''}</p>
       <button type="button" class="ghost-btn" data-act="restart">Back to menu</button>
@@ -556,9 +508,7 @@ async function sendOrder() {
     p_time: ORDER.time,
     p_items: cart.map(c => ({ name: c.name, size: c.size || null, style: c.style || null, qty: c.qty, price: c.price, note: c.comment.trim() || null })),
     p_total: cartTotal(),
-    p_use_credit: ORDER.useCredit && walletBalance > 0,
   };
-  const creditUsed = payload.p_use_credit ? Math.min(walletBalance, payload.p_total) : 0;
   const preview = new URLSearchParams(location.search).has('preview') && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   interlude('Sending your order', null);
   const started = Date.now();
@@ -574,8 +524,7 @@ async function sendOrder() {
   setTimeout(() => {
     busy = false;
     if (err) { console.error(err); alert('Your order could not be sent. Please check your connection and try again.'); current = null; go('odetails', false); return; }
-    lastOrder = { id, type: ORDER.type, name: payload.p_name, time: payload.p_time, total: payload.p_total, credit: creditUsed };
-    walletBalance -= creditUsed; ORDER.useCredit = false;
+    lastOrder = { id, type: ORDER.type, name: payload.p_name, time: payload.p_time, total: payload.p_total };
     cart = []; ORDER.time = ''; renderCart();
     history.replaceState({ s: 'ch-1' }, '');
     go('odone');
@@ -649,23 +598,6 @@ document.addEventListener('click', e => {
     case 'to-type': if (cart.length) interlude('Getting things ready', 'otype'); break;
     case 'otype': ORDER.type = el.dataset.type; el.classList.add('chosen'); setTimeout(() => go('odetails'), 260); break;
     case 'send': sendOrder(); break;
-    case 'diet': {
-      const k = el.dataset.k;
-      activeDiet.has(k) ? activeDiet.delete(k) : activeDiet.add(k);
-      try { sessionStorage.setItem('usc_diet', JSON.stringify([...activeDiet])); } catch (e) {}
-      const bar = $('stage').querySelector('.diet-bar');
-      const wrap = document.createElement('div'); wrap.innerHTML = dietBarHTML();
-      bar.nextElementSibling?.classList.contains('diet-note') && bar.nextElementSibling.remove();
-      bar.replaceWith(...wrap.childNodes);
-      applyDiet();
-      const res = $('stage').querySelector('.results'); if (res && !res.hidden) applyDiet(res);
-      break;
-    }
-    case 'use-credit':
-      ORDER.useCredit = !ORDER.useCredit;
-      el.classList.toggle('on', ORDER.useCredit);
-      $('credit-amt').textContent = ORDER.useCredit ? '− ' + fmt(Math.min(walletBalance, cartTotal())) : '';
-      break;
     case 'restart': go('ch-1'); break;
     case 'search-clear': {
       const input = $('stage').querySelector('.search-input');
@@ -723,8 +655,6 @@ async function initAuth() {
     if (profile) navRight.innerHTML = navUserBar(profile.first_name || name, !!profile.is_member);
     if (!ORDER.name) ORDER.name = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || name;
     if (!ORDER.phone && profile?.phone) ORDER.phone = profile.phone;
-    const { data: w } = await sb.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
-    walletBalance = w?.balance || 0;
   } catch (err) {
     console.warn('Auth unavailable', err);
   }
@@ -776,9 +706,6 @@ function init() {
     try {
       sb = sb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
       sb.rpc('sms_flags').then(({ data }) => { SMS = data || {}; });
-      const { data } = await sb.from('dish_tags').select('name, tags');
-      (data || []).forEach(r => { if (r.tags && r.tags.length) DIET[r.name] = r.tags; });
-      if (current && !current.startsWith('ch-') && !FLOW_ROUTES.includes(parse(current).type)) { renderStage(current); }
     } catch (e) { /* tags are optional */ }
   })();
   const rid = new URLSearchParams(location.search).get('reorder');

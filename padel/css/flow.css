@@ -446,3 +446,49 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .ex-bundle.on .ex-radio { border-color: #fff; }
 .ex-bundle.on .ex-radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #fff; }
 .ex-note { padding: 4px 0 8px; font-size: .8rem; color: var(--muted); }
+
+/* ---------- Gear, drinks offer and weekly steps ---------- */
+.step-lead { text-align: center; color: var(--muted); font-size: .9rem; line-height: 1.55; max-width: 420px; margin: 0 auto 18px; }
+.art { display: block; width: 100%; height: 100%; }
+#stage[data-route="gear"].active, #stage[data-route="drinks"].active, #stage[data-route="month"].active { animation: fadeOnly .8s var(--ease) both; }
+
+.gear-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.gear-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 12px 14px; border-radius: 22px; background: var(--panel); border: 1px solid var(--border); text-align: center; min-width: 0;
+  animation: gearIn .7s var(--ease) both; animation-delay: calc(var(--i) * 140ms + 150ms); transition: border-color .2s; }
+.gear-card.on { border-color: rgba(255,255,255,.55); }
+@keyframes gearIn { from { opacity: 0; transform: translateY(26px) rotate(-6deg) scale(.9); } to { opacity: 1; transform: none; } }
+.gear-art { height: 150px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; filter: drop-shadow(0 14px 18px rgba(0,0,0,.45)); }
+.gear-art .art { width: auto; max-width: 100%; }
+.gear-card:first-child .gear-art .art { animation: sway 4s ease-in-out 1s infinite; transform-origin: 50% 90%; }
+@keyframes sway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.gear-name { font-size: .92rem; font-weight: 700; color: #fff; line-height: 1.25; overflow-wrap: anywhere; }
+.gear-price { font-size: .78rem; color: var(--muted); margin-bottom: 8px; }
+
+.offer { position: relative; padding: 18px 18px 20px; border-radius: 24px; background: radial-gradient(ellipse at 50% 0%, #1d3a66 0%, var(--panel) 70%); border: 1px solid var(--border); text-align: center; overflow: hidden; }
+.offer-art { position: relative; height: 190px; display: flex; align-items: flex-end; justify-content: center; gap: 4px; margin-bottom: 14px; }
+.offer-bottles { display: flex; align-items: flex-end; gap: 2px; height: 100%; }
+.offer-bottles .art { width: 44px; height: 170px; filter: drop-shadow(0 10px 12px rgba(0,0,0,.5)); animation: popUp .7s var(--ease) both; }
+.offer-bottles .art:nth-child(2) { animation-delay: .1s; height: 180px; } .offer-bottles .art:nth-child(3) { animation-delay: .2s; height: 180px; } .offer-bottles .art:nth-child(4) { animation-delay: .3s; }
+.offer-chips { display: flex; align-items: flex-end; height: 100%; margin-left: 4px; }
+.offer-chips .art { width: 72px; height: 92px; filter: drop-shadow(0 10px 12px rgba(0,0,0,.5)); animation: popUp .7s var(--ease) both; animation-delay: .45s; }
+.offer-chips .art + .art { margin-left: -18px; animation-delay: .55s; }
+@keyframes popUp { from { opacity: 0; transform: translateY(40px) scale(.85); } to { opacity: 1; transform: none; } }
+.offer-tag { display: inline-block; padding: 5px 14px; border-radius: 100px; background: #e11d48; color: #fff; font-size: .72rem; font-weight: 900; letter-spacing: .2em; animation: tagPulse 2s ease-in-out .9s infinite; }
+@keyframes tagPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(225,29,72,.5); } 50% { box-shadow: 0 0 0 9px rgba(225,29,72,0); } }
+.offer-title { margin-top: 12px; font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.2; overflow-wrap: anywhere; }
+.offer-price { margin-top: 4px; font-size: 2rem; font-weight: 900; letter-spacing: -.03em; color: #fff; font-variant-numeric: tabular-nums; }
+.offer-text { margin: 10px auto 0; max-width: 400px; font-size: .88rem; line-height: 1.6; color: rgba(255,255,255,.78); }
+.offer-text b { color: #fff; }
+
+.month-card { padding: 22px 18px; border-radius: 24px; background: var(--panel); border: 1px solid var(--border); text-align: center; }
+.month-ico { width: 58px; height: 58px; margin: 0 auto 4px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--bg); animation: pop .5s var(--ease); }
+.month-dates { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 16px 0 4px; }
+.mdate { width: 58px; padding: 8px 0; border-radius: 14px; border: 1px solid var(--border2); display: flex; flex-direction: column; align-items: center; font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); animation: popUp .5s var(--ease) both; animation-delay: calc(var(--i) * 90ms + 200ms); }
+.mdate b { font-size: 1.2rem; color: #fff; letter-spacing: 0; }
+.mdate.first { background: #fff; border-color: #fff; color: var(--bg); } .mdate.first b { color: var(--bg); }
+small.muted { color: var(--muted); font-weight: 500; }
+@media (max-width: 380px) { .gear-art { height: 120px; } .offer-bottles .art { width: 36px; height: 140px; } .offer-bottles .art:nth-child(2), .offer-bottles .art:nth-child(3) { height: 150px; } .offer-chips .art { width: 60px; height: 78px; } }
+@media (max-width: 520px) { .stage-head .mini-dots { display: none; } .stage-head { grid-template-columns: auto 1fr auto; } .stage-head .menu-title { min-width: 0; } .stage-head .menu-title h2 { overflow-wrap: anywhere; } }
+.review-players > *, .review-rows > * { min-width: 0; }
+.rp .badge, .rp .avatar, .rp-price { flex-shrink: 0; }
+.row span:last-child { overflow-wrap: anywhere; }

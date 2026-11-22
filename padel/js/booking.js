@@ -71,8 +71,6 @@ const state = {
   editing: null,                 // index of the player slot with an open search
   last: null,                    // last confirmed booking, shown on the done screen
   weeks: 1,                      // weekly repeat count
-  credit: 0,                     // wallet balance
-  useCredit: false,
   hire: {},                      // { itemKey: qty }
   bundle: null,                  // chosen food bundle id
   join: null,                    // booking loaded from an invite link
@@ -81,7 +79,7 @@ let HIRE = [], BUNDLES = [];
 const hireItems = () => HIRE.filter(h => h.sport === state.sport);
 const hireTotal = () => hireItems().reduce((t, h) => t + (state.hire[h.key] || 0) * h.price, 0);
 const bundleObj = () => BUNDLES.find(b => b.id === state.bundle) || null;
-const bundlePrice = () => (state.weeks === 1 && bundleObj() ? bundleObj().price : 0);
+const bundlePrice = () => (bundleObj() ? bundleObj().price : 0);
 const grandTotal = () => totalPrice() + hireTotal() + bundlePrice();
 
 const sport = () => SPORTS[state.sport];
@@ -138,16 +136,17 @@ async function loadBooked() {
 }
 
 /* ---------- Screens ---------- */
-const STEP = { sport: 1, times: 2, team: 3, review: 4, done: 4 };
-const PARENT = { times: 'sport', team: 'times', review: 'team' };
+const STEP = { sport: 1, times: 2, team: 3, gear: 4, drinks: 5, month: 6, review: 7, done: 7 };
+const STEPS_TOTAL = 7;
+const PARENT = { times: 'sport', team: 'times', gear: 'team', drinks: 'gear', month: 'drinks', review: 'month' };
 
 function headHTML(route, title) {
   const n = STEP[route];
   return `
     <div class="stage-head">
       <button type="button" class="back-btn" data-act="back">${BACK_ARROW}<span>Back</span></button>
-      <div class="menu-title">${n ? `<span class="menu-step">Step ${n} of 4</span>` : ""}<h2>${escH(title)}</h2></div>
-      <div class="mini-dots"${n ? "" : " style=\"visibility:hidden\""}>${[1, 2, 3, 4].map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
+      <div class="menu-title">${n ? `<span class="menu-step">Step ${n} of ${STEPS_TOTAL}</span>` : ""}<h2>${escH(title)}</h2></div>
+      <div class="mini-dots"${n ? "" : " style=\"visibility:hidden\""}>${[...Array(STEPS_TOTAL)].map((_, z) => z + 1).map(k => `<span class="${k < n ? 'done' : k === n ? 'active' : ''}"></span>`).join('')}</div>
     </div>`;
 }
 
@@ -304,7 +303,7 @@ function teamFootHTML() {
   const left = state.players.filter(p => !p).length;
   return `
     <span class="foot-hint">${left ? `${left} more to add` : `Total ${fmt(totalPrice())}${openCount() ? ' + open spots' : ''}`}</span>
-    <button type="button" class="primary-btn" data-act="to-review"${left ? ' disabled' : ''}>Review booking${ARROW}</button>`;
+    <button type="button" class="primary-btn" data-act="to-review"${left ? ' disabled' : ''}>Continue${ARROW}</button>`;
 }
 
 function teamHTML() {
@@ -362,37 +361,160 @@ function interlude(text, route) {
   }, 180);
 }
 
+/* ---------- Artwork (transparent SVG) ---------- */
+const ART = {
+  racket: `<svg viewBox="0 0 120 230" class="art" aria-hidden="true"><defs><linearGradient id="rk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f7fb"/><stop offset="1" stop-color="#c9d4e4"/></linearGradient><clipPath id="rkc"><path d="M60 14C92 14 104 42 102 76C100 106 82 122 68 127L60 116L52 127C38 122 20 106 18 76C16 42 28 14 60 14Z"/></clipPath></defs>
+    <path d="M60 6C99 6 114 40 112 78C110 112 88 130 72 136L70 154H50L48 136C32 130 10 112 8 78C6 40 21 6 60 6Z" fill="#2f6df6"/>
+    <path d="M60 14C92 14 104 42 102 76C100 106 82 122 68 127L60 116L52 127C38 122 20 106 18 76C16 42 28 14 60 14Z" fill="url(#rk)"/>
+    <g clip-path="url(#rkc)" fill="#0d1c33" opacity=".85">${[...Array(7)].map((_, r) => [...Array(6)].map((_, c) => `<circle cx="${25 + c * 14 + (r % 2) * 7}" cy="${28 + r * 13}" r="3.1"/>`).join('')).join('')}</g>
+    <path d="M52 127L60 116L68 127" fill="none" stroke="#2f6df6" stroke-width="3"/>
+    <rect x="50" y="152" width="20" height="70" rx="7" fill="#111827"/>
+    <g stroke="#374151" stroke-width="2.2">${[...Array(8)].map((_, i) => `<path d="M50 ${160 + i * 8}l20 -6"/>`).join('')}</g>
+    <rect x="48" y="218" width="24" height="8" rx="4" fill="#2f6df6"/></svg>`,
+  paddle: `<svg viewBox="0 0 120 230" class="art" aria-hidden="true"><defs><linearGradient id="pd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs>
+    <rect x="12" y="8" width="96" height="136" rx="40" fill="#0b3b37"/><rect x="18" y="14" width="84" height="124" rx="35" fill="url(#pd)"/>
+    <path d="M30 40c10-14 30-20 50-14" stroke="#fff" stroke-opacity=".35" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect x="50" y="140" width="20" height="78" rx="7" fill="#111827"/><g stroke="#374151" stroke-width="2.2">${[...Array(8)].map((_, i) => `<path d="M50 ${150 + i * 8}l20 -6"/>`).join('')}</g>
+    <rect x="48" y="214" width="24" height="8" rx="4" fill="#2dd4bf"/></svg>`,
+  balls: `<svg viewBox="0 0 200 130" class="art" aria-hidden="true">${[[48, 78], [104, 60], [156, 82]].map(([x, y], i) => `
+    <g transform="translate(${x} ${y})"><circle r="38" fill="${i === 1 ? '#e4f74a' : '#d4ec34'}"/><circle r="38" fill="url(#bs)"/>
+    <path d="M-30 -22C-10 -8 -10 8 -30 22M30 -22C10 -8 10 8 30 22" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></g>`).join('')}
+    <defs><radialGradient id="bs" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient></defs></svg>`,
+  pballs: `<svg viewBox="0 0 200 130" class="art" aria-hidden="true">${[[48, 78], [104, 60], [156, 82]].map(([x, y]) => `
+    <g transform="translate(${x} ${y})"><circle r="38" fill="#facc15"/><circle r="38" fill="url(#pbs)"/>
+    ${[[0, -22], [-19, -11], [19, -11], [-19, 11], [19, 11], [0, 22], [0, 0]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="5.2" fill="#a16207"/>`).join('')}</g>`).join('')}
+    <defs><radialGradient id="pbs" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></radialGradient></defs></svg>`,
+  cola: `<svg viewBox="0 0 80 250" class="art bottle" aria-hidden="true"><defs><linearGradient id="cg" x1="0" x2="1"><stop offset="0" stop-color="#1a0703"/><stop offset=".45" stop-color="#4a1608"/><stop offset="1" stop-color="#140502"/></linearGradient></defs>
+    <rect x="29" y="2" width="22" height="12" rx="3" fill="#c7ccd4"/><rect x="29" y="11" width="22" height="3" fill="#8b93a1"/>
+    <path d="M31 14h18c0 10 2 26 6 44c5 20 13 30 13 52c0 18-8 28-8 44c0 16 9 26 9 48c0 18-6 30-10 34H21c-4-4-10-16-10-34c0-22 9-32 9-48c0-16-8-26-8-44c0-22 8-32 13-52c4-18 6-34 6-44Z" fill="url(#cg)"/>
+    <path d="M37 22c-1 18-6 34-11 54c-4 16-7 26-6 40" stroke="#fff" stroke-opacity=".38" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M58 168c3 14 5 26 4 40" stroke="#fff" stroke-opacity=".2" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="14" y="128" width="52" height="30" rx="3" fill="#d1d5db"/><rect x="14" y="128" width="52" height="4" fill="#b91c1c"/><rect x="14" y="154" width="52" height="4" fill="#b91c1c"/>
+    <text x="40" y="149" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="900" font-size="12" fill="#111827" letter-spacing="1">DIET</text></svg>`,
+  chips: `<svg viewBox="0 0 120 150" class="art" aria-hidden="true">
+    ${[[30, 6, -12], [42, 0, -5], [54, 4, 2], [66, 0, 8], [78, 6, 14], [48, 12, -2], [60, 10, 5], [72, 14, 10], [36, 16, -9]].map(([x, y, r]) => `<rect x="${x}" y="${y + 10}" width="9" height="62" rx="2" fill="#f5c542" transform="rotate(${r} ${x + 4} ${y + 70})"/><rect x="${x + 1.5}" y="${y + 12}" width="3" height="56" rx="1.5" fill="#fde68a" opacity=".7" transform="rotate(${r} ${x + 4} ${y + 70})"/>`).join('')}
+    <path d="M16 60h88l-12 86H28Z" fill="#dc2626"/><path d="M16 60h88l-2 12H18Z" fill="#b91c1c"/>
+    ${[0, 1, 2, 3].map(i => `<path d="M${30 + i * 20} 60l${-3 + i * 2} 86" stroke="#fff" stroke-width="7" opacity=".9"/>`).join('')}</svg>`,
+};
+
+/* ---------- Gear (racket & ball hire) ---------- */
+const gearArt = h => /ball/i.test(h.key) ? (state.sport === 'pickleball' ? ART.pballs : ART.balls) : (state.sport === 'pickleball' ? ART.paddle : ART.racket);
+function gearListHTML() {
+  return hireItems().map((h, k) => { const q = state.hire[h.key] || 0; return `
+    <div class="gear-card${q ? ' on' : ''}" style="--i:${k}">
+      <div class="gear-art">${gearArt(h)}</div>
+      <div class="gear-name">${escH(h.name)}</div>
+      <div class="gear-price">${fmt(h.price)} each</div>
+      <div class="ex-step"><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="-1"${q ? '' : ' disabled'} aria-label="Less">−</button><span>${q}</span><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="1"${q >= h.max_qty ? ' disabled' : ''} aria-label="More">+</button></div>
+    </div>`; }).join('');
+}
+function gearHTML() {
+  return headHTML('gear', 'Rackets & Balls') + `
+    <div class="stage-body narrow">
+      <p class="step-lead">Forgot your gear? Hire it here and it will be waiting at the desk when you arrive.</p>
+      <div class="gear-grid" id="gear-list">${gearListHTML()}</div>
+      <div class="stage-foot">
+        <button type="button" class="primary-btn" data-act="to-drinks" id="gear-next">${hireTotal() ? `Add for ${fmt(hireTotal())}` : 'Continue'}${ARROW}</button>
+        <button type="button" class="ghost-btn" data-act="skip-gear">I have my own</button>
+      </div>
+    </div>`;
+}
+
+/* ---------- Drinks offer ---------- */
+function drinksHTML() {
+  const b = BUNDLES[0];
+  const ends = slotTime(state.sel[state.sel.length - 1] + 1);
+  return headHTML('drinks', 'After Your Game') + `
+    <div class="stage-body narrow">
+      <div class="offer">
+        <div class="offer-art">
+          <div class="offer-bottles">${ART.cola}${ART.cola}${ART.cola}${ART.cola}</div>
+          <div class="offer-chips">${ART.chips}${ART.chips}</div>
+        </div>
+        <span class="offer-tag">OFFER</span>
+        <h3 class="offer-title">4 Coca-Cola Diet + 2 Chips</h3>
+        <div class="offer-price">${fmt(b.price)}</div>
+        <p class="offer-text">Four ice-cold glass-bottle Coca-Cola Diet and two portions of fresh chips, ready and waiting for you at the club when your game ends at <b>${escH(ends)}</b>. Nothing to queue for. It's added to this booking and paid together with your court.</p>
+      </div>
+      <div class="stage-foot">
+        <button type="button" class="primary-btn" data-act="take-offer">Add offer · ${fmt(b.price)}${ARROW}</button>
+        <button type="button" class="ghost-btn" data-act="skip-offer">No thanks</button>
+      </div>
+    </div>`;
+}
+
+/* ---------- Rest of the month ---------- */
+function monthDates() {
+  const d0 = dateFrom(state.date), out = [];
+  for (let d = new Date(d0); ; ) { d.setDate(d.getDate() + 7); if (d.getMonth() !== d0.getMonth()) break; out.push(dateStr(d)); }
+  return out;
+}
+function monthHTML() {
+  const more = monthDates();
+  const d0 = dateFrom(state.date);
+  const day = d0.toLocaleDateString('en-GB', { weekday: 'long' });
+  const month = d0.toLocaleDateString('en-GB', { month: 'long' });
+  return headHTML('month', 'Make It Weekly') + `
+    <div class="stage-body narrow">
+      <div class="month-card">
+        <div class="month-ico">${CAL}</div>
+        <h3 class="offer-title">Every ${day}, ${timeRange()}</h3>
+        <p class="offer-text">Keep ${escH(court().name)} for the same time every ${day} for the rest of ${month}. Same players${hireTotal() ? ', same gear' : ''}${state.bundle ? ' and the same drinks offer' : ''} each week, so you never have to book again this month.</p>
+        <div class="month-dates">${[state.date, ...more].map((d, k) => `<span class="mdate${k ? '' : ' first'}" style="--i:${k}"><b>${dateFrom(d).getDate()}</b>${dateFrom(d).toLocaleDateString('en-GB', { month: 'short' })}</span>`).join('')}</div>
+        <p class="fine">If a week is already taken we skip it and tell you. You can cancel any single week from your dashboard.</p>
+      </div>
+      <div class="stage-foot">
+        <button type="button" class="primary-btn" data-act="month-yes">Book all ${more.length + 1} ${day}s${ARROW}</button>
+        <button type="button" class="ghost-btn" data-act="month-no">Skip, just this once</button>
+      </div>
+    </div>`;
+}
+
+/* Which step comes next (skips steps that have nothing to show) */
+function stepAfter(route) {
+  const order = ['team', 'gear', 'drinks', 'month', 'review'];
+  for (let k = order.indexOf(route) + 1; k < order.length; k++) {
+    const r = order[k];
+    if (r === 'gear' && !hireItems().length) continue;
+    if (r === 'drinks' && !BUNDLES.length) continue;
+    if (r === 'month' && !monthDates().length) continue;
+    return r;
+  }
+  return 'review';
+}
+const STEP_TEXT = { gear: 'Getting your gear ready', drinks: 'One more thing', month: 'Almost done', review: 'Putting everything together' };
+function nextStep(from) { const r = stepAfter(from); interlude(STEP_TEXT[r], r); }
+function paintGear() {
+  $('gear-list').innerHTML = gearListHTML();
+  $('gear-list').querySelectorAll('.gear-card').forEach(c => c.style.animation = 'none');
+  $('gear-next').innerHTML = (hireTotal() ? `Add for ${fmt(hireTotal())}` : 'Continue') + ARROW;
+}
+
 function reviewHTML() {
   const members = state.players.filter(p => p.member).length;
+  const hire = hireItems().filter(h => state.hire[h.key]);
+  const b = state.bundle ? bundleObj() : null;
+  const dates = [state.date, ...(state.weeks > 1 ? monthDates().slice(0, state.weeks - 1) : [])];
   return headHTML('review', 'Confirm') + `
     <div class="stage-body narrow">
       <div class="review-card ticket">
         <div class="review-rows">
-          <div class="row"><span>Sport</span><span>${sport().name}</span></div>
-          <div class="row"><span>Court</span><span>${court().name}</span></div>
-          <div class="row"><span>Date</span><span>${longDate(state.date)}</span></div>
-          <div class="row"><span>Time</span><span>${timeRange()}</span></div>
-          <div class="row"><span>Duration</span><span>${duration()}</span></div>
+          <div class="row"><span>Court</span><span>${sport().name} · ${court().name}</span></div>
+          <div class="row"><span>${dates.length > 1 ? 'Dates' : 'Date'}</span><span>${dates.map(longDate).join('<br>')}</span></div>
+          <div class="row"><span>Time</span><span>${timeRange()} · ${duration()}</span></div>
           <div class="row"><span>Players</span><span>${members} member${members === 1 ? '' : 's'}, ${TEAM_SIZE - members - openCount()} non-member${TEAM_SIZE - members - openCount() === 1 ? '' : 's'}${openCount() ? `, ${openCount()} open` : ''}</span></div>
+          ${hire.length ? `<div class="row"><span>Hire</span><span>${hire.map(h => `${state.hire[h.key]}× ${escH(h.name)}`).join('<br>')}</span></div>` : ''}
+          ${b ? `<div class="row"><span>Drinks</span><span>4 Coca-Cola Diet + 2 Chips<br><small class="muted">Ready at ${escH(slotTime(state.sel[state.sel.length - 1] + 1))}</small></span></div>` : ''}
         </div>
         <div class="review-players">
           ${state.players.map(p => p.open
             ? `<div class="rp"><span class="avatar open-av">${LINK_ICON}</span><span class="rp-name">Open spot</span><span class="badge">Invite</span><span class="rp-price">On joining</span></div>`
             : `<div class="rp">${avatar(p)}<span class="rp-name">${escH(p.name)}${p.you ? ' (you)' : ''}</span>${badge(p)}<span class="rp-price">${fmt(playerPrice(p))}</span></div>`).join('')}
+          ${hire.length ? `<div class="rp"><span class="avatar">+</span><span class="rp-name">Hire</span><span></span><span class="rp-price">${fmt(hireTotal())}</span></div>` : ''}
+          ${b ? `<div class="rp"><span class="avatar">+</span><span class="rp-name">Drinks offer</span><span></span><span class="rp-price">${fmt(b.price)}</span></div>` : ''}
         </div>
-        <div class="review-total"><span id="grand-label">Total${state.weeks > 1 ? ' per game' : ''}</span><b id="grand">${fmt(grandTotal())}</b></div>
+        <div class="review-total"><span>Total${dates.length > 1 ? ' per game' : ''}</span><b>${fmt(grandTotal())}</b></div>
       </div>
-      <div class="extras" id="extras">${extrasHTML()}</div>
-      <div class="repeat">
-        <span class="repeat-label">Repeat weekly</span>
-        <div class="repeat-pills">${[1, 2, 4, 8].map(w => `<button type="button" class="repeat-pill${state.weeks === w ? ' on' : ''}" data-act="weeks" data-w="${w}">${w === 1 ? 'Once' : w + ' weeks'}</button>`).join('')}</div>
-      </div>
-      ${state.credit > 0 ? `
-      <button type="button" class="credit-toggle${state.useCredit ? ' on' : ''}" data-act="credit">
-        <span class="ct-box"></span>
-        <span class="ct-text">Use my credit<small>${fmt(state.credit)} available</small></span>
-        <b id="credit-amt">${state.useCredit ? '− ' + fmt(Math.min(state.credit, grandTotal())) : ''}</b>
-      </button>` : ''}
       <p class="fine">Per person, per 30 min: members ${fmt(MEMBER_PRICE)}, non-members ${fmt(NON_MEMBER_PRICE)}. Off-peak (Mon–Fri before 16:00): ${fmt(OFF_MEMBER)} / ${fmt(OFF_NON_MEMBER)}.</p>
       <div class="stage-foot">
         <button type="button" class="primary-btn" id="confirm-btn" data-act="confirm">Confirm booking</button>
@@ -459,37 +581,6 @@ const ICO = {
   chat: '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.8 7L4 20l1.1-4.6A8 8 0 1121 12z"/></svg>',
 };
 
-function extrasHTML() {
-  const items = hireItems();
-  const hire = items.length ? `
-    <div class="ex-block">
-      <div class="ex-head">Hire</div>
-      ${items.map(h => { const q = state.hire[h.key] || 0; return `
-      <div class="ex-row">
-        <div class="ex-info"><span class="ex-name">${escH(h.name)}</span><span class="ex-price">${fmt(h.price)} each</span></div>
-        <div class="ex-step"><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="-1"${q ? '' : ' disabled'} aria-label="Less">−</button><span>${q}</span><button type="button" data-act="hire" data-k="${escH(h.key)}" data-d="1"${q >= h.max_qty ? ' disabled' : ''} aria-label="More">+</button></div>
-      </div>`; }).join('')}
-    </div>` : '';
-  const food = BUNDLES.length ? `
-    <div class="ex-block">
-      <div class="ex-head">Food after the game<small>Ready at ${escH(slotTime(state.sel[state.sel.length - 1] + 1))}</small></div>
-      ${state.weeks > 1 ? '<p class="ex-note">Food bundles are for single bookings.</p>' : BUNDLES.map(b => `
-      <button type="button" class="ex-bundle${state.bundle === b.id ? ' on' : ''}" data-act="bundle" data-id="${b.id}">
-        <span class="ex-radio"></span>
-        <span class="ex-info"><span class="ex-name">${escH(b.title)}</span><span class="ex-price">${escH(b.description || '')}</span></span>
-        <b>${fmt(b.price)}</b>
-      </button>`).join('')}
-    </div>` : '';
-  return hire + food;
-}
-
-function paintTotals() {
-  const g = $('grand'); if (!g) return;
-  g.textContent = fmt(grandTotal());
-  $('grand-label').textContent = state.weeks > 1 ? 'Total per game' : 'Total';
-  const c = $('credit-amt'); if (c) c.textContent = state.useCredit ? '− ' + fmt(Math.min(state.credit, grandTotal())) : '';
-}
-
 function doneHTML() {
   const b = state.last;
   const many = b.dates.length > 1;
@@ -508,7 +599,6 @@ function doneHTML() {
         ${b.bundle ? `<div class="review-rows" style="padding-top:0"><div class="row"><span>Food</span><span>${escH(b.bundle.title)}<br><small style="color:var(--muted);font-weight:500">Ready at ${escH(b.endTime)}</small></span></div></div>` : ''}
         <div class="review-total"><span>Total${many ? ' per game' : ''}</span><b>${fmt(b.totalPrice + (b.hireTotal || 0) + (b.bundle ? b.bundle.price : 0))}</b></div>
       </div>
-      ${b.credit ? `<p class="fine">${fmt(b.credit)} paid with credit${b.dates.length > 1 ? ' (used across your games)' : ''}.</p>` : ''}
       ${b.skipped.length ? `<p class="fine warn">Already taken, not booked: ${b.skipped.map(longDate).join(', ')}</p>` : ''}
       <div class="share-row">
         ${b.open ? `<button type="button" class="share-btn primary" data-act="invite">${ICO.link}Invite players</button>` : ''}
@@ -593,7 +683,7 @@ let navTimer = null;
 function allowed(route) {
   if (route === 'times') return !!state.sport;
   if (route === 'team') return !!state.sport && validSel();
-  if (route === 'review') return !!state.sport && validSel() && teamFull();
+  if (['gear', 'drinks', 'month', 'review'].includes(route)) return !!state.sport && validSel() && teamFull();
   if (route === 'done') return !!state.last;
   if (route === 'join') return !!state.join;
   return route === 'sport';
@@ -605,7 +695,7 @@ function show(route) {
   stage.dataset.route = route;
   state.editing = null;
   $('sheet').classList.remove('open');
-  stage.innerHTML = { sport: sportHTML, times: timesHTML, team: teamHTML, review: reviewHTML, done: doneHTML, join: joinHTML }[route]();
+  stage.innerHTML = { sport: sportHTML, times: timesHTML, team: teamHTML, review: reviewHTML, done: doneHTML, join: joinHTML, gear: gearHTML, drinks: drinksHTML, month: monthHTML }[route]();
   hydrateImages(stage);
   stage.querySelectorAll('.ticket .row, .ticket .rp, .ticket .review-total').forEach((el, k) => el.style.setProperty('--i', k));
   void stage.offsetWidth;
@@ -735,10 +825,10 @@ async function confirmBooking() {
   };
 
   booking.weeks = state.weeks;
-  booking.credit = PREVIEW && state.useCredit ? Math.min(state.credit, grandTotal()) : 0;
+  booking.credit = 0;
   booking.hire = hireItems().filter(h => state.hire[h.key]).map(h => ({ name: h.name, qty: state.hire[h.key], price: h.price }));
   booking.hireTotal = hireTotal();
-  booking.bundle = state.weeks === 1 && bundleObj() ? { title: bundleObj().title, price: bundleObj().price } : null;
+  booking.bundle = bundleObj() ? { title: '4 Coca-Cola Diet + 2 Chips', price: bundleObj().price } : null;
   booking.open = openCount();
   booking.dates = [state.date];
   booking.skipped = [];
@@ -748,9 +838,9 @@ async function confirmBooking() {
       p_court: state.court, p_date: state.date, p_slots: slotValues,
       p_start: booking.startTime, p_end: booking.endTime, p_weeks: state.weeks,
       p_players: state.players.filter(p => !p.open).map(p => ({ user_id: p.userId || null, name: p.name })),
-      p_use_credit: state.useCredit && state.credit > 0,
+      p_use_credit: false,
       p_hire: hireItems().filter(h => state.hire[h.key]).map(h => ({ key: h.key, qty: state.hire[h.key] })),
-      p_bundle: state.weeks === 1 ? state.bundle : null,
+      p_bundle: state.bundle,
     });
     if (error || !res) { console.error('[USC] booking failed', error); return fail('Booking failed. Please try again.'); }
     if (!res.booked.length) {
@@ -763,8 +853,6 @@ async function confirmBooking() {
     booking.dates = res.booked.map(b => b.date);
     booking.skipped = res.skipped;
     booking.totalPrice = res.total;
-    booking.credit = res.credit || 0;
-    state.credit = Math.max(0, state.credit - booking.credit);
   } else {
     for (let w = 1; w < state.weeks; w++) { const d = dateFrom(state.date); d.setDate(d.getDate() + 7 * w); booking.dates.push(dateStr(d)); }
   }
@@ -779,7 +867,6 @@ async function confirmBooking() {
 
 function resetTeam() {
   state.weeks = 1;
-  state.useCredit = false;
   state.hire = {};
   state.bundle = null;
   state.players = [{ name: me.name, username: me.username, userId: me.id, member: me.member, you: true }, null, null, null];
@@ -793,7 +880,13 @@ document.addEventListener('click', e => {
   const slotEl = el.closest('[data-i]');
   const i = slotEl ? Number(slotEl.dataset.i) : state.editing;
   switch (el.dataset.act) {
-    case 'back': go(PARENT[current] || 'sport'); break;
+    case 'back': {
+      // go back to the nearest earlier step that is actually shown
+      let p = PARENT[current] || 'sport';
+      while ((p === 'month' && !monthDates().length) || (p === 'drinks' && !BUNDLES.length) || (p === 'gear' && !hireItems().length)) p = PARENT[p];
+      go(p);
+      break;
+    }
     case 'sport':
       if (state.sport !== el.dataset.sport) { state.sport = el.dataset.sport; state.court = null; state.sel = []; }
       go('times');
@@ -818,27 +911,20 @@ document.addEventListener('click', e => {
       if (name.length >= 2) setPlayer(i, { name, username: null, userId: null, member: false });
       break;
     }
-    case 'to-review': if (teamFull()) interlude('Putting everything together', 'review'); break;
+    case 'to-review': if (teamFull()) nextStep('team'); break;
+    case 'to-drinks': nextStep('gear'); break;
+    case 'skip-gear': state.hire = {}; nextStep('gear'); break;
+    case 'take-offer': state.bundle = BUNDLES[0].id; nextStep('drinks'); break;
+    case 'skip-offer': state.bundle = null; nextStep('drinks'); break;
+    case 'month-yes': state.weeks = monthDates().length + 1; interlude(STEP_TEXT.review, 'review'); break;
+    case 'month-no': state.weeks = 1; interlude(STEP_TEXT.review, 'review'); break;
     case 'confirm': confirmBooking(); break;
     case 'again': state.last = null; go('sport'); break;
     case 'open-spot': if (i !== null && i > 0) setPlayer(i, { open: true, name: 'Open spot', member: false }); break;
-    case 'weeks':
-      state.weeks = Number(el.dataset.w);
-      $('stage').querySelectorAll('.repeat-pill').forEach(b => b.classList.toggle('on', b === el));
-      if (state.weeks > 1) state.bundle = null;
-      $('extras').innerHTML = extrasHTML();
-      paintTotals();
-      break;
     case 'hire': {
       const h = HIRE.find(x => x.key === el.dataset.k); if (!h) break;
       state.hire[h.key] = Math.max(0, Math.min(h.max_qty, (state.hire[h.key] || 0) + Number(el.dataset.d)));
-      $('extras').innerHTML = extrasHTML(); paintTotals();
-      break;
-    }
-    case 'bundle': {
-      const id = Number(el.dataset.id);
-      state.bundle = state.bundle === id ? null : id;
-      $('extras').innerHTML = extrasHTML(); paintTotals();
+      paintGear();
       break;
     }
     case 'alerts': enableAlerts(el); break;
@@ -846,12 +932,6 @@ document.addEventListener('click', e => {
     case 'whatsapp': window.open('https://wa.me/?text=' + encodeURIComponent(bookingText(state.last)), '_blank', 'noopener'); break;
     case 'calendar': downloadICS(state.last); break;
     case 'join-game': joinGame(); break;
-    case 'credit': {
-      state.useCredit = !state.useCredit;
-      el.classList.toggle('on', state.useCredit);
-      paintTotals();
-      break;
-    }
   }
 });
 
@@ -895,7 +975,6 @@ async function initAuth() {
   if (window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   if (PREVIEW) {
     me = { id: null, name: 'Preview Player', first: 'Preview', username: 'preview', phone: '', email: '', member: true };
-    state.credit = 1500;
     return true;
   }
   if (!sb) { toast("Couldn't connect. Please check your connection and reload."); return false; }
@@ -921,8 +1000,6 @@ async function initAuth() {
     email: user.email,
     member: !!p?.is_member,
   };
-  const { data: w } = await sb.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
-  state.credit = w?.balance || 0;
   return true;
 }
 
